@@ -1,0 +1,17 @@
+{
+  "extName": {
+    "message": "KarmoLab"
+  },
+  "extDescription": {
+    "message": "Shows the upload date on YouTube Shorts as you scroll."
+  },
+  "featShortsDate": {
+    "message": "Show Shorts upload date"
+  },
+  "featShortsDateHint": {
+    "message": "The date appears to the left of each Short."
+  },
+  "popupFooter": {
+    "message": "lab.mascari4615.com"
+  }
+}

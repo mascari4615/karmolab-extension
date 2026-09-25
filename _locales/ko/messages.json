@@ -1,0 +1,17 @@
+{
+  "extName": {
+    "message": "KarmoLab"
+  },
+  "extDescription": {
+    "message": "유튜브 쇼츠를 넘길 때 영상 올린 날짜를 표시합니다."
+  },
+  "featShortsDate": {
+    "message": "쇼츠 올린 날짜 표시"
+  },
+  "featShortsDateHint": {
+    "message": "쇼츠 영상 왼쪽에 날짜가 나옵니다."
+  },
+  "popupFooter": {
+    "message": "lab.mascari4615.com"
+  }
+}

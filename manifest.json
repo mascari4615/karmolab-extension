@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extName__",
+  "short_name": "KarmoLab",
+  "version": "0.1.0",
+  "description": "__MSG_extDescription__",
+  "default_locale": "ko",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.youtube.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["features/shorts-date.js"],
+      "css": ["features/shorts-date.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "KarmoLab",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "homepage_url": "https://lab.mascari4615.com/"
+}
