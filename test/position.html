@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<title>쇼츠 날짜 위치 회귀 검증</title>
+<link rel="stylesheet" href="../features/shorts-date.css">
+<style>
+  body { margin:0; background:#f5f5f5; font:16px system-ui; }
+  header { height:64px; padding:0 24px; display:flex; align-items:center; background:white; }
+  aside { position:fixed; top:64px; left:0; width:72px; height:100%; background:#ddd; }
+  ytd-shorts { display:block; margin-left:72px; }
+  ytd-reel-video-renderer { display:block; height:640px; position:relative; }
+  #shorts-player { position:absolute; left:calc(50% - 160px); top:24px; width:320px; height:568px; background:#222; color:white; display:grid; place-items:center; }
+  a { color:inherit; }
+  footer { margin-left:96px; }
+</style>
+<header>쇼츠 날짜 위치 회귀 검증, ↓ 다음 영상, ↑ 이전 영상</header>
+<aside></aside>
+<ytd-shorts><ytd-reel-video-renderer>
+  <div id="shorts-player"><a href="/shorts/abcdefghijk">영상 A (합성 검증 화면)</a></div>
+</ytd-reel-video-renderer></ytd-shorts>
+<footer><button id="next">다음 영상</button> <button id="previous">이전 영상</button> <button id="toggle">날짜 켜기/끄기</button></footer>
+<script>
+  const ids = ['abcdefghijk', 'lmnopqrstuv'];
+  let index = 0;
+  let enabled = true;
+  let change;
+  history.replaceState({}, '', '/shorts/' + ids[index]);
+  window.chrome = { storage: { sync: { get: (defaults, callback) => callback(defaults) }, onChanged: { addListener: callback => { change = callback; } } } };
+  window.fetch = async () => ({ ok:true, json:async () => ({microformat:{playerMicroformatRenderer:{publishDate:index ? '2026-09-20' : '2026-09-30'}}}) });
+  function move() {
+    index = 1 - index;
+    history.replaceState({}, '', '/shorts/' + ids[index]);
+    const player = document.querySelector('#shorts-player');
+    player.animate([{transform:'translateY(500px)'}, {transform:'translateY(0)'}], {duration:500});
+    const link = player.querySelector('a');
+    link.href = '/shorts/' + ids[index];
+    link.textContent = '영상 ' + (index ? 'B' : 'A') + ' (합성 검증 화면)';
+  }
+  document.querySelector('#next').onclick = move;
+  document.querySelector('#previous').onclick = move;
+  document.querySelector('#toggle').onclick = () => { enabled = !enabled; change({shortsDate:{newValue:enabled}}, 'sync'); };
+  document.addEventListener('keydown', event => { if (['ArrowDown','ArrowUp'].includes(event.key)) { event.preventDefault(); move(); } });
+</script>
+<script src="/features/shorts-date.js"></script>
+</html>

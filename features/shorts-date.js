@@ -23,6 +23,7 @@
   let enabled = true;
   let clientVersion = null;
   let badge = null;
+  let placement = null;
 
   const videoIdFromUrl = () => {
     const m = location.pathname.match(/^\/shorts\/([\w-]{11})/);
@@ -105,33 +106,53 @@
 
   // 화면에 가장 넓게 보이는 #shorts-player
   // <video> 기준 제외: 첫 쇼츠는 재생 전 <video> 가 화면 밖 top -640 (2026-09-25 실측)
-  const activeVideo = () => {
+  const activeVideo = (id) => {
     let best = null;
     let bestArea = 0;
-    for (const v of document.querySelectorAll("ytd-shorts #shorts-player, ytd-shorts ytd-reel-video-renderer")) {
+    // 바깥 카드는 영상보다 넓음. 실제 플레이어만 좌표 후보
+    for (const v of document.querySelectorAll("ytd-shorts #shorts-player")) {
+      const renderer = v.closest("ytd-reel-video-renderer");
+      const ids = renderer ? Array.from(renderer.querySelectorAll('a[href*="/shorts/"]'))
+        .map(a => (a.getAttribute("href") || "").match(/\/shorts\/([\w-]{11})(?:[/?#]|$)/)?.[1])
+        .filter(Boolean) : [];
+      // 주소가 먼저 바뀌고 이전 영상 DOM이 남는 전환 구간 제외
+      if (ids.length && !ids.includes(id)) continue;
       const r = v.getBoundingClientRect();
       const w = Math.min(r.right, innerWidth) - Math.max(r.left, 0);
       const h = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
       const area = w > 0 && h > 0 ? w * h : 0;
-      if (area > bestArea) { best = r; bestArea = area; }
+      if (area > bestArea) { best = { node: v, rect: r }; bestArea = area; }
     }
     return best;
+  };
+
+  const stableRect = (id) => {
+    const candidate = activeVideo(id);
+    if (!candidate) { placement = null; return null; }
+    const { node, rect } = candidate;
+    const previous = placement;
+    placement = { id, node, rect };
+    if (!previous || previous.id !== id || previous.node !== node) return null;
+    // 움직이는 쇼츠를 따라 배지가 미끄러지는 현상 방지
+    if (["left", "top", "width", "height"].some(k => Math.abs(previous.rect[k] - rect[k]) > 1)) return null;
+    return rect;
   };
 
   const tick = () => {
     const id = enabled ? videoIdFromUrl() : null;
     if (!id) {
+      placement = null;
       if (badge) badge.hidden = true;
       return;
     }
     const b = ensureBadge();
+    const rect = stableRect(id);
     if (!cache.has(id)) {
       load(id);
       b.hidden = true;
       return;
     }
     const d = cache.get(id);
-    const rect = activeVideo();
     if (!d || !rect) {
       b.hidden = true;
       return;
@@ -140,7 +161,7 @@
     // 자리 부족 시 짧은 형식, 그래도 부족하면 짧은 형식을 영상 안쪽에
     const full = longText(d);
     const room = rect.left - GAP - GUIDE_WIDTH;
-    const key = `${id}|${Math.round(room)}`;
+    const key = `${id}|${Math.round(room)}|${Math.floor(Date.now() / 60000)}`;
     b.hidden = false;
     if (b.dataset.key !== key) {
       b.dataset.key = key;
