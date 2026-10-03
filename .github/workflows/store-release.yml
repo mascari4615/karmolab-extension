@@ -112,5 +112,6 @@ jobs:
         with:
           name: receipt-${{ matrix.store }}
           path: .release/*.json
+          include-hidden-files: true
           if-no-files-found: ignore
           retention-days: 90
