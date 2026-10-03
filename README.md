@@ -24,6 +24,18 @@ node pack.mjs
 
 `dist/karmolab-<버전>.zip`. 올리기 전 `manifest.json` 의 `version` 을 올린다.
 
+## 업데이트 자동화
+
+`node scripts/prepare-release.mjs`로 테스트, 문법 검사, zip 생성. `release-notes/<버전>.txt`에 심사 테스트 안내를 함께 작성.
+
+main에 버전 증가가 반영되면 GitHub Actions가 같은 zip을 Chrome과 Edge 양쪽에 제출. 인증을 한 번 설정한 뒤 사용 가능. 워크플로는 양쪽 결과와 재개용 receipt를 별도 보관. 제출 접수와 심사 승인, 실제 공개는 다른 상태.
+
+- Edge secrets: `EDGE_CLIENT_ID`, `EDGE_API_KEY`. 기존 등록 product ID는 workflow에 고정.
+- Chrome secrets: `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN`. variables: `CWS_PUBLISHER_ID`, `CWS_EXTENSION_ID`.
+- 수동 실행: workflow action `package`는 검사만, `submit`은 제출, `status`는 조회. 제출 대상 기본값 `both`.
+- 재개: 이전 workflow run의 receipt를 `resume_run`으로 복원. 불명확한 POST 결과는 재전송 없이 먼저 상태 확인.
+- 새 등록, 메타데이터 변경, 최초 공개에 필요한 항목은 스토어 대시보드에서 설정. 키는 소스, zip, 로그에 담지 않음.
+
 ## 스토어 문구
 
 - 이름: KarmoLab

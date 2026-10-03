@@ -1,0 +1,4 @@
+No credentials or sign-in required. Version 0.1.1 fixes date badge placement reported in the previous Edge review.
+Open https://www.youtube.com/shorts/ in desktop Chrome or Edge and open a public Short. Allow the public date lookup to finish. A small black badge with a white date appears beside the actual video player near its top-left. Narrow windows use a short date; without outside space it appears inside the top-left.
+Use ArrowDown/ArrowUp or next/previous Short buttons. During movement the badge hides, then reappears with that video's date when stable. Toggle the feature off/on using the extension toolbar popup.
+The previous version could use the much wider outer card coordinates and place the date far away from the video. This is fixed. No permissions or data collection added. Public date requests omit credentials.

@@ -1,0 +1,116 @@
+name: Extension release
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [package, submit, status]
+        default: package
+      store:
+        type: choice
+        options: [both, chrome, edge]
+        default: both
+      edge_operation:
+        description: Edge publish operation ID for status mode
+        type: string
+      resume_run:
+        description: Previous workflow run ID to restore operation receipts
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: extension-release-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: false
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    outputs:
+      release: ${{ steps.prepare.outputs.release }}
+      version: ${{ steps.prepare.outputs.version }}
+      filename: ${{ steps.prepare.outputs.filename }}
+      sha256: ${{ steps.prepare.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - id: prepare
+        env:
+          BASE: ${{ github.event_name == 'push' && github.event.before || '' }}
+        shell: pwsh
+        run: |
+          if ($env:BASE) { node scripts/prepare-release.mjs --base $env:BASE }
+          else { node scripts/prepare-release.mjs }
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: extension-package
+          path: dist/*.zip
+          if-no-files-found: error
+          retention-days: 30
+  submit:
+    needs: package
+    if: github.ref == 'refs/heads/main' && ((github.event_name == 'push' && needs.package.outputs.release == 'true') || (github.event_name == 'workflow_dispatch' && inputs.action != 'package'))
+    strategy:
+      fail-fast: false
+      matrix:
+        store: [chrome, edge]
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: extension-package
+          path: dist
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        if: github.event_name == 'workflow_dispatch' && inputs.resume_run != '' && (inputs.store == 'both' || inputs.store == matrix.store)
+        with:
+          name: receipt-${{ matrix.store }}
+          path: .release
+          run-id: ${{ inputs.resume_run }}
+          github-token: ${{ github.token }}
+      - name: Submit or check ${{ matrix.store }}
+        if: github.event_name != 'workflow_dispatch' || inputs.store == 'both' || inputs.store == matrix.store
+        env:
+          TARGET_STORE: ${{ matrix.store }}
+          MODE: ${{ inputs.action || 'submit' }}
+          PACKAGE_SHA256: ${{ needs.package.outputs.sha256 }}
+          PACKAGE_FILE: ${{ needs.package.outputs.filename }}
+          EDGE_OPERATION: ${{ inputs.edge_operation }}
+          EDGE_PRODUCT_ID: 2aa974b2-e51b-4eab-8cad-89e84b1e03c6
+          EDGE_CLIENT_ID: ${{ matrix.store == 'edge' && secrets.EDGE_CLIENT_ID || '' }}
+          EDGE_API_KEY: ${{ matrix.store == 'edge' && secrets.EDGE_API_KEY || '' }}
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          CWS_EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID }}
+          CWS_CLIENT_ID: ${{ matrix.store == 'chrome' && secrets.CWS_CLIENT_ID || '' }}
+          CWS_CLIENT_SECRET: ${{ matrix.store == 'chrome' && secrets.CWS_CLIENT_SECRET || '' }}
+          CWS_REFRESH_TOKEN: ${{ matrix.store == 'chrome' && secrets.CWS_REFRESH_TOKEN || '' }}
+        shell: pwsh
+        run: |
+          $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath "dist/$env:PACKAGE_FILE").Hash.ToLower()
+          if ($actual -ne $env:PACKAGE_SHA256) { throw 'Package digest mismatch' }
+          if ($env:MODE -eq 'status') {
+            if ($env:TARGET_STORE -eq 'edge') {
+              node scripts/store-release.mjs --store edge --status --operation $env:EDGE_OPERATION
+            } else { node scripts/store-release.mjs --store chrome --status }
+          } else { node scripts/store-release.mjs --store $env:TARGET_STORE --submit }
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: receipt-${{ matrix.store }}
+          path: .release/*.json
+          if-no-files-found: ignore
+          retention-days: 90
