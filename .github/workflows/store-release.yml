@@ -77,6 +77,13 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         if: github.event_name == 'workflow_dispatch' && inputs.resume_run != '' && (inputs.store == 'both' || inputs.store == matrix.store)
         with:
+          name: extension-package
+          path: dist
+          run-id: ${{ inputs.resume_run }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        if: github.event_name == 'workflow_dispatch' && inputs.resume_run != '' && (inputs.store == 'both' || inputs.store == matrix.store)
+        with:
           name: receipt-${{ matrix.store }}
           path: .release
           run-id: ${{ inputs.resume_run }}
@@ -88,6 +95,8 @@ jobs:
           MODE: ${{ inputs.action || 'submit' }}
           PACKAGE_SHA256: ${{ needs.package.outputs.sha256 }}
           PACKAGE_FILE: ${{ needs.package.outputs.filename }}
+          PACKAGE_VERSION: ${{ needs.package.outputs.version }}
+          RESUME_RUN: ${{ inputs.resume_run }}
           EDGE_OPERATION: ${{ inputs.edge_operation }}
           EDGE_PRODUCT_ID: 2aa974b2-e51b-4eab-8cad-89e84b1e03c6
           EDGE_CLIENT_ID: ${{ matrix.store == 'edge' && secrets.EDGE_CLIENT_ID || '' }}
@@ -100,7 +109,12 @@ jobs:
         shell: pwsh
         run: |
           $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath "dist/$env:PACKAGE_FILE").Hash.ToLower()
-          if ($actual -ne $env:PACKAGE_SHA256) { throw 'Package digest mismatch' }
+          $expected = $env:PACKAGE_SHA256
+          if ($env:RESUME_RUN) {
+            $receipt = Get-Content -Raw -LiteralPath ".release/$env:TARGET_STORE-$env:PACKAGE_VERSION.json" | ConvertFrom-Json
+            $expected = $receipt.sha256
+          }
+          if ($actual -ne $expected) { throw 'Package digest mismatch' }
           if ($env:MODE -eq 'status') {
             if ($env:TARGET_STORE -eq 'edge') {
               node scripts/store-release.mjs --store edge --status --operation $env:EDGE_OPERATION
