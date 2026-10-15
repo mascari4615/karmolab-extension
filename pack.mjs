@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const root = dirname(fileURLToPath(import.meta.url));
 const manifest = storeManifest(JSON.parse(readFileSync(join(root, "manifest.json"), "utf8")));
 const { version } = manifest;
-const files = ["manifest.json", "_locales", "features", "icons", "popup.html", "popup.js"];
+const files = ["manifest.json", "background.mjs", "_locales", "features", "icons", "popup.html", "popup.js"];
 
 mkdirSync(join(root, "dist"), { recursive: true });
 const out = join(root, "dist", `karmolab-${version}.zip`);

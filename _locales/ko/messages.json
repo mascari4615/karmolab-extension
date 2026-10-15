@@ -56,5 +56,27 @@
   "shortsCountBoth": { "message": "오늘 $UNIQUE$개 / $VIEWS$회", "placeholders": { "unique": { "content": "$1" }, "views": { "content": "$2" } } },
   "popupFooter": {
     "message": "lab.mascari4615.com"
-  }
+  },
+  "keywordHeading": { "message": "댓글 키워드 숨김" },
+  "keywordEnabled": { "message": "등록한 키워드가 있는 댓글 접기" },
+  "keywordWordsLabel": { "message": "한 줄에 하나씩, 최대 200개" },
+  "keywordSave": { "message": "키워드 저장" },
+  "keywordSaved": { "message": "저장했습니다. 열린 유튜브에도 바로 적용됩니다." },
+  "keywordError": { "message": "설정을 읽거나 저장하지 못했습니다. 키워드는 최대 200개, 각각 200자입니다." },
+  "keywordFolded": { "message": "등록한 키워드로 접은 댓글" },
+  "keywordShow": { "message": "펼치기" },
+  "keywordHide": { "message": "다시 접기" },
+  "volumeHeading": { "message": "이 사이트 음량" },
+  "volumeValue": { "message": "사이트 음량, 퍼센트" },
+  "volumeLoading": { "message": "사이트 음량 확인 중" },
+  "volumeApply": { "message": "이 사이트에 적용" },
+  "volumeStop": { "message": "이 탭 증폭 끄기" },
+  "volumeHint": { "message": "0~300%. 100% 이하의 영상/오디오는 다음 방문에 자동 적용. 100% 초과는 새 탭에서 한 번 적용 필요. 소리는 저장하거나 전송하지 않습니다." },
+  "volumeActive": { "message": "이 탭 음량 조절 중" },
+  "volumeSaved": { "message": "사이트별로 기억" },
+  "volumeNeedsActivation": { "message": "저장된 값, 이 탭에서 적용 필요" },
+  "volumeUnsupported": { "message": "일반 웹페이지에서 팝업을 열어주세요." },
+  "volumeRangeError": { "message": "0부터 300 사이의 음량을 입력하세요." },
+  "volumeDenied": { "message": "사이트 또는 오디오 권한을 허용하지 않았습니다." },
+  "volumeError": { "message": "음량을 적용하지 못했습니다. 이 탭에서 팝업을 다시 열고 적용해 주세요." }
 }

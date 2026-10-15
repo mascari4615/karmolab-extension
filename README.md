@@ -11,8 +11,20 @@
 | 오늘 본 쇼츠의 영상 수와 재시청 포함 횟수 | `features/shorts-count.js`, 날짜 배지 아래 표시 | 팝업 집계 체크와 표시 설정 (`chrome.storage.local`) |
 | 사용자 차단: 영상, 쇼츠, 댓글 숨김 | `features/user-block.js`, `.css` | 팝업 체크, 차단 목록의 해제 (`chrome.storage.local`) |
 | Base64 웹 주소 링크화 | `features/base64-core.js`, `base64-links.js`, `.css` | 팝업의 이 사이트에서 켜기/끄기 (`chrome.storage.local`) |
+| 댓글 키워드 숨김 | `features/keyword-core.js`, `keyword-comments.js`, `.css` | 팝업의 댓글 접기 체크, 키워드 저장 |
+| 사이트별 음량 기억과 300% 증폭 | `features/volume-*`, `background.mjs` | 팝업 음량 적용, 증폭 중지 |
 
 새 기능은 `features/` 에 파일 한 쌍, 팝업에 체크 하나, `_locales` 문구.
+
+## 댓글 키워드와 사이트 음량 (0.4.0 로컬)
+
+**댓글 키워드 숨김**에 한 줄당 단어 하나를 넣고 저장. 최대 200개, 각 200자. 유튜브 댓글 본문에 포함된 단어를 대소문자 구분 없이 비교하며 정규식은 사용하지 않음. 일치한 댓글은 안내 줄로 접고 **펼치기**로 복원. 부모 댓글은 답글도 함께 접음. 이름, 영상 제목과 홈 카드는 이 키워드 기능의 대상이 아님. 기존 사용자 차단과 독립.
+
+**이 사이트 음량**에서 0-300%를 고르고 **이 사이트에 적용**. 처음에는 해당 사이트 접근 권한, 100% 초과는 탭 소리 접근도 요청. 값은 프로토콜/호스트/포트별로 로컬 저장. 100% 이하의 HTML 영상/오디오는 다음 방문에도 자동 적용. 100% 초과는 브라우저 제한 때문에 새 탭에서 확장 아이콘을 열어 한 번 적용해야 함. 저장값은 유지하되 자동으로 소리 접근을 시작하지 않음.
+
+증폭 중에는 탭 소리를 AudioContext로 바로 재생. 녹음, 마이크 접근, 서버 전송 없음. **증폭 중지**는 연결을 닫고 기본 재생으로 복귀하며 저장값 유지. 탭 종료도 연결 해제. 이미 큰 소리를 증폭하면 찌그러질 수 있음. 브라우저 설정/확장 스토어와 일부 보호된 재생은 지원하지 않음. 일반 모드에서는 WebAudio만 쓰는 앱과 다른 출처의 iframe까지 음량 복원을 보장하지 않음.
+
+검증: `node scripts/verify-utilities.cjs`. 임시 Edge, 실제 탭 소리와 작은 시험 음원 사용. 200%/100% 출력 진폭 비교, 50% 새로고침 복원, 동적 오디오, 증폭 중지, 댓글 접기/펼치기/변경/키보드 시험. 선택 권한 승인창은 사전 허용한 시험이라 별도 미검증.
 
 ## Base64 링크 찾기 (0.3.0)
 
@@ -63,7 +75,7 @@ node scripts/reload-local.mjs
 
 완료 판정은 버전 번호가 아니라 새 실행 식별자, 현재 소스의 SHA256, 갱신 요청 응답 모두 일치. 응답 없음/포트 점유/새 코드 불일치는 실패. 명령 서버 없이 상시 로컬 서버 실행 불필요. 로컬 연결은 확장 ID와 전용 헤더 확인, 웹페이지 Origin 및 preflight 거부. 임의 코드나 페이지 조작 명령 미지원.
 
-로컬 manifest의 개발용 background, alarms, loopback 접근은 `pack.mjs`에서 제거. 스토어 ZIP에 개발 수신기 파일 제외. 버전 0.4.0 유지. `node scripts/verify-local-reload.cjs`는 임시 Edge 프로필에서 같은 버전의 코드 변경과 자기 재로드, 유튜브 재주입을 두 차례 검증. `VERIFY_BROWSER=chromium`은 추가 Chromium 시험용.
+로컬 manifest의 개발용 background는 제품용 `background.mjs`로 교체하고, alarms와 loopback 접근은 `pack.mjs`에서 제거. 스토어 ZIP에 개발 수신기 파일 제외. 제품용 음량 background와 offscreen 문서는 유지. 버전 0.4.0 유지. `node scripts/verify-local-reload.cjs`는 임시 Edge 프로필에서 같은 버전의 코드 변경과 자기 재로드, 유튜브 재주입을 두 차례 검증. `VERIFY_BROWSER=chromium`은 추가 Chromium 시험용.
 
 ## 스토어 zip
 

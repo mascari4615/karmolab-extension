@@ -1,0 +1,133 @@
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+const http = require('node:http');
+const { createHash, generateKeyPairSync } = require('node:crypto');
+const assert = require('node:assert/strict');
+const root = path.resolve(__dirname, '..');
+const output = process.env.VERIFY_OUTPUT || path.join(root, 'dist/verify-utilities');
+const fixture = `<!doctype html><html lang="ko" dark><meta charset="utf-8"><title>KarmoLab utility test</title><style>body{background:#111;color:#eee;font:16px system-ui;padding:24px}video{max-width:100%}button{padding:12px}ytd-comment-thread-renderer,ytd-comment-view-model{display:block;padding:12px;margin:8px;border:1px solid #555}</style><h1>KarmoLab utility test</h1><button id="tone">Start quiet test tone</button><video id="video"></video><ytd-comment-thread-renderer id="spoiler"><ytd-comment-view-model><span id="content-text">다음화 범인은 토끼</span></ytd-comment-view-model><div id="reply">답글도 함께 접기</div></ytd-comment-thread-renderer><ytd-comment-thread-renderer id="safe"><ytd-comment-view-model><span id="content-text">정말 재미있는 영상</span></ytd-comment-view-model></ytd-comment-thread-renderer><script>document.querySelector('#tone').onclick=()=>{const ctx=new AudioContext(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.frequency.value=440;gain.gain.value=.01;osc.connect(gain).connect(ctx.destination);osc.start();ctx.resume();document.querySelector('#tone').textContent='Quiet tone playing'};</script></html>`;
+
+(async () => {
+  fs.mkdirSync(output, { recursive: true });
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kl-utilities-')), extension = path.join(tmp, 'extension');
+  fs.mkdirSync(extension);
+  for (const file of ['features','dev','background.mjs','_locales','icons','popup.html','popup.js','manifest.json']) fs.cpSync(path.join(root,file),path.join(extension,file),{recursive:true});
+  fs.appendFileSync(path.join(extension,'features/volume-offscreen.mjs'),'\nglobalThis.__volumeTest = sessions;\n');
+  if (process.env.VERIFY_MUTATION === '1') {
+    const file = path.join(extension, 'features/volume-offscreen.mjs');
+    fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replaceAll('percent / 100', '1'));
+  }
+  const manifest = JSON.parse(fs.readFileSync(path.join(extension,'manifest.json'),'utf8'));
+  const key = generateKeyPairSync('rsa',{modulusLength:2048}).publicKey.export({format:'der',type:'spki'});
+  manifest.key = key.toString('base64');
+  manifest.permissions.push('tabCapture'); manifest.optional_permissions=[];
+  const extensionId = createHash('sha256').update(key).digest('hex').slice(0,32).replace(/[0-9a-f]/g,c=>String.fromCharCode(97+parseInt(c,16)));
+  fs.writeFileSync(path.join(extension,'manifest.json'),JSON.stringify(manifest));
+  const server=http.createServer((request,response)=>{response.setHeader('Content-Type','text/html; charset=utf-8');response.end(fixture);});
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  const origin=`http://127.0.0.1:${server.address().port}`;
+  let context;
+  try {
+    context=await chromium.launchPersistentContext(path.join(tmp,'profile'),{channel:'msedge',headless:false,ignoreDefaultArgs:['--disable-extensions'],args:['--enable-unsafe-extension-debugging',`--disable-extensions-except=${extension}`,`--load-extension=${extension}`],viewport:{width:1440,height:900},locale:'ko-KR'});
+    await context.addInitScript(({origin})=>{
+      if(location.protocol!=='chrome-extension:')return;
+      const query=chrome.tabs.query.bind(chrome.tabs);
+      chrome.tabs.query=(options,...rest)=>options.active?query({url:origin+'/*'},...rest):query(options,...rest);
+    },{origin});
+    const page=context.pages()[0];await page.goto(origin);await page.locator('#tone').click();
+    const browserSession=await context.browser().newBrowserCDPSession();
+    const tabTargets=await browserSession.send('Target.getTargets',{filter:[{type:'tab'},{exclude:true}]});
+    const targetInfo=tabTargets.targetInfos.find(item=>item.url.startsWith(origin));
+    assert.ok(targetInfo,JSON.stringify(tabTargets));
+    await browserSession.send('Extensions.triggerAction',{id:extensionId,targetId:targetInfo.targetId});
+    const popup=await context.newPage();popup.on('console',message=>{if(message.type()==='warning'||message.type()==='error')console.log('popup:',message.text());});await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+    await popup.locator('#volumeApply:not([disabled])').waitFor();
+    const comments = await context.newPage();
+    await comments.route('https://www.youtube.com/**', route => route.fulfill({contentType:'text/html; charset=utf-8',body:fixture}));
+    await comments.goto('https://www.youtube.com/fixture-keywords');
+    await popup.locator('#keywordWords').fill('다음화');
+    await popup.locator('#keywordSave').click();
+    await comments.locator('#spoiler.kl-keyword-folded').waitFor();
+    assert.equal(await comments.locator('#reply').isVisible(), false);
+    assert.equal(await comments.locator('#safe #content-text').isVisible(), true);
+    const disclosure = comments.locator('#spoiler .kl-keyword-notice button');
+    await disclosure.click();
+    assert.equal(await comments.locator('#reply').isVisible(), true);
+    assert.equal(await disclosure.getAttribute('aria-expanded'), 'true');
+    await disclosure.press('Space');
+    await comments.locator('#spoiler.kl-keyword-folded').waitFor();
+    await comments.locator('#spoiler #content-text').evaluate(node => { node.textContent = '안전한 댓글'; });
+    await comments.waitForFunction(() => !document.querySelector('#spoiler').classList.contains('kl-keyword-folded'));
+    assert.equal(await comments.locator('#spoiler .kl-keyword-notice').count(), 0);
+    await comments.locator('#spoiler #content-text').evaluate(node => { node.textContent = '다음화 이야기'; });
+    await comments.locator('#spoiler.kl-keyword-folded').waitFor();
+    await popup.locator('#keywordEnabled').uncheck();
+    await comments.waitForFunction(() => !document.querySelector('#spoiler').classList.contains('kl-keyword-folded'));
+    await popup.locator('#keywordEnabled').check();
+    await comments.locator('#spoiler.kl-keyword-folded').waitFor();
+    await comments.screenshot({path:path.join(output,'keyword-comments.png'),fullPage:true});
+    for (const width of [390,320]) {
+      await comments.setViewportSize({width,height:720});
+      assert.equal(await comments.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Comment notice must fit narrow screens');
+      await comments.screenshot({path:path.join(output,`keyword-${width}.png`),fullPage:true});
+    }
+    await page.bringToFront();
+    await browserSession.send('Extensions.triggerAction',{id:extensionId,targetId:targetInfo.targetId});
+    await popup.locator('#siteVolumeNumber').fill('200');await popup.locator('#volumeApply').click();
+    await popup.waitForFunction(()=>!document.querySelector('#volumeApply').disabled);
+    const status=await popup.locator('#volumeStatus').innerText();console.log({status});
+    assert.ok(status.includes('200%')&&status.includes('조절 중'),status);
+    const targets=await browserSession.send('Target.getTargets');
+    const target=targets.targetInfos.find(item=>item.url===`chrome-extension://${extensionId}/features/volume-offscreen.html`);
+    assert.ok(target,'actual offscreen audio document must exist');
+    const {sessionId}=await browserSession.send('Target.attachToTarget',{targetId:target.targetId,flatten:false});
+    let requestId=0;const requests=new Map();
+    browserSession.on('Target.receivedMessageFromTarget',event=>{if(event.sessionId!==sessionId)return;const message=JSON.parse(event.message);if(message.id&&requests.has(message.id)){const handlers=requests.get(message.id);requests.delete(message.id);message.error?handlers.reject(message.error):handlers.resolve(message.result);}});
+    const evaluate=expression=>new Promise((resolve,reject)=>{const id=++requestId;requests.set(id,{resolve,reject});browserSession.send('Target.sendMessageToTarget',{sessionId,message:JSON.stringify({id,method:'Runtime.evaluate',params:{expression,awaitPromise:true,returnByValue:true}})}).catch(reject);});
+    const rms=async()=>{const result=await evaluate(`(async()=>{const session=[...globalThis.__volumeTest.values()][0];const analyser=session.context.createAnalyser();analyser.fftSize=2048;session.gain.connect(analyser);await new Promise(r=>setTimeout(r,200));const data=new Float32Array(2048);analyser.getFloatTimeDomainData(data);session.gain.disconnect(analyser);return Math.sqrt(data.reduce((sum,value)=>sum+value*value,0)/data.length)})()`);if(result.exceptionDetails)throw Error(result.exceptionDetails.text);return result.result.value;};
+    const boosted=await rms();
+    await popup.locator('#siteVolumeNumber').fill('100');await popup.locator('#volumeApply').click();await popup.waitForFunction(()=>!document.querySelector('#volumeApply').disabled);
+    const normal=await rms(),ratio=boosted/normal;
+    assert.ok(normal>0.001&&ratio>1.8&&ratio<2.2,JSON.stringify({normal,boosted,ratio}));
+    await popup.locator('#siteVolumeNumber').fill('50');await popup.locator('#volumeApply').click();
+    await popup.waitForFunction(()=>!document.querySelector('#volumeApply').disabled);
+    await popup.locator('#volumeStop').click();
+    await page.waitForFunction(()=>document.querySelector('#video').volume===.5);
+    const stopped = await evaluate('globalThis.__volumeTest.size');
+    assert.equal(stopped.result.value,0,'Stop must release every audio session');
+    await page.reload();
+    await page.waitForFunction(()=>document.querySelector('#video').volume===.5);
+    await page.locator('#video').evaluate(node => { const audio=document.createElement('audio');audio.id='lateAudio';document.body.append(audio); });
+    await page.waitForFunction(()=>document.querySelector('#lateAudio').volume===.5);
+    await popup.reload();await popup.locator('#volumeApply:not([disabled])').waitFor();
+    assert.equal(await popup.locator('#siteVolumeNumber').inputValue(),'50');
+    await popup.locator('#siteVolumeNumber').fill('301');await popup.locator('#volumeApply').click();
+    assert.ok((await popup.locator('#volumeStatus').innerText()).includes('300'));
+    const saved = await popup.evaluate(async origin => (await chrome.storage.local.get('volumeSites')).volumeSites[origin],origin);
+    assert.equal(saved,50,'Invalid input must not overwrite remembered volume');
+    await popup.locator('#base64Site').click();
+    await popup.waitForFunction(()=>!document.querySelector('#base64Site').disabled);
+    await popup.locator('#base64Site').click();
+    await popup.waitForFunction(()=>!document.querySelector('#base64Site').disabled);
+    assert.equal(await popup.evaluate(origin=>chrome.permissions.contains({origins:[origin.replace(/:\d+$/, '')+'/*']}),origin),true,'Turning Base64 off must retain volume permission');
+    await popup.reload();await popup.locator('#volumeApply:not([disabled])').waitFor();
+    await popup.setViewportSize({width:320,height:720});
+    assert.equal(await popup.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Popup must fit 320px');
+    await popup.locator('#siteVolumeNumber').focus();await popup.keyboard.press('Tab');
+    assert.equal(await popup.evaluate(()=>document.activeElement.id),'volumeApply');
+    await popup.screenshot({path:path.join(output,'volume-popup.png'),fullPage:true});
+    const touchSession=await context.newCDPSession(popup);
+    await touchSession.send('Emulation.setTouchEmulationEnabled',{enabled:true});
+    assert.equal(await popup.evaluate(()=>matchMedia('(pointer: coarse)').matches),true);
+    for (const id of ['volumeApply','siteVolumeRange','siteVolumeNumber','keywordSave']) {
+      assert.ok(await popup.locator('#'+id).evaluate(node=>node.getBoundingClientRect().height)>=44,`${id} touch target must be 44px`);
+    }
+    const result={browser:'Edge',normalRms:normal,boostedRms:boosted,ratio,actualTabCapture:true,keywordFoldExpandKeyboardReuseToggle:true,volumeRememberReloadDynamicMedia:true,stopReleasedAudio:true,invalidInputPreservesValue:true,sharedBase64VolumePermission:true,popup320Keyboard:true,permissionDialog:'pregranted in isolated fixture',action:'Extensions.triggerAction in disposable Edge profile only',popup:'full-page popup view, fixture active tab query'};
+    fs.writeFileSync(path.join(output,'result.json'),JSON.stringify(result,null,2));console.log(result);
+  } catch(error) {
+    fs.writeFileSync(path.join(output,'failure.json'),JSON.stringify({message:error.message,stack:error.stack},null,2));
+    throw error;
+  } finally {await context?.close();await new Promise(resolve=>server.close(resolve));fs.rmSync(tmp,{recursive:true,force:true,maxRetries:6,retryDelay:200});}
+})().catch(error=>{console.error(error);process.exitCode=1;});

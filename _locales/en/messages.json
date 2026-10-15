@@ -56,5 +56,27 @@
   "shortsCountBoth": { "message": "$UNIQUE$ videos / $VIEWS$ views today", "placeholders": { "unique": { "content": "$1" }, "views": { "content": "$2" } } },
   "popupFooter": {
     "message": "lab.mascari4615.com"
-  }
+  },
+  "keywordHeading": { "message": "Hide comment keywords" },
+  "keywordEnabled": { "message": "Collapse comments containing these keywords" },
+  "keywordWordsLabel": { "message": "One per line, up to 200" },
+  "keywordSave": { "message": "Save keywords" },
+  "keywordSaved": { "message": "Saved. Open YouTube pages update immediately." },
+  "keywordError": { "message": "Could not read or save settings. Use up to 200 keywords, each at most 200 characters." },
+  "keywordFolded": { "message": "Comment collapsed by keyword" },
+  "keywordShow": { "message": "Show comment" },
+  "keywordHide": { "message": "Collapse again" },
+  "volumeHeading": { "message": "Volume for this site" },
+  "volumeValue": { "message": "Site volume, percent" },
+  "volumeLoading": { "message": "Checking site volume" },
+  "volumeApply": { "message": "Apply to this site" },
+  "volumeStop": { "message": "Stop boosting this tab" },
+  "volumeHint": { "message": "0-300%. Video/audio volume up to 100% restores on future visits. Above 100% needs one activation per new tab. Audio is never recorded or uploaded." },
+  "volumeActive": { "message": "Volume active in this tab" },
+  "volumeSaved": { "message": "Remembered for this site" },
+  "volumeNeedsActivation": { "message": "Saved; activate in this tab" },
+  "volumeUnsupported": { "message": "Open the popup on a regular webpage." },
+  "volumeRangeError": { "message": "Enter a volume between 0 and 300." },
+  "volumeDenied": { "message": "Site or audio permission was not granted." },
+  "volumeError": { "message": "Could not apply volume. Reopen the popup on this tab and try again." }
 }

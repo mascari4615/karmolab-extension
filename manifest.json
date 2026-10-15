@@ -11,15 +11,17 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "permissions": ["storage", "activeTab", "scripting", "alarms"],
+  "permissions": ["storage", "activeTab", "scripting", "offscreen", "alarms"],
+  "optional_permissions": ["tabCapture"],
+  "minimum_chrome_version": "116",
   "background": { "service_worker": "dev/reload-worker.mjs", "type": "module" },
   "optional_host_permissions": ["https://*/*", "http://*/*"],
   "host_permissions": ["https://www.youtube.com/*", "http://127.0.0.1/*"],
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["features/shorts-count.js", "features/shorts-date.js", "features/user-block.js"],
-      "css": ["features/shorts-date.css", "features/user-block.css"],
+      "js": ["features/shorts-count.js", "features/shorts-date.js", "features/user-block.js", "features/keyword-core.js", "features/keyword-comments.js"],
+      "css": ["features/shorts-date.css", "features/user-block.css", "features/keyword-comments.css"],
       "run_at": "document_idle"
     }
   ],

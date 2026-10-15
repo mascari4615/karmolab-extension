@@ -22,7 +22,7 @@ if (require.main === module) (async () => {
   const tmp = mkdtempSync(path.join(os.tmpdir(), 'kl-count-'));
   const extension = path.join(tmp, 'extension');
   mkdirSync(extension); mkdirSync(output, { recursive: true });
-  for (const file of ['features', 'dev', '_locales', 'icons', 'popup.html', 'popup.js']) cpSync(path.join(root, file), path.join(extension, file), { recursive: true });
+  for (const file of ['features', 'dev', 'background.mjs', '_locales', 'icons', 'popup.html', 'popup.js']) cpSync(path.join(root, file), path.join(extension, file), { recursive: true });
   const manifest = JSON.parse(readFileSync(path.join(root, 'manifest.json'), 'utf8'));
   const publicKey = generateKeyPairSync('rsa', { modulusLength: 2048 }).publicKey.export({ format: 'der', type: 'spki' });
   manifest.key = publicKey.toString('base64');

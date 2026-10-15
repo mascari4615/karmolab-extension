@@ -89,8 +89,9 @@ base64Button.addEventListener('click', async () => {
     if (base64Active) {
       if ((await chrome.scripting.getRegisteredContentScripts({ ids: [id] })).length) await chrome.scripting.unregisterContentScripts({ ids: [id] });
       await chrome.storage.local.set({ base64Sites: base64Sites.filter(site => site !== base64Pattern) });
-      // YouTube's required permission is shared by the existing features.
-      if (base64Pattern !== 'https://www.youtube.com/*') await chrome.permissions.remove({ origins: [base64Pattern] });
+      // Volume memory and YouTube may still need this shared host permission.
+      const volumeUsesSite = (await chrome.scripting.getRegisteredContentScripts()).some(script => script.id.startsWith('volume-') && script.matches.includes(base64Pattern));
+      if (base64Pattern !== 'https://www.youtube.com/*' && !volumeUsesSite) await chrome.permissions.remove({ origins: [base64Pattern] });
     } else {
       const registered = await chrome.scripting.getRegisteredContentScripts({ ids: [id] });
       if (!registered.length) await chrome.scripting.registerContentScripts([{
@@ -107,6 +108,27 @@ base64Button.addEventListener('click', async () => {
   finally { base64Button.disabled = false; }
 });
 renderBase64();
+
+const keywordBox = document.getElementById('keywordEnabled'), keywordWords = document.getElementById('keywordWords'), keywordSave = document.getElementById('keywordSave'), keywordStatus = document.getElementById('keywordStatus');
+chrome.storage.local.get({ keywordWords: [], keywordEnabled: true }).then(values => {
+  keywordBox.checked = values.keywordEnabled !== false; keywordWords.value = values.keywordWords.join('\n');
+  keywordBox.disabled = keywordWords.disabled = keywordSave.disabled = false;
+}).catch(() => { keywordStatus.textContent = message('keywordError'); });
+keywordBox.addEventListener('change', async () => {
+  keywordBox.disabled = true;
+  try { await chrome.storage.local.set({ keywordEnabled: keywordBox.checked }); keywordStatus.textContent = ''; }
+  catch { keywordBox.checked = !keywordBox.checked; keywordStatus.textContent = message('keywordError'); }
+  finally { keywordBox.disabled = false; }
+});
+keywordSave.addEventListener('click', async () => {
+  keywordSave.disabled = true;
+  try {
+    const words = KarmoKeywords.parse(keywordWords.value);
+    await chrome.storage.local.set({ keywordWords: words, keywordEnabled: keywordBox.checked });
+    keywordWords.value = words.join('\n'); keywordStatus.textContent = message('keywordSaved');
+  } catch { keywordStatus.textContent = message('keywordError'); }
+  finally { keywordSave.disabled = false; }
+});
 
 const countBox = document.getElementById('shortsCount');
 const countMode = document.getElementById('shortsCountMode');

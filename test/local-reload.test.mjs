@@ -9,7 +9,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 test('store manifest excludes local receiver and development permissions', () => {
   const source = JSON.parse(readFileSync(new URL('../manifest.json', import.meta.url)));
   const packed = storeManifest(source);
-  assert.equal(packed.background, undefined);
+  assert.deepEqual(packed.background, { service_worker: 'background.mjs', type: 'module' });
   assert.ok(!packed.permissions.includes('alarms'));
   assert.ok(!packed.host_permissions.includes('http://127.0.0.1/*'));
   assert.ok(packed.content_scripts.every(item => item.js.every(file => !file.startsWith('dev/'))));

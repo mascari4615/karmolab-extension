@@ -1,0 +1,7 @@
+.kl-keyword-folded > :not(.kl-keyword-notice) { display: none !important; }
+.kl-keyword-notice { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0; padding: 8px 12px; border: 1px solid #666; border-radius: 8px; color: #555; font: 13px/1.4 Roboto, Arial, sans-serif; }
+.kl-keyword-notice button { border: 0; background: transparent; color: #333; padding: 8px; min-height: 36px; font: 500 13px/1.4 Roboto, Arial, sans-serif; cursor: pointer; }
+.kl-keyword-notice button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+html[dark] .kl-keyword-notice { color: #bbb; border-color: #666; }
+html[dark] .kl-keyword-notice button { color: #fff; }
+@media (pointer: coarse) { .kl-keyword-notice button { min-height: 44px; } }

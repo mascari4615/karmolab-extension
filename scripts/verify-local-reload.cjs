@@ -13,7 +13,7 @@ const { pathToFileURL } = require('node:url');
   const extension = path.join(tmp, 'extension');
   const output = process.env.VERIFY_OUTPUT || path.join(root, 'dist/verify-local-reload');
   mkdirSync(extension); mkdirSync(output, { recursive: true });
-  for (const file of ['features', 'dev', '_locales', 'icons', 'popup.html', 'popup.js', 'manifest.json']) cpSync(path.join(root, file), path.join(extension, file), { recursive: true });
+  for (const file of ['features', 'dev', 'background.mjs', '_locales', 'icons', 'popup.html', 'popup.js', 'manifest.json']) cpSync(path.join(root, file), path.join(extension, file), { recursive: true });
   const manifest = JSON.parse(readFileSync(path.join(extension, 'manifest.json'), 'utf8'));
   const key = generateKeyPairSync('rsa', { modulusLength: 2048 }).publicKey.export({ format: 'der', type: 'spki' });
   manifest.key = key.toString('base64');

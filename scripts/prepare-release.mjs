@@ -34,7 +34,7 @@ function main() {
     release = validateVersionChange(manifest.version, before.version);
   }
   execFileSync(process.execPath, ['--test'], { stdio: 'inherit' });
-  for (const script of ['popup.js', ...readdirSync('features').filter(file => file.endsWith('.js')).map(file => `features/${file}`)]) {
+  for (const script of ['popup.js', 'background.mjs', ...readdirSync('features').filter(file => /\.(js|mjs)$/.test(file)).map(file => `features/${file}`)]) {
     execFileSync(process.execPath, ['--check', script], { stdio: 'inherit' });
   }
   for (const script of ['dev/reload-worker.mjs', 'dev/build.mjs', 'scripts/reload-local.mjs']) execFileSync(process.execPath, ['--check', script], { stdio: 'inherit' });

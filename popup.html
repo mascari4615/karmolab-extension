@@ -30,10 +30,27 @@
     .count-settings label:has(input) { min-height: 28px; align-items: center; }
     select { padding: 7px 8px; border: 1px solid #777; border-radius: 4px; background: #111; color: #fff; font: inherit; }
     #shortsCountStatus { color: #bbb; font-size: 12px; margin: 6px 0; }
+    .utility { padding-top: 12px; }
+    .utility label { padding: 8px 0; min-height: 28px; align-items: center; }
+    .utility p { font-size: 12px; color: #bbb; margin: 8px 0; overflow-wrap: anywhere; }
+    .volume-row { display: flex; align-items: center; gap: 8px; }
+    .volume-row input[type="range"] { flex: 1; min-width: 0; min-height: 36px; accent-color: #fff; }
+    input[type="number"] { width: 55px; padding: 6px; background: #111; color: #fff; border: 1px solid #777; font: inherit; }
+    .utility button { border-radius: 4px; min-height: 36px; }
+    .utility .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    textarea { width: 100%; box-sizing: border-box; min-height: 80px; padding: 8px; border: 1px solid #777; border-radius: 4px; background: #111; color: #fff; font: inherit; resize: vertical; }
+    @media (pointer: coarse) { .utility button, .volume-row input, .volume-row input[type="range"] { min-height: 44px; } }
   </style>
 </head>
 <body>
   <header><img src="icons/icon-32.png" alt=""><b>KarmoLab</b></header>
+  <section class="utility" aria-labelledby="volumeHeading">
+    <h2 id="volumeHeading" data-msg="volumeHeading"></h2>
+    <div class="volume-row"><input id="siteVolumeRange" type="range" min="0" max="300" step="5" value="100" disabled data-msg-label="volumeValue"><input id="siteVolumeNumber" type="number" min="0" max="300" step="1" value="100" disabled data-msg-label="volumeValue"><span>%</span></div>
+    <p id="volumeStatus" role="status" data-msg="volumeLoading"></p>
+    <div class="actions"><button id="volumeApply" type="button" disabled data-msg="volumeApply"></button><button id="volumeStop" type="button" hidden data-msg="volumeStop"></button></div>
+    <p data-msg="volumeHint"></p>
+  </section>
   <section aria-labelledby="base64Heading">
     <h2 id="base64Heading" data-msg="featBase64"></h2>
     <small data-msg="featBase64Hint"></small>
@@ -62,12 +79,22 @@
     <label><input type="checkbox" id="shortsWatchTime" disabled><span data-msg="shortsWatchTimeDisplay"></span></label>
     <p id="shortsCountStatus" role="status"></p>
   </section>
+  <section class="utility" aria-labelledby="keywordHeading">
+    <h2 id="keywordHeading" data-msg="keywordHeading"></h2>
+    <label><input id="keywordEnabled" type="checkbox" disabled><span data-msg="keywordEnabled"></span></label>
+    <label for="keywordWords" data-msg="keywordWordsLabel"></label>
+    <textarea id="keywordWords" rows="3" maxlength="40200" disabled></textarea>
+    <button id="keywordSave" type="button" disabled data-msg="keywordSave"></button>
+    <p id="keywordStatus" role="status"></p>
+  </section>
   <section aria-labelledby="blockHeading">
     <h2 id="blockHeading" data-msg="blockedUsers"></h2>
     <p id="blockStatus" role="status" data-msg="blockLoading"></p>
     <ul id="blockedList"></ul>
   </section>
   <footer><a href="https://lab.mascari4615.com/" target="_blank" data-msg="popupFooter"></a></footer>
+  <script src="features/keyword-core.js"></script>
   <script src="popup.js"></script>
+  <script type="module" src="features/volume-popup.mjs"></script>
 </body>
 </html>
