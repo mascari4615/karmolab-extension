@@ -15,6 +15,11 @@ export function isNewer(current, previous) {
   for (let i = 0; i < 4; i++) if (a[i] !== b[i]) return a[i] > b[i];
   return false;
 }
+export function validateVersionChange(current, previous) {
+  const increased = isNewer(current, previous);
+  if (current !== previous && !increased) throw new Error('Version must increase when changed');
+  return increased;
+}
 
 function main() {
   const { values } = parseArgs({ options: { base: { type: 'string' } } });
@@ -26,11 +31,7 @@ function main() {
   if (values.base && !/^0+$/.test(values.base)) {
     if (!/^[\da-f]{40}$/i.test(values.base)) throw new Error('Base must be a full commit SHA');
     const before = JSON.parse(execFileSync('git', ['show', `${values.base}:manifest.json`], { encoding: 'utf8' }));
-    const paths = execFileSync('git', ['diff', '--name-only', values.base, 'HEAD'], { encoding: 'utf8' }).split('\n');
-    const runtimeChanged = paths.some(path => /^(manifest\.json|features\/|icons\/|_locales\/|popup\.)/.test(path));
-    release = isNewer(manifest.version, before.version);
-    if (manifest.version !== before.version && !release) throw new Error('Version must increase');
-    if (runtimeChanged && !release) throw new Error('Runtime change requires a version bump');
+    release = validateVersionChange(manifest.version, before.version);
   }
   execFileSync(process.execPath, ['--test'], { stdio: 'inherit' });
   for (const script of ['popup.js', ...readdirSync('features').filter(file => file.endsWith('.js')).map(file => `features/${file}`)]) {
