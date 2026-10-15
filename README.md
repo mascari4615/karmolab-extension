@@ -41,6 +41,7 @@ main에 버전 증가가 반영되면 GitHub Actions가 같은 zip을 Chrome과 
 - Chrome secrets: `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN`. variables: `CWS_PUBLISHER_ID`, `CWS_EXTENSION_ID`.
 - 수동 실행: workflow action `package`는 검사만, `submit`은 제출, `status`는 조회. 제출 대상 기본값 `both`.
 - 재개: 이전 workflow run의 receipt를 `resume_run`으로 복원. 불명확한 POST 결과는 재전송 없이 먼저 상태 확인.
+- Edge 작업 상태 조회의 HTTP 200/202 모두 처리. 저장된 작업 ID로 재개해 같은 ZIP 재업로드 방지.
 - 새 등록, 메타데이터 변경, 최초 공개에 필요한 항목은 스토어 대시보드에서 설정. 키는 소스, zip, 로그에 담지 않음.
 
 ## 스토어 문구

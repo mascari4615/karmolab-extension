@@ -10,7 +10,7 @@ export function requireEnv(env, names) {
 export function createStoreApi({ fetcher = fetch, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)), attempts = 24, delayMs = 5000 } = {}) {
   async function request(url, options = {}, expected = 200) {
     const response = await fetcher(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(30000) });
-    if (response.status !== expected) throw new Error(`Store request failed: HTTP ${response.status}`);
+    if (!(Array.isArray(expected) ? expected : [expected]).includes(response.status)) throw new Error(`Store request failed: HTTP ${response.status}`);
     return response;
   }
   async function poll(read, field, success, inProgress) {
@@ -35,7 +35,7 @@ export function createStoreApi({ fetcher = fetch, sleep = ms => new Promise(reso
     const headers = { Authorization: `ApiKey ${env.EDGE_API_KEY}`, 'X-ClientID': env.EDGE_CLIENT_ID };
     const read = async (kind, id) => {
       if (!GUID.test(id)) throw new Error('Invalid Edge operation ID');
-      return (await request(`${base}/submissions/${kind === 'upload' ? 'draft/package/' : ''}operations/${id}`, { headers })).json();
+      return (await request(`${base}/submissions/${kind === 'upload' ? 'draft/package/' : ''}operations/${id}`, { headers }, [200, 202])).json();
     };
     return {
       read,

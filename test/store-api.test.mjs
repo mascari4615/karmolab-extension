@@ -41,6 +41,18 @@ test('Edge resume polls existing operation without duplicate upload or publish',
   await t.api.edge(edgeEnv).submit(Buffer.from('zip'), 'notes', receipt, () => {});
   assert.equal(t.calls.every(c => !c.options.method), true);
 });
+
+test('Edge status reads accept HTTP 202 during upload and publication without repeating POST', async () => {
+  const t = transport([
+    response({ status: 'InProgress' }, 202), response(ok, 202),
+    response({ status: 'InProgress' }, 202), response(ok, 202),
+  ]);
+  const receipt = { uploadOperationId: uploadId, publishOperationId: publishId };
+  await t.api.edge(edgeEnv).submit(Buffer.from('zip'), 'notes', receipt, () => {});
+  assert.equal(receipt.status, 'SUBMISSION_ACCEPTED');
+  assert.equal(t.calls.length, 4);
+  assert.equal(t.calls.every(call => !call.options.method), true);
+});
 test('Edge response loss does not retry mutation', async () => {
   const t = transport([new Error('network interrupted')]); const receipt = {};
   await assert.rejects(t.api.edge(edgeEnv).submit(Buffer.from('zip'), 'notes', receipt, () => {}));
