@@ -1,0 +1,5 @@
+Added YouTube user blocking. Click Block beside a comment author or the channel on a watch/Shorts page, then confirm. Videos, Shorts cards and comments from that channel are hidden in this browser. A blocked video opened directly is covered and paused. Unblock in the extension popup to restore content; the feature checkbox temporarily disables filtering without deleting the list.
+
+Review steps: Open a public YouTube video with comments, click Block beside a comment author, confirm, and check that their comment disappears. Open the extension popup, verify the saved user, then click Unblock and verify the comment returns. Search for the blocked channel to check video filtering. Shorts upload dates remain available independently.
+
+No new permissions. Blocked channel IDs and names are stored locally in the browser, not synchronized or sent to our servers. Public YouTube channel/video metadata requests omit cookies. This hides content in the browser; it does not block users in the YouTube account. Unsupported layouts or unavailable public metadata may remain visible.

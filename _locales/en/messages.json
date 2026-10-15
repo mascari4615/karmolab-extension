@@ -3,7 +3,7 @@
     "message": "KarmoLab"
   },
   "extDescription": {
-    "message": "Shows the upload date on YouTube Shorts as you scroll."
+    "message": "Show YouTube Shorts dates and hide videos, Shorts and comments from unwanted channels."
   },
   "featShortsDate": {
     "message": "Show Shorts upload date"
@@ -11,6 +11,19 @@
   "featShortsDateHint": {
     "message": "The date appears to the left of each Short."
   },
+  "featUserBlock": { "message": "Block YouTube users" },
+  "featUserBlockHint": { "message": "Block beside a comment author or video channel. Hide their videos, Shorts and comments." },
+  "blockedUsers": { "message": "Blocked users" },
+  "blockLoading": { "message": "Loading blocked users..." },
+  "blockEmpty": { "message": "No blocked users. Use Block beside a YouTube comment author." },
+  "blockLocalHint": { "message": "Saved in this browser only. Unblock to show hidden items again." },
+  "blockUser": { "message": "Block" },
+  "unblockUser": { "message": "Unblock" },
+  "blockConfirm": { "message": "Hide videos, Shorts and comments from $NAME$ in this browser? You can unblock them in the extension popup.", "placeholders": { "name": { "content": "$1" } } },
+  "blockRetry": { "message": "Retry block" },
+  "blockSaveError": { "message": "Could not save. Please try again." },
+  "blockLoadError": { "message": "Could not load blocked users. Reopen the extension popup." },
+  "blockedPlayback": { "message": "This channel is blocked. Move to another video or unblock it in the KarmoLab popup." },
   "popupFooter": {
     "message": "lab.mascari4615.com"
   }

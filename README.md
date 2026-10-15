@@ -8,8 +8,15 @@
 | 기능 | 파일 | 끄기 |
 | --- | --- | --- |
 | 쇼츠 올린 날짜 표시 | `features/shorts-date.js`, `.css` | 팝업 체크 (`chrome.storage.sync` 의 `shortsDate`) |
+| 사용자 차단: 영상, 쇼츠, 댓글 숨김 | `features/user-block.js`, `.css` | 팝업 체크, 차단 목록의 해제 (`chrome.storage.local`) |
 
 새 기능은 `features/` 에 파일 한 쌍, 팝업에 체크 하나, `_locales` 문구.
+
+댓글 작성자 또는 영상/쇼츠 채널 옆의 **차단** → 확인. 차단한 부모 댓글은 답글까지, 차단한 답글 작성자는 해당 답글만 숨김. 직접 연 차단 영상/쇼츠는 재생을 멈추고 안내 표시. 팝업의 **해제**로 복원. 유튜브 계정의 차단 설정과 별개이며, 목록은 이 브라우저에만 저장.
+
+표시 이름 대신 채널 핸들/ID로 구분. 공개 채널 페이지 조회 성공 시 둘을 연결. 작성자 링크가 없는 썸네일은 공개 영상 정보 조회, 동시 요청 최대 3개. 조회 실패, 미지원 레이아웃은 추측해서 숨기지 않음. 핸들 변경, 로그인 전용 콘텐츠, 라이브 채팅은 지원 보장 범위 밖.
+
+브라우저 검증: Playwright 설치 후 `node scripts/verify-user-block.cjs` (Edge, 격리된 DOM 시험), `node scripts/verify-user-block-live.cjs` (번들 Chromium, 실제 확장과 공개 유튜브). `PLAYWRIGHT_MODULE`로 모듈 경로, `VERIFY_OUTPUT`으로 캡처 경로 지정 가능. `VERIFY_MUTATION=1`은 차단 판정 제거 후 검사 실패 확인용. 실제 시험은 임시 프로필만 사용.
 
 ## 로컬로 써 보기
 
@@ -39,12 +46,12 @@ main에 버전 증가가 반영되면 GitHub Actions가 같은 zip을 Chrome과 
 ## 스토어 문구
 
 - 이름: KarmoLab
-- 짧은 설명 (ko): 유튜브 쇼츠를 넘길 때 영상 올린 날짜를 표시합니다.
-- 짧은 설명 (en): Shows the upload date on YouTube Shorts as you scroll.
+- 짧은 설명 (ko): 유튜브 쇼츠 날짜 표시와 원치 않는 채널의 영상, 쇼츠, 댓글 숨김.
+- 짧은 설명 (en): Show YouTube Shorts dates and hide videos, Shorts and comments from unwanted channels.
 - 분류: 도구 (Tools)
 - 권한 사유
-  - `storage`: 기능 켜고 끄기 설정 저장
-  - `www.youtube.com`: 쇼츠 화면에 날짜 표시, 유튜브에서 그 영상의 공개 날짜 조회
+  - `storage`: 기능 설정과 브라우저 내 차단 목록 저장
+  - `www.youtube.com`: 쇼츠 날짜 표시, 채널/영상 공개 정보 조회, 차단 버튼과 콘텐츠 숨김
 - 개인정보: 수집하는 사용자 데이터 없음. 날짜 조회 요청에 쿠키를 싣지 않는다 (`credentials: "omit"`)
 - 원격 코드: 없음
 
@@ -52,4 +59,6 @@ main에 버전 증가가 반영되면 GitHub Actions가 같은 zip을 Chrome과 
 
 - 수집하거나 보내는 사용자 데이터 없음
 - 날짜 조회는 유튜브의 공개 영상 정보에서, 쿠키 없이 (`credentials: "omit"`)
-- 저장하는 것은 기능 켜고 끄기 설정 하나 (`chrome.storage.sync`)
+- 쇼츠 날짜 설정은 `chrome.storage.sync`, 차단 설정, 채널 ID, 이름은 `chrome.storage.local`
+- 공개 채널/영상 정보 조회에 쿠키 제외. 차단 목록을 외부 서버에 보내지 않음
+- 확장 삭제 시 로컬 차단 목록 삭제

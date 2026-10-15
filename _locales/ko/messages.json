@@ -3,7 +3,7 @@
     "message": "KarmoLab"
   },
   "extDescription": {
-    "message": "유튜브 쇼츠를 넘길 때 영상 올린 날짜를 표시합니다."
+    "message": "유튜브 쇼츠 날짜 표시와 원치 않는 채널의 영상, 쇼츠, 댓글 숨김."
   },
   "featShortsDate": {
     "message": "쇼츠 올린 날짜 표시"
@@ -11,6 +11,19 @@
   "featShortsDateHint": {
     "message": "쇼츠 영상 왼쪽에 날짜가 나옵니다."
   },
+  "featUserBlock": { "message": "유튜브 사용자 차단" },
+  "featUserBlockHint": { "message": "댓글 작성자나 영상 채널 옆에서 차단. 영상, 쇼츠, 댓글을 숨깁니다." },
+  "blockedUsers": { "message": "차단한 사용자" },
+  "blockLoading": { "message": "차단 목록 읽는 중" },
+  "blockEmpty": { "message": "차단한 사용자 없음. 유튜브 댓글 작성자 옆의 차단 버튼을 누르세요." },
+  "blockLocalHint": { "message": "이 브라우저에만 저장. 해제하면 숨긴 항목이 다시 나타납니다." },
+  "blockUser": { "message": "차단" },
+  "unblockUser": { "message": "해제" },
+  "blockConfirm": { "message": "$NAME$ 사용자의 영상, 쇼츠, 댓글을 이 브라우저에서 숨길까요? 확장 팝업에서 해제할 수 있습니다.", "placeholders": { "name": { "content": "$1" } } },
+  "blockRetry": { "message": "차단 재시도" },
+  "blockSaveError": { "message": "저장하지 못했습니다. 다시 시도해 주세요." },
+  "blockLoadError": { "message": "차단 목록을 불러오지 못했습니다. 확장 팝업을 다시 열어 주세요." },
+  "blockedPlayback": { "message": "차단한 채널의 영상입니다. 다른 영상으로 이동하거나 KarmoLab 팝업에서 차단을 해제하세요." },
   "popupFooter": {
     "message": "lab.mascari4615.com"
   }

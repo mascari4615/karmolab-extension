@@ -1,0 +1,8 @@
+.kl-block-hidden { display: none !important; }
+.kl-block-button { color: var(--yt-spec-text-secondary, #666); background: transparent; border: 1px solid currentColor; border-radius: 2px; font: 12px/1.4 Roboto, Arial, sans-serif; padding: 4px 8px; margin-inline-start: 8px; cursor: pointer; vertical-align: middle; }
+.kl-block-button:hover { color: var(--yt-spec-text-primary, #111); background: var(--yt-spec-badge-chip-background, #eee); }
+.kl-block-button:focus-visible { outline: 2px solid var(--yt-spec-call-to-action, #065fd4); outline-offset: 2px; }
+.kl-block-button:disabled { opacity: .6; cursor: wait; }
+.kl-block-playback { position: relative !important; }
+.kl-block-playback > :not(.kl-block-notice) { visibility: hidden !important; }
+.kl-block-notice { position: absolute; inset: 0; z-index: 20; display: grid; place-content: center; padding: 24px; background: #000; color: #fff; text-align: center; font: 16px/1.6 Roboto, Arial, sans-serif; }
