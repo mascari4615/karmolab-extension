@@ -8,6 +8,18 @@
   const pending = new Set();
   let walker = null;
   let cursor = null;
+  let nextId = 0;
+  function icon(paths) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    for (const d of paths) {
+      const path = document.createElementNS(svg.namespaceURI, 'path');
+      path.setAttribute('d', d);
+      svg.append(path);
+    }
+    return svg;
+  }
 
   function linkify(node) {
     if (!node.isConnected || !node.parentElement || node.parentElement.closest(excluded)) return;
@@ -21,7 +33,11 @@
       fragment.append(text.slice(offset, link.start));
       const entry = document.createElement('span');
       entry.className = 'kl-base64-entry';
-      entry.append(link.token);
+      const original = document.createElement('span');
+      original.className = 'kl-base64-original';
+      original.textContent = link.token;
+      original.hidden = true;
+      original.id = 'kl-base64-original-' + ++nextId;
       const anchor = document.createElement('a');
       anchor.className = 'kl-base64-link';
       anchor.href = link.href;
@@ -29,9 +45,31 @@
       anchor.rel = 'noopener noreferrer';
       anchor.referrerPolicy = 'no-referrer';
       anchor.title = link.href;
-      anchor.textContent = chrome.i18n.getMessage('base64Open', link.hostname);
+      anchor.append(icon(['M10 13a5 5 0 0 0 7 .1l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7', 'M14 11a5 5 0 0 0-7-.1l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7']));
+      const domain = document.createElement('span');
+      domain.textContent = link.hostname;
+      anchor.append(domain);
       anchor.setAttribute('aria-label', chrome.i18n.getMessage('base64Open', link.href));
-      entry.append(anchor);
+      const reveal = document.createElement('button');
+      reveal.type = 'button';
+      reveal.className = 'kl-base64-reveal';
+      reveal.setAttribute('aria-expanded', 'false');
+      reveal.setAttribute('aria-controls', original.id);
+      reveal.setAttribute('aria-label', chrome.i18n.getMessage('base64ShowOriginal'));
+      reveal.title = chrome.i18n.getMessage('base64ShowOriginal');
+      reveal.append(icon(['m8 10 4 4 4-4']));
+      reveal.addEventListener('click', event => {
+        event.stopPropagation();
+        original.hidden = !original.hidden;
+        reveal.setAttribute('aria-expanded', String(!original.hidden));
+        const label = chrome.i18n.getMessage(original.hidden ? 'base64ShowOriginal' : 'base64HideOriginal');
+        reveal.setAttribute('aria-label', label);
+        reveal.title = label;
+      });
+      const target = document.createElement('span');
+      target.className = 'kl-base64-target';
+      target.append(anchor, reveal);
+      entry.append(target, original);
       fragment.append(entry);
       offset = link.start + link.token.length;
     }
@@ -88,7 +126,9 @@
       observer.observe(document.body, { childList: true, characterData: true, subtree: true });
       enqueue(document.body);
     } else {
-      for (const entry of document.querySelectorAll('.kl-base64-entry')) entry.replaceWith(entry.firstChild);
+      for (const entry of document.querySelectorAll('.kl-base64-entry')) {
+        entry.replaceWith(document.createTextNode(entry.querySelector('.kl-base64-original').textContent));
+      }
     }
   }
   chrome.storage.onChanged.addListener((changes, area) => {

@@ -37,6 +37,7 @@ body { margin:24px; max-width:680px; font:16px/1.8 system-ui; color:#222; backgr
       channel: 'chromium', headless: true, locale: 'ko-KR',
       args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`],
       viewport: { width: 1440, height: 900 },
+      hasTouch: process.env.VERIFY_TOUCH === '1',
     });
     const page = context.pages()[0];
     page.setDefaultTimeout(15000);
@@ -57,6 +58,26 @@ body { margin:24px; max-width:680px; font:16px/1.8 system-ui; color:#222; backgr
     assert.equal(await page.locator('#initial .kl-base64-link').count(), 2);
     assert.equal(await page.locator('#initial .kl-base64-link').first().getAttribute('href'), 'https://example.com/path?q=%ED%95%9C%EA%B8%80');
     assert.ok((await page.locator('#initial').textContent()).includes(token));
+    const source = page.locator('#initial .kl-base64-original').first();
+    const reveal = page.locator('#initial .kl-base64-reveal').first();
+    assert.equal(await source.isVisible(), false, 'source collapsed by default');
+    assert.equal(await page.locator('#initial .kl-base64-link').first().innerText(), 'example.com');
+    await page.locator('#initial .kl-base64-link').first().focus();
+    await page.keyboard.press('Tab');
+    assert.equal(await reveal.evaluate(button => button === document.activeElement), true);
+    await page.keyboard.press('Enter');
+    assert.equal(await source.isVisible(), true);
+    assert.equal(await source.textContent(), token);
+    await page.screenshot({ path: path.join(output, 'source-expanded.png') });
+    await page.keyboard.press('Space');
+    assert.equal(await source.isVisible(), false);
+    if (process.env.VERIFY_TOUCH === '1') {
+      assert.equal(await reveal.evaluate(el => el.getBoundingClientRect().height), 40);
+      await reveal.tap();
+      assert.equal(await source.isVisible(), true);
+      await reveal.tap();
+      assert.equal(await source.isVisible(), false);
+    }
     for (const selector of ['textarea', '[contenteditable]', 'pre', '#existing', '#unsafe']) assert.equal(await page.locator(selector + ' .kl-base64-link').count(), 0);
     await page.evaluate(token => { const p = document.createElement('p'); p.textContent = token; document.querySelector('#dynamic').append(p); }, token);
     await page.locator('#dynamic .kl-base64-link').waitFor();
@@ -91,7 +112,7 @@ body { margin:24px; max-width:680px; font:16px/1.8 system-ui; color:#222; backgr
     await page.reload();
     assert.equal(await page.locator('.kl-base64-link').count(), 0);
     assert.deepEqual(errors, []);
-    const result = { status: 'PASS', extension: manifest.version, fixtureHostPreGranted: true, nativePermissionPrompt: 'not tested', initialLinks: 2, dynamic: true, cleanup: true, originalText: true, excludedEditors: true, noPrefetch: true, keyboard: true, viewports: [1440, 390, 320] };
+    const result = { status: 'PASS', extension: manifest.version, fixtureHostPreGranted: true, nativePermissionPrompt: 'not tested', initialLinks: 2, dynamic: true, cleanup: true, originalText: true, excludedEditors: true, noPrefetch: true, keyboard: true, sourceDisclosure: true, touch: process.env.VERIFY_TOUCH === '1', viewports: [1440, 390, 320] };
     writeFileSync(path.join(output, 'result.json'), JSON.stringify(result, null, 2));
     console.log(result);
   } finally {

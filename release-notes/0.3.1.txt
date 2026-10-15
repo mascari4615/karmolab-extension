@@ -1,0 +1,4 @@
+Local development build. No store submission requested.
+Base64 links now blend into page typography with a small link icon and destination domain.
+Encoded source is preserved in an accessible disclosure beside the link, collapsed by default.
+Test keyboard and touch disclosure, source selection, dynamic content, and disable restoring the original text.

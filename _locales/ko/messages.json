@@ -3,7 +3,7 @@
     "message": "KarmoLab"
   },
   "extDescription": {
-    "message": "유튜브 쇼츠 날짜 표시와 원치 않는 채널의 영상, 쇼츠, 댓글 숨김."
+    "message": "유튜브 쇼츠 날짜, 사용자 차단과 Base64 웹 주소 링크 찾기."
   },
   "featShortsDate": {
     "message": "쇼츠 올린 날짜 표시"
@@ -27,7 +27,7 @@
   "blockLoadError": { "message": "차단 목록을 불러오지 못했습니다. 확장 팝업을 다시 열어 주세요." },
   "blockedPlayback": { "message": "차단한 채널의 영상입니다. 다른 영상으로 이동하거나 KarmoLab 팝업에서 차단을 해제하세요." },
   "featBase64": { "message": "Base64 링크 찾기" },
-  "featBase64Hint": { "message": "원문 옆에 목적지 링크 표시. 이 사이트의 본문과 댓글만 읽으며 외부로 보내지 않습니다." },
+  "featBase64Hint": { "message": "목적지 링크로 표시하고 화살표로 원문 보기. 이 사이트의 본문과 댓글만 읽으며 외부로 보내지 않습니다." },
   "base64Loading": { "message": "현재 사이트 확인 중" },
   "base64Enable": { "message": "이 사이트에서 켜기" },
   "base64Disable": { "message": "이 사이트에서 끄기" },
@@ -37,6 +37,8 @@
   "base64Denied": { "message": "사이트 접근이 허용되지 않았습니다. 필요할 때 다시 켜 주세요." },
   "base64Error": { "message": "사이트 설정을 적용하지 못했습니다. 페이지를 새로고침하고 다시 시도해 주세요." },
   "base64Open": { "message": "$DOMAIN$ 열기", "placeholders": { "domain": { "content": "$1" } } },
+  "base64ShowOriginal": { "message": "Base64 원문 보기" },
+  "base64HideOriginal": { "message": "Base64 원문 접기" },
   "popupFooter": {
     "message": "lab.mascari4615.com"
   }
