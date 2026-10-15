@@ -10,7 +10,7 @@ const output = process.env.VERIFY_OUTPUT || path.join(root, 'dist', 'verify-user
   mkdirSync(output, { recursive: true });
   const context = await chromium.launchPersistentContext(profile, {
     channel: 'chromium', headless: true, args: [`--disable-extensions-except=${root}`, `--load-extension=${root}`],
-    viewport: { width: 1440, height: 1000 }, locale: 'ko-KR',
+    viewport: { width: 1440, height: 1000 }, locale: 'ko-KR', colorScheme: 'dark',
   });
   try {
     const page = context.pages()[0];
@@ -19,8 +19,18 @@ const output = process.env.VERIFY_OUTPUT || path.join(root, 'dist', 'verify-user
     const button = page.locator('ytd-comment-view-model .kl-block-button').first();
     await button.waitFor({ timeout: 45000 });
     const author = await button.getAttribute('aria-label');
-    const comment = page.locator('ytd-comment-view-model').filter({ has: button });
+    const comment = button.locator('xpath=ancestor::ytd-comment-view-model[1]');
+    assert.equal(await comment.count(), 1, 'selected comment must exist before visibility assertions');
     await page.screenshot({ path: path.join(output, 'comment-before.png') });
+    await page.locator('#owner > .kl-block-button').waitFor();
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.screenshot({ path: path.join(output, 'comment-dark.png') });
+    await page.setViewportSize({ width: 800, height: 900 });
+    await button.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: path.join(output, 'comment-narrow.png') });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    assert.equal(await comment.locator('#header-author .kl-block-button').count(), 0);
+    assert.equal(await comment.locator('#action-buttons #toolbar > .kl-block-button').count(), 1);
     page.on('dialog', dialog => dialog.accept());
     await button.click();
     await page.waitForFunction(() => document.querySelector('.kl-block-hidden'));
@@ -59,6 +69,13 @@ const output = process.env.VERIFY_OUTPUT || path.join(root, 'dist', 'verify-user
     await page.goto('https://www.youtube.com' + shortHref, { waitUntil: 'domcontentloaded' });
     const shortButton = page.locator('ytd-reel-video-renderer .kl-block-button').filter({ visible: true }).first();
     await shortButton.waitFor();
+    await page.screenshot({ path: path.join(output, 'shorts-before.png') });
+    await page.setViewportSize({ width: 800, height: 900 });
+    await page.screenshot({ path: path.join(output, 'shorts-narrow.png') });
+    assert.equal(await shortButton.evaluate(button => {
+      const rect = button.getBoundingClientRect();
+      return rect.height >= 36 && rect.left >= 0 && rect.right <= innerWidth;
+    }), true, 'Shorts block remains readable and within narrow viewport');
     await shortButton.click();
     await page.locator('ytd-reel-video-renderer .kl-block-notice').filter({ visible: true }).first().waitFor();
     assert.equal(await page.locator('ytd-reel-video-renderer.kl-block-playback video').first().evaluate(video => video.paused), true);

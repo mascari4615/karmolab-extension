@@ -12,7 +12,7 @@
 
 새 기능은 `features/` 에 파일 한 쌍, 팝업에 체크 하나, `_locales` 문구.
 
-댓글 작성자 또는 영상/쇼츠 채널 옆의 **차단** → 확인. 차단한 부모 댓글은 답글까지, 차단한 답글 작성자는 해당 답글만 숨김. 직접 연 차단 영상/쇼츠는 재생을 멈추고 안내 표시. 팝업의 **해제**로 복원. 유튜브 계정의 차단 설정과 별개이며, 목록은 이 브라우저에만 저장.
+댓글의 좋아요/답글 줄 또는 영상/쇼츠의 구독 버튼 뒤 **차단** → 확인. 차단한 부모 댓글은 답글까지, 차단한 답글 작성자는 해당 답글만 숨김. 직접 연 차단 영상/쇼츠는 재생을 멈추고 안내 표시. 팝업의 **해제**로 복원. 유튜브 계정의 차단 설정과 별개이며, 목록은 이 브라우저에만 저장.
 
 표시 이름 대신 채널 핸들/ID로 구분. 공개 채널 페이지 조회 성공 시 둘을 연결. 작성자 링크가 없는 썸네일은 공개 영상 정보 조회, 동시 요청 최대 3개. 조회 실패, 미지원 레이아웃은 추측해서 숨기지 않음. 핸들 변경, 로그인 전용 콘텐츠, 라이브 채팅은 지원 보장 범위 밖.
 
@@ -35,7 +35,7 @@ node pack.mjs
 
 `node scripts/prepare-release.mjs`로 테스트, 문법 검사, zip 생성. `release-notes/<버전>.txt`에 심사 테스트 안내를 함께 작성.
 
-main에 버전 증가가 반영되면 GitHub Actions가 같은 zip을 Chrome과 Edge 양쪽에 제출. 인증을 한 번 설정한 뒤 사용 가능. 워크플로는 양쪽 결과와 재개용 receipt를 별도 보관. 제출 접수와 심사 승인, 실제 공개는 다른 상태.
+main push는 검사와 ZIP 생성만 실행. 로컬 언팩판으로 사용자가 체험한 뒤 배포를 맡기면 workflow_dispatch의 submit으로 같은 ZIP을 Chrome과 Edge 양쪽에 제출. 워크플로는 양쪽 결과와 재개용 receipt를 별도 보관. 제출 접수와 심사 승인, 실제 공개는 다른 상태.
 
 - Edge secrets: `EDGE_CLIENT_ID`, `EDGE_API_KEY`. 기존 등록 product ID는 workflow에 고정.
 - Chrome secrets: `CWS_CLIENT_ID`, `CWS_CLIENT_SECRET`, `CWS_REFRESH_TOKEN`. variables: `CWS_PUBLISHER_ID`, `CWS_EXTENSION_ID`.

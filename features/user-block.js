@@ -54,7 +54,11 @@
     return null;
   }
   async function addBlock(person, button) {
+    button._saving = true;
+    button.title = msg('blockButtonHint');
     button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.querySelector('.kl-block-label').textContent = msg('blockSaving');
     try {
       const ids = [person.id];
       // 핸들과 채널 ID 연결. 실패해도 선택한 링크 기준 차단 유지
@@ -76,29 +80,49 @@
       scan();
     } catch {
       button.disabled = false;
-      button.textContent = msg('blockRetry');
+      button.querySelector('.kl-block-label').textContent = msg('blockRetry');
       button.setAttribute('aria-label', msg('blockRetry'));
       button.title = msg('blockSaveError');
-    }
+    } finally { button._saving = false; button.removeAttribute('aria-busy'); schedule(); }
   }
-  function addButton(root, person, anchor, inside = false) {
+  function addButton(root, person, anchor, inside = false, variant = 'channel') {
     let button = root.querySelector(':scope .kl-block-button');
     if (!person || !enabled) { button?.remove(); return; }
     if (!button) {
       button = document.createElement('button');
       button.type = 'button';
-      button.className = 'kl-block-button';
-      button.textContent = msg('blockUser');
-      if (inside) anchor.append(button);
-      else anchor.after(button);
+      button.className = 'kl-block-button kl-block-button--' + variant;
+      const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      icon.setAttribute('viewBox', '0 0 24 24');
+      icon.setAttribute('aria-hidden', 'true');
+      icon.setAttribute('fill', 'none');
+      icon.setAttribute('stroke', 'currentColor');
+      icon.setAttribute('stroke-width', '1.8');
+      const circle = document.createElementNS(icon.namespaceURI, 'circle');
+      circle.setAttribute('cx', '12'); circle.setAttribute('cy', '12'); circle.setAttribute('r', '8');
+      const slash = document.createElementNS(icon.namespaceURI, 'path');
+      slash.setAttribute('d', 'M6.4 6.4 17.6 17.6');
+      icon.append(circle, slash);
+      const label = document.createElement('span');
+      label.className = 'kl-block-label';
+      label.textContent = msg('blockUser');
+      button.append(icon, label);
+      button.title = msg('blockButtonHint');
       button.addEventListener('click', event => {
         event.preventDefault(); event.stopPropagation();
         const current = button._person;
         if (current && confirm(chrome.i18n.getMessage('blockConfirm', current.name))) addBlock(current, button);
       });
     }
+    if (inside) {
+      if (button.parentElement !== anchor) anchor.append(button);
+    } else if (anchor.nextElementSibling !== button) { anchor.after(button); }
     button._person = person;
-    button.setAttribute('aria-label', msg('blockUser') + ': ' + person.name);
+    if (!button._saving && button.disabled && !blocked(person.id)) {
+      button.disabled = false;
+      button.querySelector('.kl-block-label').textContent = msg('blockUser');
+    }
+    if (!button.title.includes(msg('blockSaveError'))) button.setAttribute('aria-label', msg('blockUser') + ': ' + person.name);
   }
   function playback(root, person) {
     const hide = Boolean(enabled && blocked(person?.id));
@@ -129,22 +153,24 @@
         const target = root.closest('ytd-comment-thread-renderer')?.querySelector(comments) === root
           ? root.closest('ytd-comment-thread-renderer') : root;
         target.classList.toggle('kl-block-hidden', Boolean(enabled && blocked(person?.id)));
-        const row = root.querySelector('#header-author');
-        const anchor = row || root.querySelector('#author-text');
-        if (anchor) addButton(root, person, anchor, Boolean(row));
+        const actions = root.querySelector('#action-buttons #toolbar') || root.querySelector('#action-buttons');
+        addButton(root, person, actions || root.querySelector('#main') || root, true, 'comment');
       }
       for (const root of document.querySelectorAll('ytd-reel-video-renderer')) {
         const person = owner(root, 'a[href^="/@"],a[href^="/channel/"]') || videoOwner(root);
-        const anchor = root.querySelector('a[href^="/@"],a[href^="/channel/"]');
-        if (anchor) addButton(root, person, anchor);
+        const subscribe = root.querySelector('.ytReelChannelBarViewModelReelSubscribeButton, #subscribe-button, ytd-subscribe-button-renderer');
+        const bar = root.querySelector('yt-reel-channel-bar-view-model');
+        const anchor = subscribe || bar;
+        if (anchor) addButton(root, person, anchor, !subscribe, 'shorts');
         playback(root, person);
       }
       const watch = document.querySelector('ytd-watch-flexy');
       if (watch) {
         const ownerRoot = watch.querySelector('ytd-video-owner-renderer');
         const person = ownerRoot && owner(ownerRoot, 'a[href]');
-        const anchor = ownerRoot?.querySelector('#channel-name');
-        if (anchor) addButton(ownerRoot, person, anchor);
+        const ownerArea = watch.querySelector('#owner') || ownerRoot;
+        const anchor = ownerArea?.querySelector('#subscribe-button, ytd-subscribe-button-renderer, yt-subscribe-button-view-model');
+        if (anchor) addButton(ownerArea, person, anchor);
         const player = watch.querySelector('#player');
         if (player) playback(player, person);
       }

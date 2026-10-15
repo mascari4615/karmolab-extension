@@ -58,7 +58,7 @@ jobs:
           retention-days: 30
   submit:
     needs: package
-    if: github.ref == 'refs/heads/main' && ((github.event_name == 'push' && needs.package.outputs.release == 'true') || (github.event_name == 'workflow_dispatch' && inputs.action != 'package'))
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.action != 'package'
     strategy:
       fail-fast: false
       matrix:

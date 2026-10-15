@@ -1,0 +1,3 @@
+Local development build: improve block-button visibility and placement. Channel blocking sits after Subscribe with an icon and a 36px control. Comment blocking moves from the author name to the comment action row. Light, dark, keyboard and touch states are included. No new permissions.
+
+Store submission now requires an explicit workflow_dispatch submit action. Pushing source changes runs checks and creates a package without submitting to either store.

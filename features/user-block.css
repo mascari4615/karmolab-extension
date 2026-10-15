@@ -1,8 +1,23 @@
 .kl-block-hidden { display: none !important; }
-.kl-block-button { color: var(--yt-spec-text-secondary, #666); background: transparent; border: 1px solid currentColor; border-radius: 2px; font: 12px/1.4 Roboto, Arial, sans-serif; padding: 4px 8px; margin-inline-start: 8px; cursor: pointer; vertical-align: middle; }
-.kl-block-button:hover { color: var(--yt-spec-text-primary, #111); background: var(--yt-spec-badge-chip-background, #eee); }
-.kl-block-button:focus-visible { outline: 2px solid var(--yt-spec-call-to-action, #065fd4); outline-offset: 2px; }
-.kl-block-button:disabled { opacity: .6; cursor: wait; }
+.kl-block-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; box-sizing: border-box; min-height: 36px; margin-inline-start: 8px; padding: 0 14px; border: 1px solid #c6c6c6; border-radius: 20px; background: #f2f2f2; color: #0f0f0f; font: 500 14px/1.4 Roboto, "Malgun Gothic", Arial, sans-serif; white-space: nowrap; cursor: pointer; vertical-align: middle; -webkit-tap-highlight-color: transparent; }
+.kl-block-button svg { width: 18px; height: 18px; flex-shrink: 0; pointer-events: none; }
+.kl-block-button:hover { background: #e5e5e5; }
+.kl-block-button:active { background: #d9d9d9; }
+.kl-block-button:focus-visible { outline: 2px solid #065fd4; outline-offset: 3px; }
+.kl-block-button:disabled { opacity: .65; cursor: wait; }
+.kl-block-button--comment { min-height: 32px; margin-inline-start: 4px; padding: 0 10px; border-color: transparent; background: transparent; color: #505050; font-size: 12px; }
+.kl-block-button--comment svg { width: 16px; height: 16px; }
+html[dark] .kl-block-button { background: #272727; color: #f1f1f1; border-color: #717171; }
+html[dark] .kl-block-button:hover { background: #3f3f3f; }
+html[dark] .kl-block-button:active { background: #505050; }
+html[dark] .kl-block-button:focus-visible { outline-color: #3ea6ff; }
+html[dark] .kl-block-button--comment { background: transparent; color: #d6d6d6; border-color: transparent; }
+html[dark] .kl-block-button--comment:hover { background: #353535; color: #fff; }
+.kl-block-button--shorts, html[dark] .kl-block-button--shorts { background: #272727; color: #fff; border-color: #a0a0a0; }
+.kl-block-button--shorts:hover, html[dark] .kl-block-button--shorts:hover { background: #444; }
+.kl-block-button--shorts:focus-visible { outline-color: #fff; }
+yt-reel-channel-bar-view-model:has(> .kl-block-button) { flex-wrap: wrap; row-gap: 8px; }
+@media (pointer: coarse) { .kl-block-button { min-height: 44px; } .kl-block-button--comment { min-height: 40px; } }
 .kl-block-playback { position: relative !important; }
 .kl-block-playback > :not(.kl-block-notice) { visibility: hidden !important; }
 .kl-block-notice { position: absolute; inset: 0; z-index: 20; display: grid; place-content: center; padding: 24px; background: #000; color: #fff; text-align: center; font: 16px/1.6 Roboto, Arial, sans-serif; }
