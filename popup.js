@@ -49,7 +49,7 @@ blockBox.addEventListener('change', async () => {
   finally { blockBox.disabled = false; }
 });
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local') renderBlocks();
+  if (area === 'local' && Object.keys(changes).some(key => key === 'userBlock' || key.startsWith('blockedChannel:'))) renderBlocks();
 });
 renderBlocks();
 
@@ -110,20 +110,22 @@ renderBase64();
 
 const countBox = document.getElementById('shortsCount');
 const countMode = document.getElementById('shortsCountMode');
+const watchTimeBox = document.getElementById('shortsWatchTime');
 const countStatus = document.getElementById('shortsCountStatus');
-chrome.storage.local.get({ shortsCount: true, shortsCountMode: 'both' }).then(values => {
+chrome.storage.local.get({ shortsCount: true, shortsCountMode: 'both', shortsWatchTime: true }).then(values => {
   countBox.checked = values.shortsCount !== false;
   countMode.value = values.shortsCountMode;
-  countBox.disabled = countMode.disabled = false;
+  watchTimeBox.checked = values.shortsWatchTime !== false;
+  countBox.disabled = countMode.disabled = watchTimeBox.disabled = false;
 }).catch(() => { countStatus.textContent = message('shortsCountError'); });
-for (const control of [countBox, countMode]) control.addEventListener('change', async () => {
+for (const control of [countBox, countMode, watchTimeBox]) control.addEventListener('change', async () => {
   control.disabled = true;
   try {
-    await chrome.storage.local.set({ shortsCount: countBox.checked, shortsCountMode: countMode.value });
+    await chrome.storage.local.set({ shortsCount: countBox.checked, shortsCountMode: countMode.value, shortsWatchTime: watchTimeBox.checked });
     countStatus.textContent = '';
   } catch {
     countStatus.textContent = message('shortsCountError');
-    const values = await chrome.storage.local.get({ shortsCount: true, shortsCountMode: 'both' }).catch(() => null);
-    if (values) { countBox.checked = values.shortsCount !== false; countMode.value = values.shortsCountMode; }
+    const values = await chrome.storage.local.get({ shortsCount: true, shortsCountMode: 'both', shortsWatchTime: true }).catch(() => null);
+    if (values) { countBox.checked = values.shortsCount !== false; countMode.value = values.shortsCountMode; watchTimeBox.checked = values.shortsWatchTime !== false; }
   } finally { control.disabled = false; }
 });

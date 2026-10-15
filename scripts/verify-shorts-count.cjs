@@ -29,7 +29,7 @@ if (require.main === module) (async () => {
   const extensionId = createHash('sha256').update(publicKey).digest('hex').slice(0, 32).replace(/[0-9a-f]/g, c => String.fromCharCode(97 + parseInt(c, 16)));
   writeFileSync(path.join(extension, 'manifest.json'), JSON.stringify(manifest));
   const context = await chromium.launchPersistentContext(path.join(tmp, 'profile'), {
-    channel: 'chromium', headless: true, locale: 'ko-KR', viewport: { width: 1440, height: 900 },
+    channel: 'msedge', headless: false, ignoreDefaultArgs: ['--disable-extensions'], locale: 'ko-KR', viewport: { width: 1440, height: 900 },
     args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`],
   });
   try {
@@ -51,7 +51,8 @@ if (require.main === module) (async () => {
     page.on('pageerror', error => errors.push(error.message));
     page.on('dialog', dialog => dialog.accept());
     await page.goto('https://www.youtube.com/shorts/' + ID);
-    await page.waitForFunction(() => document.querySelector('.karmolab-shorts-count')?.textContent === '오늘 1개 / 1회');
+    await page.waitForFunction(() => document.querySelector('.karmolab-shorts-count')?.textContent.startsWith('오늘 1개 / 1회 / '));
+    await page.waitForFunction(() => / \/ [1-9]\d*초$/.test(document.querySelector('.karmolab-shorts-count')?.textContent));
     const badge = page.locator('.karmolab-shorts-date');
     const layout = await badge.evaluate(b => ({ text: b.firstChild.textContent, dateTop: b.getBoundingClientRect().top, countTop: b.querySelector('.karmolab-shorts-count').getBoundingClientRect().top }));
     assert.ok(layout.text.includes('2026'));
@@ -59,9 +60,9 @@ if (require.main === module) (async () => {
     await page.screenshot({ path: path.join(output, 'shorts-both.png') });
     const navigate = async id => page.evaluate(id => { history.pushState({}, '', '/shorts/' + id); document.querySelector('#self').href = '/shorts/' + id; }, id);
     await navigate(OTHER);
-    await page.waitForFunction(() => document.querySelector('.karmolab-shorts-count')?.textContent === '오늘 2개 / 2회');
+    await page.waitForFunction(() => document.querySelector('.karmolab-shorts-count')?.textContent.startsWith('오늘 2개 / 2회 / '));
     await navigate(ID);
-    await page.waitForFunction(() => document.querySelector('.karmolab-shorts-count')?.textContent === '오늘 2개 / 3회');
+    await page.waitForFunction(() => document.querySelector('.karmolab-shorts-count')?.textContent.startsWith('오늘 2개 / 3회 / '));
     const popup = await context.newPage();
     await popup.goto(`chrome-extension://${extensionId}/popup.html`);
     await popup.locator('#shortsCountMode:not([disabled])').waitFor();
@@ -71,8 +72,24 @@ if (require.main === module) (async () => {
       await popup.locator('#shortsCountMode').selectOption(mode);
       await popup.locator('#shortsCountMode:not([disabled])').waitFor();
       await page.bringToFront();
-      await page.waitForFunction(text => document.querySelector('.karmolab-shorts-count')?.textContent === text, expected);
+      await page.waitForFunction(text => document.querySelector('.karmolab-shorts-count')?.textContent.startsWith(text + ' / '), expected);
     }
+    await popup.bringToFront();
+    await popup.locator('#shortsWatchTime').press('Space');
+    await popup.locator('#shortsWatchTime:not([disabled])').waitFor();
+    await page.bringToFront();
+    await page.waitForFunction(() => document.querySelector('.karmolab-shorts-count')?.textContent === '오늘 2개 / 3회');
+    await popup.bringToFront();
+    await popup.locator('#shortsWatchTime').press('Space');
+    await popup.locator('#shortsWatchTime:not([disabled])').waitFor();
+    await popup.evaluate(async () => {
+      const d = new Date(), day = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const start = Date.now() - 24 * 60000;
+      await chrome.storage.local.set({ ['shortsDayTime:' + day + ':fixture']: [[start, start + 23 * 60000]] });
+    });
+    await page.bringToFront();
+    await page.waitForFunction(() => document.querySelector('.karmolab-shorts-count')?.textContent.endsWith(' / 23분'));
+    await page.screenshot({ path: path.join(output, 'shorts-watch-time-wide.png') });
     await popup.screenshot({ path: path.join(output, 'popup-count-settings.png') });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForFunction(() => {
@@ -85,7 +102,10 @@ if (require.main === module) (async () => {
     assert.ok(narrow.x >= 0 && narrow.x + narrow.width <= 390);
     await popup.evaluate(() => chrome.storage.sync.set({ shortsDate: false }));
     await page.waitForFunction(() => document.querySelector('.karmolab-shorts-date')?.dataset.hasDate === '');
-    assert.equal(await page.locator('.karmolab-shorts-count').innerText(), '오늘 2개 / 3회');
+    assert.equal((await page.locator('.karmolab-shorts-count').innerText()).replace(/ \/ [^/]+$/, ''), '오늘 2개 / 3회');
+    await page.setViewportSize({ width: 320, height: 720 });
+    await page.waitForFunction(() => { const r = document.querySelector('.karmolab-shorts-date')?.getBoundingClientRect(); return r && r.left >= 0 && r.right <= innerWidth; });
+    await page.screenshot({ path: path.join(output, 'shorts-watch-time-320.png') });
     await popup.evaluate(() => chrome.storage.sync.set({ shortsDate: true }));
     await page.goto('https://www.youtube.com/fixture-home');
     for (const id of ['home', 'subscription', 'legacy']) {
@@ -121,7 +141,7 @@ if (require.main === module) (async () => {
       }
       await page.screenshot({ path: path.join(output, 'public-channel-cards.png') });
     }
-    const result = { status: 'PASS', actualExtension: manifest.version, realMediaStreamPlayback: true, unique: 2, views: 3, displayModes: 3, dateDisabledIndependent: true, cardButtonPerVideo: 1, feedBlockUnblock: true, recycledCard: true, publicChannelCards: process.env.VERIFY_PUBLIC === '1', loggedInUserFeeds: 'layout observed, updated installation not tested' };
+    const result = { status: 'PASS', browser: 'Edge', actualExtension: manifest.version, realMediaStreamPlayback: true, unique: 2, views: 3, displayModes: 3, watchTimeKeyboardToggle: true, watchTimeFromRealPlayback: true, watchTimeSeeded23Minutes: true, widths: [1440,390,320], dateDisabledIndependent: true, cardButtonPerVideo: 1, feedBlockUnblock: true, recycledCard: true, publicChannelCards: process.env.VERIFY_PUBLIC === '1' };
     writeFileSync(path.join(output, 'result.json'), JSON.stringify(result, null, 2));
     console.log(result);
   } finally {

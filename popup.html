@@ -27,6 +27,7 @@
     #base64Site { border-radius: 4px; min-height: 36px; white-space: normal; }
     .count-settings { padding: 0 14px 14px; }
     .count-settings label { padding: 8px 0; }
+    .count-settings label:has(input) { min-height: 28px; align-items: center; }
     select { padding: 7px 8px; border: 1px solid #777; border-radius: 4px; background: #111; color: #fff; font: inherit; }
     #shortsCountStatus { color: #bbb; font-size: 12px; margin: 6px 0; }
   </style>
@@ -58,6 +59,7 @@
       <option value="unique" data-msg="shortsCountModeUnique"></option>
       <option value="views" data-msg="shortsCountModeViews"></option>
     </select>
+    <label><input type="checkbox" id="shortsWatchTime" disabled><span data-msg="shortsWatchTimeDisplay"></span></label>
     <p id="shortsCountStatus" role="status"></p>
   </section>
   <section aria-labelledby="blockHeading">
