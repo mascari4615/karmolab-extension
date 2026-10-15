@@ -1,6 +1,6 @@
 # KarmoLab 확장 (Chrome, Edge MV3)
 
-스토어 배포용 확장. 개발용 확장 (Mascari4615.github.io 의 `apps/karmo-web-extension`) 과 별개. 권한은 `storage` 와 `www.youtube.com` 뿐.
+스토어 배포용 확장. 개발용 확장 (Mascari4615.github.io 의 `apps/karmo-web-extension`) 과 별개. 기존 유튜브 기능은 `storage` 와 `www.youtube.com` 사용. Base64 링크 찾기는 `activeTab`, `scripting`과 사용자가 켠 사이트의 선택 접근 권한 사용.
 정본: `memo/projects/karmolab/apps/karmolab-extension.md`
 
 ## 기능
@@ -9,8 +9,19 @@
 | --- | --- | --- |
 | 쇼츠 올린 날짜 표시 | `features/shorts-date.js`, `.css` | 팝업 체크 (`chrome.storage.sync` 의 `shortsDate`) |
 | 사용자 차단: 영상, 쇼츠, 댓글 숨김 | `features/user-block.js`, `.css` | 팝업 체크, 차단 목록의 해제 (`chrome.storage.local`) |
+| Base64 웹 주소 링크화 | `features/base64-core.js`, `base64-links.js`, `.css` | 팝업의 이 사이트에서 켜기/끄기 (`chrome.storage.local`) |
 
 새 기능은 `features/` 에 파일 한 쌍, 팝업에 체크 하나, `_locales` 문구.
+
+## Base64 링크 찾기 (0.3.0)
+
+일반 웹페이지에서 확장 팝업의 **이 사이트에서 켜기** → 브라우저가 요청하면 해당 사이트 접근 허용. 본문과 댓글의 Base64가 완전한 HTTP/HTTPS 주소면 원문 옆에 목적지 도메인의 링크 표시. 원문 유지, 클릭할 때 새 탭으로 열기. 디코딩 서버, 원문 전송, 목적지 미리 요청 없음.
+
+사이트별 기본값은 꺼짐. 켠 사이트는 다음 방문에도 동작하며 새 댓글도 처리. **이 사이트에서 끄기**로 원문 복원과 자동 실행 등록 해제, 추가 사이트 권한 회수. 기존 유튜브 기능이 쓰는 필수 접근은 유지. 사이트는 프로토콜과 호스트 단위이며 같은 호스트의 포트는 공유.
+
+표준 Base64, URL-safe, 패딩 생략 지원. 스크립트 주소, 계정/암호 포함 URL, 제어문자, 잘못된 인코딩은 무시. 입력창, 편집 영역, 기존 링크와 코드 블록은 건드리지 않음. 브라우저 설정/확장 스토어, iframe/Shadow DOM, 줄바꿈으로 분리된 토큰은 지원 범위 밖.
+
+브라우저 시험: `node scripts/verify-base64.cjs`. 임시 확장 설치의 로컬 fixture 호스트만 사전 허용하여 실제 팝업, 자동 등록, 주입, 동적 본문, 복원을 검증. 운영 manifest의 선택 권한 승인창과 사용자의 실제 설치본 적용은 별도 확인 대상.
 
 댓글의 좋아요/답글 줄 또는 영상/쇼츠의 구독 버튼 뒤 **차단** → 확인. 차단한 부모 댓글은 답글까지, 차단한 답글 작성자는 해당 답글만 숨김. 직접 연 차단 영상/쇼츠는 재생을 멈추고 안내 표시. 팝업의 **해제**로 복원. 유튜브 계정의 차단 설정과 별개이며, 목록은 이 브라우저에만 저장.
 

@@ -1,0 +1,24 @@
+.kl-base64-entry { overflow-wrap: anywhere; }
+.kl-base64-link {
+  display: inline-block !important;
+  box-sizing: border-box !important;
+  max-width: calc(100% - .45em) !important;
+  margin-inline-start: .45em !important;
+  padding: 1px 7px !important;
+  border: 1px solid currentColor !important;
+  border-radius: 4px !important;
+  background: #f4f4f4 !important;
+  color: #202020 !important;
+  font: 500 12px/1.8 system-ui, sans-serif !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+  overflow-wrap: anywhere !important;
+  vertical-align: baseline !important;
+}
+.kl-base64-link:hover { background: #dedede !important; }
+.kl-base64-link:focus-visible { outline: 2px solid currentColor !important; outline-offset: 3px !important; }
+@media (prefers-color-scheme: dark) {
+  .kl-base64-link { background: #272727 !important; color: #fff !important; }
+  .kl-base64-link:hover { background: #454545 !important; }
+}
+@media (pointer: coarse) { .kl-base64-link { padding-block: 8px !important; } }

@@ -1,0 +1,6 @@
+Local development build. No store submission requested.
+Base64-encoded HTTP/HTTPS URLs gain a destination-labelled link beside the original text.
+Enable per site in the popup. Site access is optional and requested only when enabled.
+Dynamic content supported. Turning off restores original text. No link prefetching or decoding server.
+Test: open a normal web page containing a Base64 URL, open KarmoLab popup, enable this site and approve access.
+Confirm the link destination, added comments, exclusion of editors/existing links/code, and disable cleanup.

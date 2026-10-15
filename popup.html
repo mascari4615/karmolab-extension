@@ -23,10 +23,18 @@
     button:disabled { opacity: .6; cursor: wait; }
     :focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
     #blockStatus { margin: 8px 0; color: #bbb; font-size: 12px; }
+    #base64Status { color: #bbb; font-size: 12px; overflow-wrap: anywhere; }
+    #base64Site { border-radius: 4px; min-height: 36px; white-space: normal; }
   </style>
 </head>
 <body>
   <header><img src="icons/icon-32.png" alt=""><b>KarmoLab</b></header>
+  <section aria-labelledby="base64Heading">
+    <h2 id="base64Heading" data-msg="featBase64"></h2>
+    <small data-msg="featBase64Hint"></small>
+    <p id="base64Status" role="status" data-msg="base64Loading"></p>
+    <button id="base64Site" type="button" disabled data-msg="base64Enable"></button>
+  </section>
   <label>
     <input type="checkbox" id="shortsDate">
     <span><span data-msg="featShortsDate"></span><small data-msg="featShortsDateHint"></small></span>

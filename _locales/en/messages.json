@@ -26,6 +26,17 @@
   "blockSaveError": { "message": "Could not save. Please try again." },
   "blockLoadError": { "message": "Could not load blocked users. Reopen the extension popup." },
   "blockedPlayback": { "message": "This channel is blocked. Move to another video or unblock it in the KarmoLab popup." },
+  "featBase64": { "message": "Find Base64 links" },
+  "featBase64Hint": { "message": "Show destinations beside encoded text. Reads text on enabled sites locally, without sending it anywhere." },
+  "base64Loading": { "message": "Checking this site" },
+  "base64Enable": { "message": "Enable on this site" },
+  "base64Disable": { "message": "Disable on this site" },
+  "base64On": { "message": "Link detection on" },
+  "base64Off": { "message": "Link detection off" },
+  "base64Unsupported": { "message": "Open a regular webpage. Browser settings and extension stores are not supported." },
+  "base64Denied": { "message": "Site access was not granted. You can try enabling it again later." },
+  "base64Error": { "message": "Could not apply this site setting. Refresh the page and try again." },
+  "base64Open": { "message": "Open $DOMAIN$", "placeholders": { "domain": { "content": "$1" } } },
   "popupFooter": {
     "message": "lab.mascari4615.com"
   }

@@ -1,4 +1,4 @@
-import { readFileSync, appendFileSync } from 'node:fs';
+import { readFileSync, appendFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { parseArgs } from 'node:util';
@@ -33,7 +33,7 @@ function main() {
     if (runtimeChanged && !release) throw new Error('Runtime change requires a version bump');
   }
   execFileSync(process.execPath, ['--test'], { stdio: 'inherit' });
-  for (const script of ['popup.js', ...manifest.content_scripts.flatMap(entry => entry.js || [])]) {
+  for (const script of ['popup.js', ...readdirSync('features').filter(file => file.endsWith('.js')).map(file => `features/${file}`)]) {
     execFileSync(process.execPath, ['--check', script], { stdio: 'inherit' });
   }
   execFileSync(process.execPath, ['pack.mjs'], { stdio: 'inherit' });
