@@ -45,6 +45,20 @@
 1. `edge://extensions` 또는 `chrome://extensions` 에서 개발자 모드
 2. 압축해제된 확장 로드 -> 이 폴더
 
+### 개발 중 다시 읽기
+
+로컬 수신기를 처음 추가한 설치본은 확장 관리의 다시 로드 1회 필요. 이전 코드에는 수신기가 없으므로 소스 변경이나 유튜브 새로고침만으로 활성화되지 않음. 그 뒤에는 에이전트가 설치 경로에서 실행:
+
+```
+node scripts/reload-local.mjs
+```
+
+기본 ID는 이 PC의 로컬 KarmoLab. 다른 설치는 `--id <확장 ID>`, 다른 소스 폴더는 `--root <설치 폴더>`. KarmoDevExtension의 갱신 명령과 별도. 실행할 때만 127.0.0.1:17379에서 최대 65초 대기, 알람으로 명령을 받은 KarmoLab이 자기 자신을 다시 읽고 열린 유튜브 페이지 새로고침. 다른 사이트는 필요할 때 페이지 새로고침. 새 창이나 새 탭 생성 없음.
+
+완료 판정은 버전 번호가 아니라 새 실행 식별자, 현재 소스의 SHA256, 갱신 요청 응답 모두 일치. 응답 없음/포트 점유/새 코드 불일치는 실패. 명령 서버 없이 상시 로컬 서버 실행 불필요. 로컬 연결은 확장 ID와 전용 헤더 확인, 웹페이지 Origin 및 preflight 거부. 임의 코드나 페이지 조작 명령 미지원.
+
+로컬 manifest의 개발용 background, alarms, loopback 접근은 `pack.mjs`에서 제거. 스토어 ZIP에 개발 수신기 파일 제외. 버전 0.4.0 유지. `node scripts/verify-local-reload.cjs`는 임시 Edge 프로필에서 같은 버전의 코드 변경과 자기 재로드, 유튜브 재주입을 두 차례 검증. `VERIFY_BROWSER=chromium`은 추가 Chromium 시험용.
+
 ## 스토어 zip
 
 ```

@@ -11,9 +11,10 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "scripting", "alarms"],
+  "background": { "service_worker": "dev/reload-worker.mjs", "type": "module" },
   "optional_host_permissions": ["https://*/*", "http://*/*"],
-  "host_permissions": ["https://www.youtube.com/*"],
+  "host_permissions": ["https://www.youtube.com/*", "http://127.0.0.1/*"],
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],

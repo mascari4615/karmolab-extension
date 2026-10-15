@@ -20,7 +20,7 @@ body { margin:24px; max-width:680px; font:16px/1.8 system-ui; color:#222; backgr
   const extension = path.join(tmp, 'extension');
   mkdirSync(extension);
   mkdirSync(output, { recursive: true });
-  for (const file of ['features', '_locales', 'icons', 'popup.html', 'popup.js']) cpSync(path.join(root, file), path.join(extension, file), { recursive: true });
+  for (const file of ['features', 'dev', '_locales', 'icons', 'popup.html', 'popup.js']) cpSync(path.join(root, file), path.join(extension, file), { recursive: true });
   const manifest = JSON.parse(readFileSync(path.join(root, 'manifest.json'), 'utf8'));
   // Opening popup.html as a tab does not simulate toolbar-click activeTab access.
   // Grant only the local fixture host in this disposable test installation.

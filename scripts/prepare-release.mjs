@@ -37,6 +37,7 @@ function main() {
   for (const script of ['popup.js', ...readdirSync('features').filter(file => file.endsWith('.js')).map(file => `features/${file}`)]) {
     execFileSync(process.execPath, ['--check', script], { stdio: 'inherit' });
   }
+  for (const script of ['dev/reload-worker.mjs', 'dev/build.mjs', 'scripts/reload-local.mjs']) execFileSync(process.execPath, ['--check', script], { stdio: 'inherit' });
   execFileSync(process.execPath, ['pack.mjs'], { stdio: 'inherit' });
   const filename = `karmolab-${manifest.version}.zip`;
   const sha256 = createHash('sha256').update(readFileSync(`dist/${filename}`)).digest('hex');
