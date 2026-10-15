@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "short_name": "KarmoLab",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "__MSG_extDescription__",
   "default_locale": "ko",
   "icons": {
@@ -17,7 +17,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["features/shorts-date.js", "features/user-block.js"],
+      "js": ["features/shorts-count.js", "features/shorts-date.js", "features/user-block.js"],
       "css": ["features/shorts-date.css", "features/user-block.css"],
       "run_at": "document_idle"
     }

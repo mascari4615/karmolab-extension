@@ -139,7 +139,8 @@
   };
 
   const tick = () => {
-    const id = enabled ? videoIdFromUrl() : null;
+    const counter = globalThis.KarmoShortsCount;
+    const id = enabled || counter?.enabled ? videoIdFromUrl() : null;
     if (!id) {
       placement = null;
       if (badge) badge.hidden = true;
@@ -147,28 +148,37 @@
     }
     const b = ensureBadge();
     const rect = stableRect(id);
-    if (!cache.has(id)) {
+    if (enabled && !cache.has(id)) {
       load(id);
-      b.hidden = true;
-      return;
     }
-    const d = cache.get(id);
-    if (!d || !rect) {
+    const d = enabled ? cache.get(id) : null;
+    const countText = counter?.text() || '';
+    if ((!d && !countText) || !rect) {
       b.hidden = true;
       return;
     }
     // 자리: 영상 밖 왼쪽. 영상 가림 금지 (사용자 2026-09-25)
     // 자리 부족 시 짧은 형식, 그래도 부족하면 짧은 형식을 영상 안쪽에
-    const full = longText(d);
+    const full = d ? longText(d) : '';
     const room = rect.left - GAP - GUIDE_WIDTH;
-    const key = `${id}|${Math.round(room)}|${Math.floor(Date.now() / 60000)}`;
+    const key = `${id}|${Math.round(room)}|${Math.floor(Date.now() / 60000)}|${full}|${countText}`;
     b.hidden = false;
     if (b.dataset.key !== key) {
       b.dataset.key = key;
-      b.textContent = full;
-      if (b.offsetWidth > room) b.textContent = shortText(d);
+      b.dataset.hasDate = d ? '1' : '';
+      const draw = dateText => {
+        b.textContent = dateText;
+        if (countText) {
+          const line = document.createElement('div');
+          line.className = 'karmolab-shorts-count';
+          line.textContent = countText;
+          b.appendChild(line);
+        }
+      };
+      draw(full);
+      if (d && b.offsetWidth > room) draw(shortText(d));
       b.dataset.inside = b.offsetWidth <= room ? "" : "1";
-      b.title = d.toLocaleString(lang());
+      b.title = d ? d.toLocaleString(lang()) : '';
     }
     b.style.left = `${b.dataset.inside ? Math.max(rect.left, 0) + GAP : rect.left - GAP - b.offsetWidth}px`;
     b.style.top = `${Math.max(rect.top, 0) + GAP}px`;

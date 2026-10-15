@@ -39,6 +39,17 @@
   "base64Open": { "message": "Open $DOMAIN$", "placeholders": { "domain": { "content": "$1" } } },
   "base64ShowOriginal": { "message": "Show Base64 source" },
   "base64HideOriginal": { "message": "Hide Base64 source" },
+  "featShortsCount": { "message": "Today's Shorts count" },
+  "featShortsCountHint": { "message": "Counts after 2 seconds of visible playback. Automatic loops excluded. Resets at local midnight; stored only in this browser." },
+  "shortsCountDisplay": { "message": "Show below the date" },
+  "shortsCountModeBoth": { "message": "Unique videos and views" },
+  "shortsCountModeUnique": { "message": "Unique videos per day" },
+  "shortsCountModeViews": { "message": "Views including revisits" },
+  "shortsCountLoading": { "message": "Loading today's count" },
+  "shortsCountError": { "message": "Could not read/save today's count" },
+  "shortsCountUnique": { "message": "$COUNT$ videos today", "placeholders": { "count": { "content": "$1" } } },
+  "shortsCountViews": { "message": "$COUNT$ views today", "placeholders": { "count": { "content": "$1" } } },
+  "shortsCountBoth": { "message": "$UNIQUE$ videos / $VIEWS$ views today", "placeholders": { "unique": { "content": "$1" }, "views": { "content": "$2" } } },
   "popupFooter": {
     "message": "lab.mascari4615.com"
   }

@@ -2,7 +2,7 @@
   const prefix = 'blockedChannel:';
   const cards = 'ytd-video-renderer,ytd-rich-item-renderer,ytd-grid-video-renderer,ytd-compact-video-renderer,yt-lockup-view-model,ytd-reel-item-renderer,yt-shorts-lockup-view-model,ytm-shorts-lockup-view-model';
   const comments = 'ytd-comment-view-model,ytd-comment-renderer';
-  const ownerLinks = '#channel-name a[href],ytd-channel-name a[href],a.yt-content-metadata-view-model__metadata-text[href],.yt-lockup-metadata-view-model__metadata a[href]';
+  const ownerLinks = '#channel-name a[href],ytd-channel-name a[href],a.yt-content-metadata-view-model__metadata-text[href],.yt-lockup-metadata-view-model__metadata a[href],yt-content-metadata-view-model a[href],yt-lockup-metadata-view-model a[href]';
   let records = {}, enabled = true, loaded = false, scheduled = false;
   const metadata = new Map(), queue = [];
   let activeRequests = 0;
@@ -18,11 +18,11 @@
     } catch { return null; }
   }
   const blocked = id => id && Object.values(records).some(record => record.ids?.includes(id));
-  function videoOwner(root) {
+  function videoOwner(root, resolve = false) {
     const link = root.querySelector('a[href*="/shorts/"],a[href*="/watch?"]');
     const id = link?.getAttribute('href')?.match(/(?:\/shorts\/|[?&]v=)([\w-]{11})/)?.[1];
     if (!id) return null;
-    if (!metadata.has(id) && enabled && Object.keys(records).length) {
+    if (!metadata.has(id) && enabled && (resolve || Object.keys(records).length)) {
       metadata.set(id, null);
       queue.push(id);
       pump();
@@ -144,8 +144,17 @@
     observer.disconnect();
     try {
       for (const root of document.querySelectorAll(cards)) {
-        const person = owner(root) || videoOwner(root);
-        root.classList.toggle('kl-block-hidden', Boolean(enabled && blocked(person?.id)));
+        // Wrapper and nested lockup represent the same card, not two buttons.
+        if (root.matches('ytd-rich-item-renderer') && root.querySelector(cards)) continue;
+        const direct = owner(root);
+        const rect = root.getBoundingClientRect();
+        const visible = rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth;
+        const person = direct || videoOwner(root, visible);
+        const wrapper = root.closest('ytd-rich-item-renderer');
+        const target = wrapper && wrapper.querySelectorAll(cards).length === 1 ? wrapper : root;
+        target.classList.toggle('kl-block-hidden', Boolean(enabled && blocked(person?.id)));
+        const anchor = root.querySelector('.ytLockupMetadataViewModelTextContainer, .yt-lockup-metadata-view-model__text-container, #meta, #metadata, .shortsLockupViewModelHostMetadata, .ytmShortsLockupViewModelHostMetadata');
+        if (anchor) addButton(root, person, anchor, true, 'card');
       }
       for (const root of document.querySelectorAll(comments)) {
         const person = owner(root, 'a#author-text[href]');

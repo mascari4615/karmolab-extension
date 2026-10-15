@@ -13,3 +13,5 @@
 .karmolab-shorts-date[hidden] {
   display: none;
 }
+.karmolab-shorts-count { color: #ddd; font-size: 12px; font-variant-numeric: tabular-nums; }
+.karmolab-shorts-date[data-has-date="1"] .karmolab-shorts-count { margin-top: 4px; }

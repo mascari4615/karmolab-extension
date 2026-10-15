@@ -107,3 +107,23 @@ base64Button.addEventListener('click', async () => {
   finally { base64Button.disabled = false; }
 });
 renderBase64();
+
+const countBox = document.getElementById('shortsCount');
+const countMode = document.getElementById('shortsCountMode');
+const countStatus = document.getElementById('shortsCountStatus');
+chrome.storage.local.get({ shortsCount: true, shortsCountMode: 'both' }).then(values => {
+  countBox.checked = values.shortsCount !== false;
+  countMode.value = values.shortsCountMode;
+  countBox.disabled = countMode.disabled = false;
+}).catch(() => { countStatus.textContent = message('shortsCountError'); });
+for (const control of [countBox, countMode]) control.addEventListener('change', async () => {
+  control.disabled = true;
+  try {
+    await chrome.storage.local.set({ shortsCount: countBox.checked, shortsCountMode: countMode.value });
+    countStatus.textContent = '';
+  } catch {
+    countStatus.textContent = message('shortsCountError');
+    const values = await chrome.storage.local.get({ shortsCount: true, shortsCountMode: 'both' }).catch(() => null);
+    if (values) { countBox.checked = values.shortsCount !== false; countMode.value = values.shortsCountMode; }
+  } finally { control.disabled = false; }
+});

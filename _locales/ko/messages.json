@@ -12,10 +12,10 @@
     "message": "쇼츠 영상 왼쪽에 날짜가 나옵니다."
   },
   "featUserBlock": { "message": "유튜브 사용자 차단" },
-  "featUserBlockHint": { "message": "구독 버튼 옆이나 댓글 동작 줄에서 차단. 영상, 쇼츠, 댓글을 숨깁니다." },
+  "featUserBlockHint": { "message": "영상 카드 아래, 구독 버튼 옆, 댓글 동작 줄에서 차단. 영상, 쇼츠, 댓글을 숨깁니다." },
   "blockedUsers": { "message": "차단한 사용자" },
   "blockLoading": { "message": "차단 목록 읽는 중" },
-  "blockEmpty": { "message": "차단한 사용자 없음. 유튜브 댓글 작성자 옆의 차단 버튼을 누르세요." },
+  "blockEmpty": { "message": "차단한 사용자 없음. 영상 카드 아래나 댓글 동작 줄의 차단 버튼을 누르세요." },
   "blockLocalHint": { "message": "이 브라우저에만 저장. 해제하면 숨긴 항목이 다시 나타납니다." },
   "blockUser": { "message": "차단" },
   "blockSaving": { "message": "차단 중" },
@@ -39,6 +39,17 @@
   "base64Open": { "message": "$DOMAIN$ 열기", "placeholders": { "domain": { "content": "$1" } } },
   "base64ShowOriginal": { "message": "Base64 원문 보기" },
   "base64HideOriginal": { "message": "Base64 원문 접기" },
+  "featShortsCount": { "message": "오늘 본 쇼츠 집계" },
+  "featShortsCountHint": { "message": "보이는 화면에서 2초 재생하면 집계. 자동 반복 제외, 자정에 초기화. 이 브라우저에만 저장." },
+  "shortsCountDisplay": { "message": "날짜 아래 표시" },
+  "shortsCountModeBoth": { "message": "영상 수와 재시청 포함 횟수" },
+  "shortsCountModeUnique": { "message": "영상 수 (같은 영상 하루 한 번)" },
+  "shortsCountModeViews": { "message": "횟수 (재시청 포함)" },
+  "shortsCountLoading": { "message": "오늘 집계 읽는 중" },
+  "shortsCountError": { "message": "오늘 집계 저장/읽기 실패" },
+  "shortsCountUnique": { "message": "오늘 $COUNT$개", "placeholders": { "count": { "content": "$1" } } },
+  "shortsCountViews": { "message": "오늘 $COUNT$회", "placeholders": { "count": { "content": "$1" } } },
+  "shortsCountBoth": { "message": "오늘 $UNIQUE$개 / $VIEWS$회", "placeholders": { "unique": { "content": "$1" }, "views": { "content": "$2" } } },
   "popupFooter": {
     "message": "lab.mascari4615.com"
   }

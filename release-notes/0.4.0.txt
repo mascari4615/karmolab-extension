@@ -1,0 +1,6 @@
+Local development build. No store submission requested.
+Shorts: unique videos and qualified visits are counted locally per day after 2 seconds of visible playback.
+The popup selects unique videos, views including revisits, or both below the date. Automatic loops do not create visits.
+Counts reset at local midnight. Turning collection off stops new events; no history is fetched or uploaded.
+Home and subscription feed cards now offer a block button below metadata, including current lockup markup.
+Test feed blocking/unblocking, dynamic card reuse, midnight rollover, two tabs, popup display modes, paused/hidden/blocked/ad playback exclusions.

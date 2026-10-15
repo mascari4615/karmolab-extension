@@ -25,6 +25,10 @@
     #blockStatus { margin: 8px 0; color: #bbb; font-size: 12px; }
     #base64Status { color: #bbb; font-size: 12px; overflow-wrap: anywhere; }
     #base64Site { border-radius: 4px; min-height: 36px; white-space: normal; }
+    .count-settings { padding: 0 14px 14px; }
+    .count-settings label { padding: 8px 0; }
+    select { padding: 7px 8px; border: 1px solid #777; border-radius: 4px; background: #111; color: #fff; font: inherit; }
+    #shortsCountStatus { color: #bbb; font-size: 12px; margin: 6px 0; }
   </style>
 </head>
 <body>
@@ -43,6 +47,19 @@
     <input type="checkbox" id="userBlock" disabled>
     <span><span data-msg="featUserBlock"></span><small data-msg="featUserBlockHint"></small></span>
   </label>
+  <section class="count-settings" aria-labelledby="shortsCountHeading">
+    <label>
+      <input type="checkbox" id="shortsCount" disabled>
+      <span><span id="shortsCountHeading" data-msg="featShortsCount"></span><small data-msg="featShortsCountHint"></small></span>
+    </label>
+    <label for="shortsCountMode" data-msg="shortsCountDisplay"></label>
+    <select id="shortsCountMode" disabled>
+      <option value="both" data-msg="shortsCountModeBoth"></option>
+      <option value="unique" data-msg="shortsCountModeUnique"></option>
+      <option value="views" data-msg="shortsCountModeViews"></option>
+    </select>
+    <p id="shortsCountStatus" role="status"></p>
+  </section>
   <section aria-labelledby="blockHeading">
     <h2 id="blockHeading" data-msg="blockedUsers"></h2>
     <p id="blockStatus" role="status" data-msg="blockLoading"></p>

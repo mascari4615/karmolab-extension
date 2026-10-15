@@ -7,17 +7,21 @@
 .kl-block-button:disabled { opacity: .65; cursor: wait; }
 .kl-block-button--comment { min-height: 32px; margin-inline-start: 4px; padding: 0 10px; border-color: transparent; background: transparent; color: #505050; font-size: 12px; }
 .kl-block-button--comment svg { width: 16px; height: 16px; }
+.kl-block-button--card { align-self: flex-start; min-height: 28px; margin: 5px 0 0; padding: 0 8px; background: transparent; color: #505050; border-color: transparent; font-size: 12px; }
+.kl-block-button--card svg { width: 16px; height: 16px; }
 html[dark] .kl-block-button { background: #272727; color: #f1f1f1; border-color: #717171; }
 html[dark] .kl-block-button:hover { background: #3f3f3f; }
 html[dark] .kl-block-button:active { background: #505050; }
 html[dark] .kl-block-button:focus-visible { outline-color: #3ea6ff; }
 html[dark] .kl-block-button--comment { background: transparent; color: #d6d6d6; border-color: transparent; }
 html[dark] .kl-block-button--comment:hover { background: #353535; color: #fff; }
+html[dark] .kl-block-button--card { background: transparent; color: #d6d6d6; border-color: transparent; }
+html[dark] .kl-block-button--card:hover { background: #353535; color: #fff; }
 .kl-block-button--shorts, html[dark] .kl-block-button--shorts { background: #272727; color: #fff; border-color: #a0a0a0; }
 .kl-block-button--shorts:hover, html[dark] .kl-block-button--shorts:hover { background: #444; }
 .kl-block-button--shorts:focus-visible { outline-color: #fff; }
 yt-reel-channel-bar-view-model:has(> .kl-block-button) { flex-wrap: wrap; row-gap: 8px; }
-@media (pointer: coarse) { .kl-block-button { min-height: 44px; } .kl-block-button--comment { min-height: 40px; } }
+@media (pointer: coarse) { .kl-block-button { min-height: 44px; } .kl-block-button--comment, .kl-block-button--card { min-height: 40px; } }
 .kl-block-playback { position: relative !important; }
 .kl-block-playback > :not(.kl-block-notice) { visibility: hidden !important; }
 .kl-block-notice { position: absolute; inset: 0; z-index: 20; display: grid; place-content: center; padding: 24px; background: #000; color: #fff; text-align: center; font: 16px/1.6 Roboto, Arial, sans-serif; }
