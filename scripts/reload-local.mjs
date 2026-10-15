@@ -44,9 +44,9 @@ export async function reloadLocal({ root, id, port = 17379, timeoutMs = 65000, r
       server.once('error', reject);
       server.listen(port, '127.0.0.1', resolveListen);
     });
-    timer = setTimeout(() => finish.reject(new Error(before ? `Reload not confirmed: ${JSON.stringify({ expected, before, last })}` : 'No KarmoLab receiver response; bootstrap reload not confirmed')), timeoutMs);
     boundPort = server.address().port;
     await ready(boundPort);
+    timer = setTimeout(() => finish.reject(new Error(before ? `Reload not confirmed: ${JSON.stringify({ expected, before, last })}` : 'No KarmoLab receiver response; bootstrap reload not confirmed')), timeoutMs);
     return await result;
   } finally {
     clearTimeout(timer);

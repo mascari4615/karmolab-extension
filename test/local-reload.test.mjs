@@ -27,3 +27,12 @@ test('local reload rejects web origins and cannot report success without a new b
   } });
   await assert.rejects(pending, /No KarmoLab receiver response/);
 });
+
+test('receiver timeout begins after asynchronous server readiness completes', async () => {
+  let ready = false;
+  await assert.rejects(reloadLocal({ root, id: 'b'.repeat(32), port: 0, timeoutMs: 10, ready: async () => {
+    await new Promise(resolve => setTimeout(resolve, 40));
+    ready = true;
+  } }), /No KarmoLab receiver response/);
+  assert.equal(ready, true);
+});
