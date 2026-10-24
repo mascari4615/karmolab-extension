@@ -131,13 +131,13 @@ main push는 검사와 ZIP 생성만 실행. 로컬 언팩판으로 사용자가
 - 짧은 설명 (ko): 유튜브 쇼츠 날짜 표시와 원치 않는 채널의 영상, 쇼츠, 댓글 숨김.
 - 짧은 설명 (en): Show YouTube Shorts dates and hide videos, Shorts and comments from unwanted channels.
 - 분류: 도구 (Tools)
-- 권한 사유
-  - `storage`: 기능 설정과 브라우저 내 차단 목록 저장
-  - `www.youtube.com`: 쇼츠 날짜 표시, 채널/영상 공개 정보 조회, 차단 버튼과 콘텐츠 숨김
-  - `activeTab`: 사용자가 확장 팝업에서 기능을 실행한 현재 탭을 대상으로 Base64 링크 찾기와 사이트 음량 조절을 적용하기 위해 사용합니다. 사용자의 명시적 실행 없이 다른 탭에 접근하기 위한 권한이 아닙니다.
-  - `scripting`: 사용자가 기능을 켠 사이트에 Base64 링크 표시 및 음량 조절 스크립트와 스타일을 삽입하고, 허용된 사이트의 다음 방문에 같은 기능을 적용하도록 콘텐츠 스크립트를 등록하거나 해제하기 위해 사용합니다. 실행 코드는 확장 패키지에 포함되며 원격 코드를 내려받지 않습니다.
-  - `offscreen`: 사용자가 선택한 탭의 소리를 Web Audio로 재생하며 음량을 최대 300%까지 조절하는 오프스크린 문서를 유지하기 위해 사용합니다. 마이크를 사용하거나 오디오를 녹음, 저장, 외부 전송하지 않습니다.
-  - `tabCapture`: 사용자가 확장 팝업에서 100%를 초과하는 음량을 선택하고 적용한 탭의 소리만 가져와 증폭한 뒤 재생하기 위해 사용합니다. 선택 권한이며 사용자의 적용 동작이 있어야 시작합니다. 영상과 마이크는 캡처하지 않고 오디오를 녹음, 저장, 외부 전송하지 않습니다.
+- 권한 사유 (English, 스토어 입력용)
+  - `storage`: Stores feature settings and the user's channel block list in browser extension storage.
+  - `www.youtube.com`: Displays YouTube Shorts publication dates, retrieves public channel and video information, adds channel blocking controls, and hides content according to the user's settings.
+  - `activeTab`: Used after an explicit user action in the extension popup to access the current tab for Base64 link detection and per-site volume controls.
+  - `scripting`: Injects packaged Base64 link detection and volume control scripts and styles into supported websites enabled by the user. Registers or unregisters content scripts to apply these features on subsequent visits to permitted sites. No remotely hosted code is executed.
+  - `offscreen`: Maintains an offscreen document that uses Web Audio to play audio from a user-selected tab and adjust its volume up to 300%. It does not use the microphone or record, store, or upload audio.
+  - `tabCapture`: An optional permission used only when the user explicitly applies a volume setting above 100% in the extension popup. Captures audio from that tab for amplified playback. It does not capture video or microphone audio, and it does not record, store, or upload audio.
 
 Chrome 개발자 콘솔의 **개인 정보 보호 관행 → 권한 요청 이유**에서 위 사유를 각 권한의 입력란에 넣고 **임시저장**. README나 ZIP에 사유를 추가하는 것만으로 콘솔 값이 저장되지는 않음. 새 권한을 추가한 릴리스는 제출 전에 각 입력란 저장 여부 확인.
 - 개인정보: 수집하는 사용자 데이터 없음. 날짜 조회 요청에 쿠키를 싣지 않는다 (`credentials: "omit"`)
