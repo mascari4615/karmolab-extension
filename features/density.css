@@ -15,9 +15,13 @@ html[data-kl-comment-density="compact"][dark] {
   --kl-comment-meta:#a0a0a0;
 }
 html[data-kl-comment-density="compact"] ytd-comment-thread-renderer { position:relative; margin-bottom:4px !important; }
-html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) :is(#author-thumbnail,#author-thumbnail-button) { display:none !important; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail { display:block !important; position:absolute !important; inset-inline-start:72px; top:1px; width:20px; height:20px; margin:0 !important; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail-button { display:flex !important; align-items:center; justify-content:center; width:20px; height:20px; padding:0; margin:0; border-radius:50%; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail :is(yt-img-shadow,img) { width:20px !important; height:20px !important; border-radius:50%; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail .threadline { display:none; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail-button:focus-visible { outline:2px solid var(--kl-comment-author); outline-offset:2px; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #body { position:relative; margin:0 !important; }
-html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #main { display:block !important; margin:0 !important; padding-inline:72px 80px; min-width:0; line-height:22px; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #main { display:block !important; margin:0 !important; padding-inline:100px 80px; min-width:0; line-height:22px; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) :is(#header,#header-author) { display:contents !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #header-author h3 { display:inline !important; float:inline-start; max-width:100%; overflow-wrap:anywhere; margin:0 6px 0 0 !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-text { display:inline !important; width:auto !important; }
@@ -67,6 +71,9 @@ html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-r
   html[data-kl-comment-density="compact"] ytd-comment-thread-renderer:has(> #replies ytd-comment-replies-renderer) > #comment-container > :is(ytd-comment-view-model,ytd-comment-renderer) #main { padding-inline-end:80px; }
 }
 @media (hover:none), (pointer:coarse) {
+  html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail { inset-inline-start:68px; top:-11px; width:44px; height:44px; }
+  html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail-button { width:44px; height:44px; }
+  html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #main { padding-inline-start:116px; }
   html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar { position:static; max-width:100%; margin-top:4px !important; opacity:1; pointer-events:auto; border:0; background:transparent; }
   html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar button { min-height:44px; }
   html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies,#more-replies-sub-thread,#less-replies-sub-thread) button { height:44px !important; min-height:44px; }
