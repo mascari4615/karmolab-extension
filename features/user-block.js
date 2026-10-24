@@ -7,6 +7,10 @@
   let records = {}, enabled = true, loaded = false, scheduled = false;
   let blockedIds = new Set(), scanned = false;
   let keywordWords = [], keywordEnabled = true;
+  let keywordVideos = true, keywordShorts = true;
+  const review = globalThis.KarmoFilterReview;
+  const localKeys = new WeakMap();
+  let keySerial = 0;
   const metadata = new Map(), queue = [];
   const exits = new Map(), moves = new WeakMap();
   const cacheKey = 'karmolab:video-owners:v1';
@@ -29,11 +33,23 @@
   }
   const indexRecords = () => { blockedIds = new Set(Object.values(records).flatMap(record => record.ids || [])); };
   const blocked = id => blockedIds.has(id);
+  const isShort = root => root.matches('ytd-reel-item-renderer,yt-shorts-lockup-view-model,ytm-shorts-lockup-view-model,ytd-reel-video-renderer');
+  function videoId(root) {
+    return root.querySelector('a[href*="/shorts/"],a[href*="/watch?"]')?.getAttribute('href')?.match(/(?:\/shorts\/|[?&]v=)([\w-]{11})/)?.[1];
+  }
+  function contentKey(root) {
+    const id = videoId(root);
+    if (id) return { key: 'video:' + id, stable: true };
+    const signature = root.querySelector('#video-title,h3')?.textContent || '';
+    let local = localKeys.get(root);
+    if (!local || local.signature !== signature) { local = { key: 'card:local:' + (++keySerial), signature }; localKeys.set(root, local); }
+    return { key: local.key, stable: false };
+  }
   function titleMatches(root) {
-    if (!keywordEnabled || !keywordWords.length) return false;
+    if (!keywordEnabled || !keywordWords.length || (isShort(root) ? !keywordShorts : !keywordVideos)) return null;
     const title = root.querySelector('#video-title,#video-title-link,h3,.yt-lockup-metadata-view-model__title,.ytLockupMetadataViewModelTitle,.shortsLockupViewModelHostMetadataTitle,.ytmShortsLockupViewModelHostMetadataTitle');
     const link = title || root.querySelector('a[href*="/watch?"][title],a[href*="/shorts/"][title]');
-    return Boolean(link && KarmoKeywords.match(link.getAttribute('title') || link.textContent, keywordWords));
+    return link && KarmoKeywords.match(link.getAttribute('title') || link.textContent, keywordWords);
   }
   const motion = () => scanned && document.visibilityState === 'visible' && !matchMedia('(prefers-reduced-motion: reduce)').matches;
   const onScreen = rect => rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth;
@@ -86,8 +102,7 @@
     }).catch(() => { /* 차단 해제와 DOM 교체 시 이전 퇴장 취소 */ });
   }
   function videoOwner(root, resolve = false) {
-    const link = root.querySelector('a[href*="/shorts/"],a[href*="/watch?"]');
-    const id = link?.getAttribute('href')?.match(/(?:\/shorts\/|[?&]v=)([\w-]{11})/)?.[1];
+    const id = videoId(root);
     if (!id) return null;
     if (!metadata.has(id) && enabled && (resolve || Object.keys(records).length)) {
       metadata.set(id, null);
@@ -111,7 +126,8 @@
           metadata.set(id, { id: channel, name: data.videoDetails.author, href: 'https://www.youtube.com/channel/' + channel, at: Date.now() });
           try { sessionStorage.setItem(cacheKey, JSON.stringify([...metadata].filter(([, value]) => value).slice(-500))); } catch { /* 저장 불가 시 메모리 캐시 유지 */ }
         }
-      }).catch(() => { /* Keep unknown authors visible when metadata is unavailable. */ }).finally(() => {
+      }).catch(() => { /* 조회 실패 상태는 복구 목록에서 재시도 */ }).finally(() => {
+        if (metadata.get(id) === null) metadata.set(id, false);
         activeRequests--; schedule(); pump();
       });
     }
@@ -211,8 +227,7 @@
     }
     if (!button.title.includes(msg('blockSaveError'))) button.setAttribute('aria-label', msg('blockUser') + ': ' + person.name);
   }
-  function playback(root, person) {
-    const hide = Boolean(enabled && blocked(person?.id));
+  function playback(root, person, hide = Boolean(enabled && blocked(person?.id)), message = msg('blockedPlayback')) {
     root.classList.toggle('kl-block-playback', hide);
     let notice = root.querySelector(':scope > .kl-block-notice');
     if (hide) {
@@ -221,9 +236,9 @@
         notice = document.createElement('div');
         notice.className = 'kl-block-notice';
         notice.setAttribute('role', 'status');
-        notice.textContent = msg('blockedPlayback');
         root.append(notice);
       }
+      notice.textContent = message;
     } else { notice?.remove(); }
   }
   function layout() {
@@ -243,6 +258,7 @@
     if (!loaded) return;
     observer.disconnect();
     try {
+      const entries = [];
       for (const [target, animation] of exits) {
         if (!target.isConnected) { exits.delete(target); animation.cancel(); target.classList.remove('kl-block-leaving'); }
       }
@@ -253,13 +269,24 @@
         const direct = owner(root);
         const person = direct || (!keywordHit && videoOwner(root, onScreen(root.getBoundingClientRect())));
         const target = cardTarget(root);
-        conceal(target, Boolean(keywordHit || (enabled && blocked(person?.id))));
+        const item = contentKey(root), bypass = review?.bypass(item.key);
+        const pending = Boolean(isShort(root) && enabled && blockedIds.size && videoId(root) && !direct && !person && !keywordHit && !bypass);
+        const failed = pending && metadata.get(videoId(root)) === false;
+        const hide = Boolean(!bypass && (keywordHit || (enabled && blocked(person?.id))));
+        target.classList.toggle('kl-block-pending', pending);
+        if (pending) target.setAttribute('data-kl-placeholder', msg(failed ? 'reviewFailed' : 'reviewChecking'));
+        else target.removeAttribute('data-kl-placeholder');
+        conceal(target, hide);
+        if (hide || pending) entries.push({ ...item, root: target, kind: isShort(root) ? 'shorts' : 'video', reason: pending ? msg(failed ? 'reviewFailed' : 'reviewChecking') : (keywordHit ? msg('reviewKeyword') + ': ' + keywordHit : msg('reviewChannelBlocked')), retry: failed ? () => { metadata.delete(videoId(root)); schedule(); } : undefined });
         const anchor = root.querySelector('.ytLockupMetadataViewModelTextContainer, .yt-lockup-metadata-view-model__text-container, #meta, #metadata, .shortsLockupViewModelHostMetadata, .ytmShortsLockupViewModelHostMetadata');
         if (anchor) addButton(root, person, anchor, true, 'card');
       }
       for (const root of document.querySelectorAll('ytd-channel-renderer')) {
         const person = owner(root, 'a#main-link[href],a.channel-link[href]');
-        conceal(root, Boolean(enabled && blocked(person?.id)));
+        const key = 'channel:' + person?.id;
+        const hide = Boolean(enabled && blocked(person?.id) && !review?.bypass(key));
+        conceal(root, hide);
+        if (hide) entries.push({ root, key, stable: true, kind: 'channel', reason: msg('reviewChannelBlocked') });
         const anchor = root.querySelector('#info-section');
         if (anchor) addButton(root, person, anchor, true, 'card');
       }
@@ -269,17 +296,25 @@
         // 차단한 부모 댓글은 답글까지 숨김, 답글 작성자 차단은 해당 답글만
         const target = root.closest('ytd-comment-thread-renderer')?.querySelector(comments) === root
           ? root.closest('ytd-comment-thread-renderer') : root;
-        conceal(target, Boolean(enabled && blocked(person?.id)));
+        const item = review?.comment(root);
+        const hide = Boolean(enabled && blocked(person?.id) && !review?.bypass(item?.key));
+        conceal(target, hide);
+        if (hide && item) entries.push({ ...item, root: target, kind: 'comment', reason: msg('reviewChannelBlocked') });
         const actions = root.querySelector('#action-buttons #toolbar') || root.querySelector('#action-buttons');
         addButton(root, person, actions || root.querySelector('#main') || root, true, 'comment');
       }
       for (const root of document.querySelectorAll('ytd-reel-video-renderer')) {
         const person = owner(root, 'a[href^="/@"],a[href^="/channel/"]') || videoOwner(root);
+        const item = contentKey(root), bypass = review?.bypass(item.key);
+        const pending = Boolean(enabled && blockedIds.size && videoId(root) && !person && !bypass);
+        const failed = pending && metadata.get(videoId(root)) === false;
+        const hide = Boolean(!bypass && (pending || (enabled && blocked(person?.id))));
         const subscribe = root.querySelector('.ytReelChannelBarViewModelReelSubscribeButton, #subscribe-button, ytd-subscribe-button-renderer');
         const bar = root.querySelector('yt-reel-channel-bar-view-model');
         const anchor = subscribe || bar;
         if (anchor) addButton(root, person, anchor, !subscribe, 'shorts');
-        playback(root, person);
+        playback(root, person, hide, pending ? msg(failed ? 'reviewFailed' : 'reviewChecking') : msg('blockedPlayback'));
+        if (hide) entries.push({ ...item, root, kind: 'shorts', reason: pending ? msg(failed ? 'reviewFailed' : 'reviewChecking') : msg('reviewChannelBlocked'), retry: failed ? () => { metadata.delete(videoId(root)); schedule(); } : undefined });
       }
       const watch = document.querySelector('ytd-watch-flexy');
       if (watch) {
@@ -289,8 +324,15 @@
         const anchor = ownerArea?.querySelector('#subscribe-button, ytd-subscribe-button-renderer, yt-subscribe-button-view-model');
         if (anchor) addButton(ownerArea, person, anchor);
         const player = watch.querySelector('#player');
-        if (player) playback(player, person);
+        if (player) {
+          const id = new URL(location.href).searchParams.get('v');
+          const key = 'video:' + id;
+          const hide = Boolean(enabled && blocked(person?.id) && !review?.bypass(key));
+          playback(player, person, hide);
+          if (hide) entries.push({ root: player, key, stable: Boolean(id), kind: 'video', reason: msg('reviewChannelBlocked') });
+        }
       }
+      review?.set('users-and-titles', entries);
     } finally {
       scanned = true;
       observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['href', 'title', 'aria-label'] });
@@ -312,6 +354,8 @@
     for (const [key, change] of Object.entries(changes)) {
       if (key === 'userBlock') { enabled = change.newValue !== false; relevant = true; }
       if (key === 'keywordEnabled') { keywordEnabled = change.newValue !== false; relevant = true; }
+      if (key === 'keywordVideos') { keywordVideos = change.newValue !== false; relevant = true; }
+      if (key === 'keywordShorts') { keywordShorts = change.newValue !== false; relevant = true; }
       if (key === 'keywordWords') { keywordWords = globalThis.KarmoKeywords?.parse((change.newValue || []).join('\n')) || []; relevant = true; }
       if (key.startsWith(prefix)) {
         relevant = true;
@@ -322,14 +366,18 @@
     if (relevant) { indexRecords(); schedule(); }
   });
   document.addEventListener('yt-navigate-finish', schedule);
+  review?.onChange(schedule);
   document.addEventListener('play', event => {
     if (event.target.closest?.('.kl-block-playback')) event.target.pause();
   }, true);
-  chrome.storage.local.get(null).then(values => {
+  chrome.storage.local.get(null).then(async values => {
+    await review?.ready;
     records = Object.fromEntries(Object.entries(values).filter(([key]) => key.startsWith(prefix)));
     indexRecords();
     enabled = values.userBlock !== false;
     keywordEnabled = values.keywordEnabled !== false;
+    keywordVideos = values.keywordVideos !== false;
+    keywordShorts = values.keywordShorts !== false;
     keywordWords = globalThis.KarmoKeywords?.parse((values.keywordWords || []).join('\n')) || [];
     loaded = true;
     scan();

@@ -126,10 +126,18 @@ base64Button.addEventListener('click', async () => {
 renderBase64();
 
 const keywordBox = document.getElementById('keywordEnabled'), keywordWords = document.getElementById('keywordWords'), keywordSave = document.getElementById('keywordSave'), keywordStatus = document.getElementById('keywordStatus');
-chrome.storage.local.get({ keywordWords: [], keywordEnabled: true }).then(values => {
+const keywordScopes = ['keywordComments', 'keywordVideos', 'keywordShorts'];
+chrome.storage.local.get({ keywordWords: [], keywordEnabled: true, keywordComments: true, keywordVideos: true, keywordShorts: true }).then(values => {
   keywordBox.checked = values.keywordEnabled !== false; keywordWords.value = values.keywordWords.join('\n');
   keywordBox.disabled = keywordWords.disabled = keywordSave.disabled = false;
+  for (const key of keywordScopes) { const input = document.getElementById(key); input.checked = values[key] !== false; input.disabled = false; }
 }).catch(() => { keywordStatus.textContent = message('keywordError'); });
+for (const key of keywordScopes) document.getElementById(key).addEventListener('change', async event => {
+  const input = event.target; input.disabled = true;
+  try { await chrome.storage.local.set({ [key]: input.checked }); keywordStatus.textContent = ''; }
+  catch { input.checked = !input.checked; keywordStatus.textContent = message('keywordError'); }
+  finally { input.disabled = false; }
+});
 keywordBox.addEventListener('change', async () => {
   keywordBox.disabled = true;
   try { await chrome.storage.local.set({ keywordEnabled: keywordBox.checked }); keywordStatus.textContent = ''; }

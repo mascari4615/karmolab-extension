@@ -38,6 +38,9 @@
       ul { list-style: none; margin: 12px 0 0; padding: 0; }
       li { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
       li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+      .review-row { display: block; padding: 12px 0; border-bottom: 1px solid var(--yt-spec-10-percent-layer, #ccc); }
+      .review-row p { margin: 4px 0 8px; }
+      .review-actions { display: flex; flex-wrap: wrap; gap: 8px; }
       footer { flex-shrink: 0; padding: 8px 20px 12px; border-top: 1px solid var(--yt-spec-10-percent-layer, #ccc); }
       #status { margin: 0; min-height: 18px; overflow-wrap: anywhere; }
       #retry { margin-top: 6px; }
@@ -52,6 +55,9 @@
         </section>
         <section><h3 data-msg="keywordHeading"></h3>
           <label><span data-msg="keywordEnabled"></span><input id="keywords" type="checkbox" disabled></label>
+          <label><span data-msg="keywordComments"></span><input id="scope-comments" type="checkbox" disabled></label>
+          <label><span data-msg="keywordVideos"></span><input id="scope-videos" type="checkbox" disabled></label>
+          <label><span data-msg="keywordShorts"></span><input id="scope-shorts" type="checkbox" disabled></label>
           <label for="words" data-msg="panelKeywords"></label>
           <textarea id="words" rows="3" maxlength="40200" disabled></textarea>
           <p data-msg="keywordWordsLabel"></p><button id="save" type="button" disabled data-msg="keywordSave"></button>
@@ -67,6 +73,10 @@
           <label><span data-msg="featUserBlock"></span><input id="blocking" type="checkbox" disabled></label>
           <input id="search" type="search" autocomplete="off" disabled>
           <p id="empty"></p><ul id="blocked"></ul>
+        </section>
+        <section><h3 data-msg="reviewHeading"></h3>
+          <p id="review-count" role="status" aria-live="polite"></p><ul id="review-list"></ul>
+          <h3 data-msg="reviewExceptions"></h3><ul id="review-exceptions"></ul>
         </section>
         <section><h3 data-msg="backupHeading"></h3><p data-msg="backupHint"></p>
           <button id="export" type="button" disabled data-msg="backupExport"></button>
@@ -103,7 +113,47 @@
   let savingWords = false, mountTimer;
   let syncValues = {}, backupBusy = false, selectedBackup = null, fileVersion = 0;
   const pending = new Set();
-  const toggles = { commentTranslate: $('#translation'), keywordEnabled: $('#keywords'), userBlock: $('#blocking'), shortsDate: $('#shortsDate'), shortsCount: $('#shortsCount'), shortsWatchTime: $('#watchTime') };
+  const toggles = { commentTranslate: $('#translation'), keywordEnabled: $('#keywords'), keywordComments: $('#scope-comments'), keywordVideos: $('#scope-videos'), keywordShorts: $('#scope-shorts'), userBlock: $('#blocking'), shortsDate: $('#shortsDate'), shortsCount: $('#shortsCount'), shortsWatchTime: $('#watchTime') };
+  const review = globalThis.KarmoFilterReview, reviewPending = new Set();
+  let reviewSignature = '';
+  function renderReview() {
+    if (!review) { $('#review-count').textContent = msg('reviewUnavailable'); return; }
+    const snapshot = review.snapshot();
+    const signature = JSON.stringify([snapshot, [...reviewPending]]);
+    if (signature === reviewSignature) return;
+    reviewSignature = signature;
+    $('#review-count').textContent = snapshot.readError ? msg('reviewUnavailable') : chrome.i18n.getMessage('reviewCount', String(snapshot.rows.length));
+    const kind = value => msg({ video: 'reviewVideo', shorts: 'reviewShorts', comment: 'reviewComment', channel: 'reviewChannel' }[value] || 'reviewVideo');
+    const action = (row, key, label, callback) => {
+      const button = document.createElement('button'); button.type = 'button'; button.textContent = msg(label); button.disabled = reviewPending.has(key);
+      button.addEventListener('click', async () => {
+        reviewPending.add(key); renderReview();
+        try { await callback(); announce('panelSaved'); }
+        catch { announce('panelSaveError'); }
+        finally { reviewPending.delete(key); renderReview(); if (!panel.hidden) { $('#review-count').tabIndex = -1; $('#review-count').focus({ preventScroll: true }); } }
+      });
+      row.append(button);
+    };
+    $('#review-list').replaceChildren();
+    snapshot.rows.forEach((entry, index) => {
+      const row = document.createElement('li'), title = document.createElement('strong'), reason = document.createElement('p'), actions = document.createElement('div');
+      row.className = 'review-row'; row.dataset.reviewKey = entry.key; actions.className = 'review-actions';
+      title.textContent = kind(entry.kind) + ' ' + (index + 1); reason.textContent = entry.reasons.join(', ');
+      action(actions, entry.key, 'reviewShowOnce', () => review.show(entry.key));
+      if (entry.stable) action(actions, entry.key, 'reviewAllow', () => review.allow(entry.key));
+      if (entry.canRetry) action(actions, entry.key, 'reviewRetry', () => review.retry(entry.key));
+      row.append(title, reason, actions); $('#review-list').append(row);
+    });
+    $('#review-exceptions').replaceChildren();
+    snapshot.exceptions.sort((a, b) => b.created - a.created).forEach((entry, index) => {
+      const row = document.createElement('li'), label = document.createElement('span');
+      row.dataset.allowKey = entry.key;
+      label.textContent = kind(entry.kind) + ' ' + (index + 1); row.append(label);
+      action(row, entry.key, 'reviewRevoke', () => review.revoke(entry.key)); $('#review-exceptions').append(row);
+    });
+  }
+  review?.subscribe(renderReview);
+  review?.ready.then(renderReview);
   function announce(key) { status.textContent = msg(key); }
   function renderBlocks() {
     const term = $('#search').value.normalize('NFKC').toLowerCase().trim();
@@ -139,6 +189,7 @@
     $('#restore').disabled = !loaded || !selectedBackup || backupBusy || savingWords || pending.size > 0;
     if (loaded && !dirty && !savingWords) words.value = (values.keywordWords || []).join('\n');
     renderBlocks();
+    renderReview();
   }
   async function load() {
     if (loading) return;

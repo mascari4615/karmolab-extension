@@ -20,4 +20,7 @@
 - Blocking masks original text and thumbnails immediately after a match; only a neutral placeholder exits before the remaining cards move.
 - User approved block undo, Shorts settings in the panel, and YouTube preferences/blocked-user JSON backup and restore.
 - Backups exclude viewing history, optional site permissions, site volume and Base64 site settings. Restore previews contents, merges blocked users and applies backed-up preferences.
+- Unknown Shorts remain covered while channel blocking is active and ownership is checked. Failed checks remain covered with retry and deliberate reveal actions.
+- Keyword targets have separate comments, video and Shorts switches. Existing settings default to all targets enabled.
+- The existing panel reports current covered items and reasons without exposing original titles or thumbnails. Show once resets at navigation; stable content IDs support persistent item exceptions and revocation.
 - Success: change these settings without leaving YouTube, with saved-state feedback and preserved drafts.

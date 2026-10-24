@@ -3,6 +3,10 @@
 .kl-block-leaving::before, .kl-block-leaving *, .kl-block-leaving *::before, .kl-block-leaving *::after { visibility: hidden !important; }
 .kl-block-leaving::after { content: "" !important; position: absolute; inset: 0; visibility: visible !important; border-radius: inherit; background: var(--yt-spec-badge-chip-background, #e5e5e5); }
 html[dark] .kl-block-leaving::after { background: var(--yt-spec-badge-chip-background, #272727); }
+.kl-block-pending { position: relative; visibility: hidden !important; pointer-events: none !important; }
+.kl-block-pending::before, .kl-block-pending *, .kl-block-pending *::before, .kl-block-pending *::after { visibility: hidden !important; }
+.kl-block-pending::after { content: attr(data-kl-placeholder) !important; position: absolute; inset: 0; display: grid; place-content: center; padding: 8px; visibility: visible !important; background: #e5e5e5; color: #505050; border-radius: inherit; text-align: center; font: 13px/1.4 Roboto, Arial, sans-serif; }
+html[dark] .kl-block-pending::after { background: #272727; color: #aaa; }
 .kl-block-empty { display: none !important; }
 .kl-block-grid { display: flex !important; flex-wrap: wrap; gap: 16px; }
 .kl-block-grid > .ytGridShelfViewModelGridShelfRow { display: contents !important; }
