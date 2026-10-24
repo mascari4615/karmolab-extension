@@ -1,6 +1,6 @@
 (() => {
   const prefix='hiddenHomeChannel:', cards='ytd-browse[page-subtype="home"]:not([hidden]) ytd-rich-grid-renderer ytd-rich-item-renderer';
-  const pending=new WeakSet(); let records={},loaded=false,timer;
+  const pending=new WeakSet(); let records={},loaded=false,timer,feedbackBusy=false;
   const msg=key=>chrome.i18n.getMessage(key);
   const visible=e=>e&&e.getClientRects().length&&!e.closest('[hidden],[aria-hidden="true"]');
   function person(card) {
@@ -62,8 +62,9 @@
   }
   async function hide(card,button) {
     const current=person(card),video=card.querySelector('h3 a[href*="/watch"],a#video-title[href*="/watch"]')?.getAttribute('href');
-    if(!current||!video||pending.has(card))return;
-    pending.add(card);button.disabled=true;
+    if(!current||!video||pending.has(card)||feedbackBusy)return;
+    feedbackBusy=true;pending.add(card);button.setAttribute('aria-busy','true');
+    for(const control of document.querySelectorAll('.kl-home-hide-button'))control.disabled=true;
     const controller=new AbortController();
     const navigation=()=>controller.abort();document.addEventListener('yt-navigate-start',navigation,{once:true});
     let saved=false;
@@ -74,7 +75,7 @@
     } catch(error) {
       if(saved)announce(error.completed?.includes('notInterested')?'homeHideReasonFailed':'homeHideFeedbackFailed',current,Boolean(error.completed?.includes('notInterested')));
       else {announce('panelSaveError',current);shadow.querySelector('#undo').hidden=true;}
-    } finally {pending.delete(card);button.disabled=false;document.removeEventListener('yt-navigate-start',navigation);schedule();}
+    } finally {pending.delete(card);feedbackBusy=false;button.removeAttribute('aria-busy');for(const control of document.querySelectorAll('.kl-home-hide-button'))control.disabled=false;document.removeEventListener('yt-navigate-start',navigation);schedule();}
   }
   function scan() {
     if(!loaded)return;
@@ -90,6 +91,7 @@
         button.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();shadow.querySelector('#undo').hidden=false;void hide(card,button);});anchor.append(button);
       }
       button.title=msg('homeHideHint');button.setAttribute('aria-label',msg('homeHideChannel')+': '+current.name);
+      button.disabled=feedbackBusy;
     }
   }
   function schedule(){if(!timer)timer=setTimeout(()=>{timer=undefined;scan();},100);}
