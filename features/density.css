@@ -50,7 +50,7 @@ html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-r
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer):is(:hover,:focus-within) #action-menu { opacity:1; pointer-events:auto; }
 html[data-kl-comment-density="compact"] ytd-comment-replies-renderer { margin-inline-start:0 !important; }
 html[data-kl-comment-density="compact"] ytd-comment-replies-renderer .ytSubThreadSubThreadContent { margin-top:0 !important; }
-html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > :is(#collapsed-threads,#expanded-threads) > yt-sub-thread { display:block; }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > :is(#collapsed-threads,#expanded-threads) > yt-sub-thread { display:block; position:static; }
 html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > :is(#collapsed-threads,#expanded-threads) > yt-sub-thread > .ytSubThreadThreadline { display:none; }
 html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > :is(#collapsed-threads,#expanded-threads) > yt-sub-thread > .ytSubThreadSubThreadContent { margin:0 !important; padding:0; }
 html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > #expanded-threads:not([hidden]) { margin:4px 0 4px 16px; padding-inline-start:8px; border-inline-start:1px solid var(--yt-spec-10-percent-layer,#555); }
@@ -59,7 +59,7 @@ html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > #expanded
 html[data-kl-comment-density="compact"] ytd-comment-thread-renderer:has(> #replies ytd-comment-replies-renderer) > #comment-container > :is(ytd-comment-view-model,ytd-comment-renderer) #main { padding-inline-end:172px; }
 html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies-sub-thread,#less-replies-sub-thread) button { min-width:44px; height:26px !important; min-height:26px; padding:0 4px; color:var(--kl-comment-meta); font-size:12px; font-weight:400; }
 html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies-sub-thread,#less-replies-sub-thread) .ytSpecButtonShapeNextIcon { width:14px; height:14px; margin-inline-start:2px; }
-html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies,#more-replies-sub-thread) button { height:28px !important; min-height:28px; padding-block:0; font-size:12px; }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies,#more-replies-sub-thread,#less-replies-sub-thread) button { height:28px !important; min-height:28px; padding-block:0; font-size:12px; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #reply-dialog:not(:empty) { margin-top:8px; }
 @media (max-width:600px), (hover:none), (pointer:coarse) {
   html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > #collapsed-threads > yt-sub-thread > .ytSubThreadSubThreadContent > .show-replies-button,
@@ -69,7 +69,7 @@ html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-r
 @media (hover:none), (pointer:coarse) {
   html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar { position:static; max-width:100%; margin-top:4px !important; opacity:1; pointer-events:auto; border:0; background:transparent; }
   html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar button { min-height:44px; }
-  html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies,#more-replies-sub-thread) button { height:44px !important; min-height:44px; }
+  html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies,#more-replies-sub-thread,#less-replies-sub-thread) button { height:44px !important; min-height:44px; }
   html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-menu { opacity:1; pointer-events:auto; }
   html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-menu button { width:44px !important; height:44px !important; min-height:44px !important; }
   html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #main { padding-inline-end:104px; }
