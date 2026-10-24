@@ -32,7 +32,7 @@
     apply();
   });
   new MutationObserver(() => {
-    if (homeMode !== 'default' && (!grid?.isConnected || location.pathname !== '/')) schedule();
+    if (homeMode !== 'default' && location.pathname === '/' && !grid?.isConnected) schedule();
   }).observe(document.documentElement, { childList:true, subtree:true });
   document.addEventListener('yt-navigate-start', () => {
     resize.disconnect(); grid?.removeAttribute('data-kl-home-grid'); grid?.style.removeProperty('--kl-home-columns'); grid = null;

@@ -13,3 +13,4 @@
 - Download stored preferences. A selected restore file shows counts and merge semantics before an explicit restore action; preserve unsaved keyword drafts.
 - Compact comments: timestamp gutter, no avatar, author and body on the first line. Keep body type at 14px and native content folding. Reveal reactions on hover/focus; keep actions visible for coarse pointers.
 - Home sizing changes card width rather than page zoom or type size. Three direct choices: native, small, smaller. Derive columns from available width, with native layout restored outside Home or when disabled.
+- Where row-based reading flow is supported, backfill Home grid gaps around full-width shelves and align keyboard focus with visual rows. Otherwise keep source order and ordinary grid placement.
