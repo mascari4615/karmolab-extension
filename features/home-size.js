@@ -1,9 +1,9 @@
 (() => {
   const msg = key => chrome.i18n.getMessage(key);
-  class HomeSize extends HTMLElement {
+  class HomeSize {
     constructor() {
-      super();
-      this.view = this.attachShadow({mode:'open'});
+      this.host = document.createElement('div');
+      this.view = this.host.attachShadow({mode:'open'});
       this.view.innerHTML = `<style>
         :host{display:block;min-width:0;color:var(--hs-text,#0f0f0f);font:13px/1.4 Roboto,Arial,sans-serif;color-scheme:light}
         *{box-sizing:border-box}.top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:32px}
@@ -43,18 +43,18 @@
       steps.addEventListener('pointerup',release);steps.addEventListener('pointercancel',release);
       this.view.addEventListener('keydown',event=>{if(event.key!=='Escape')event.stopPropagation();});
       this.view.addEventListener('keyup',event=>event.stopPropagation());
+      this.connect();
     }
-    connectedCallback() {
+    connect() {
       this.unsubscribe=KarmoDensityLayout.subscribeHome(state=>{this.state=state;this.render();});
       this.theme = new MutationObserver(()=>this.renderTheme());
       this.theme.observe(document.documentElement,{attributes:true,attributeFilter:['dark']});this.renderTheme();
     }
-    disconnectedCallback(){this.unsubscribe?.();this.theme?.disconnect();}
     renderTheme() {
       const dark=document.documentElement.hasAttribute('dark');
       const colors=dark?{text:'#f1f1f1',secondary:'#aaa',bg:'#0f0f0f',line:'#999',accent:'#3ea6ff'}:{text:'#0f0f0f',secondary:'#606060',bg:'#fff',line:'#777',accent:'#065fd4'};
-      for(const [key,value] of Object.entries(colors))this.style.setProperty('--hs-'+key,value);
-      this.style.colorScheme=dark?'dark':'light';
+      for(const [key,value] of Object.entries(colors))this.host.style.setProperty('--hs-'+key,value);
+      this.host.style.colorScheme=dark?'dark':'light';
     }
     choose(mode,count) {
       if(!this.state?.loaded || (this.state.homeDensity===mode&&this.state.homeColumns===count))return;
@@ -67,10 +67,10 @@
       this.view.querySelector('output').textContent=state.error?msg('panelSaveError'):state.actual?chrome.i18n.getMessage('homeColumnsActual',String(state.actual)):'';
     }
   }
-  customElements.define('kl-home-size',HomeSize);
+  globalThis.KarmoHomeSize = { create:()=>new HomeSize().host };
   const toolbar=document.createElement('div');toolbar.id='kl-home-size-toolbar';
   toolbar.style.cssText='display:flex;justify-content:flex-end;padding:4px 24px 12px;box-sizing:border-box;';
-  const control=document.createElement('kl-home-size');control.style.cssText='width:320px;max-width:100%;';toolbar.append(control);
+  const control=KarmoHomeSize.create();control.style.width='320px';control.style.maxWidth='100%';toolbar.append(control);
   function mount() {
     const grid=location.pathname==='/'?document.querySelector('ytd-browse[page-subtype="home"]:not([hidden]) ytd-rich-grid-renderer'):null;
     if(grid) {if(toolbar.nextElementSibling!==grid)grid.before(toolbar);}

@@ -59,7 +59,7 @@
           <input id="commentFontSize" type="range" min="12" max="20" step="1" disabled>
           <label for="commentLineHeight"><span data-msg="commentLineHeightLabel"></span><output for="commentLineHeight" id="commentLineHeightValue"></output></label>
           <input id="commentLineHeight" type="range" min="18" max="32" step="2" disabled>
-          <kl-home-size></kl-home-size><p data-msg="homeColumnsHint"></p>
+          <div id="home-sizing"></div><p data-msg="homeColumnsHint"></p>
         </section>
         <section><h3 data-msg="panelComments"></h3>
           <label><span data-msg="commentTranslate"></span><input id="translation" type="checkbox" disabled></label>
@@ -99,6 +99,7 @@
       <footer><p id="status" role="status" aria-live="polite"></p><button id="retry" type="button" hidden data-msg="panelRetry"></button></footer>
     </aside>`;
   const $ = selector => shadow.querySelector(selector);
+  $('#home-sizing').replaceWith(KarmoHomeSize.create());
   for (const node of shadow.querySelectorAll('[data-msg]')) node.textContent = msg(node.dataset.msg);
   $('#close').setAttribute('aria-label', msg('panelClose'));
   $('#search').setAttribute('aria-label', msg('panelSearch'));
