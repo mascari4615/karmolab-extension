@@ -1,6 +1,8 @@
-Local development build. No store submission requested.
-Shorts: unique videos and qualified visits are counted locally per day after 2 seconds of visible playback.
-The popup selects unique videos, views including revisits, or both below the date. Automatic loops do not create visits.
-Counts reset at local midnight. Turning collection off stops new events; no history is fetched or uploaded.
-Home and subscription feed cards now offer a block button below metadata, including current lockup markup.
-Test feed blocking/unblocking, dynamic card reuse, midnight rollover, two tabs, popup display modes, paused/hidden/blocked/ad playback exclusions.
+KarmoLab 0.4.0 update for the existing Chrome and Edge listings.
+YouTube: automatic Korean comment translation with a toggle; in-page settings panel; keyword filtering; channel blocking with undo and JSON backup/merge restore.
+Compact comments: profile menu, adjustable text and line height, short relative dates with full-date tooltips, edited indicator, wider Shorts comment text and reply threads.
+Home: shared 2-6-column controls with live preview, compact card actions, and an independent Home-only channel hiding list. An explicit hide click also follows YouTube's Not interested/reason flow for that video only. Missing stages report partial progress; no automatic retry. Local unhide does not undo YouTube feedback.
+Shorts: local daily unique videos, qualified visits and visible playback time. Paused, hidden, blocked and advertising playback excluded; loops do not create visits. No history upload.
+Base64 HTTP/HTTPS link discovery on individually enabled sites. Optional site volume up to 300%; amplification requires explicit tab capture. No microphone recording or audio upload.
+Review: test Home column changes and restore, comments/replies, blocking/undo, backup validation, and Shorts navigation. Recommendation feedback was verified in a local fixture; live feedback submission was excluded at the owner's request.
+The store ZIP excludes local reload servers, development alarms and loopback access. Product audio playback background/offscreen support remains.
