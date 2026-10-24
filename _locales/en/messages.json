@@ -77,7 +77,7 @@
   "densityDefault": { "message": "Default" },
   "commentDensityLabel": { "message": "Comment appearance" },
   "commentDensityCompact": { "message": "Compact" },
-  "commentDensityHint": { "message": "Time, author and text on one line without avatars. Actions appear on hover or keyboard focus." },
+  "commentDensityHint": { "message": "Time, a small profile image and text on one line. Select the image to see the handle and channel menu." },
   "homeDensityLabel": { "message": "Home video size" },
   "homeDensitySmall": { "message": "Small" },
   "homeDensityCompact": { "message": "Smaller" },

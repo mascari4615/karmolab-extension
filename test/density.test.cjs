@@ -78,8 +78,9 @@ test('late initial settings do not overwrite newer changes from the panel', asyn
   assert.equal(p.attrs.get('data-kl-home-grid'),'compact');assert.equal(p.html.dataset.klCommentDensity,'compact');
 });
 test('old backups without density keys preserve current layout preferences', async () => {
-  const localValues={commentDensity:'compact',homeDensity:'small'};
+  const localValues={commentDensity:'compact',homeDensity:'small',commentFontSize:18,commentLineHeight:26,homeCardWidth:220};
   const area=values=>({get:async()=>({...values}),set:async patch=>Object.assign(values,patch),remove:async()=>{}});
   await backups.restore({format:'karmolab-youtube-backup',version:1,settings:{commentTranslate:false},blocks:[]},{local:area(localValues),sync:area({})});
   assert.equal(localValues.commentDensity,'compact');assert.equal(localValues.homeDensity,'small');assert.equal(localValues.commentTranslate,false);
+  assert.equal(localValues.commentFontSize,18);assert.equal(localValues.commentLineHeight,26);assert.equal(localValues.homeCardWidth,220);
 });

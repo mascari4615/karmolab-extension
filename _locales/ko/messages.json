@@ -77,7 +77,7 @@
   "densityDefault": { "message": "기본" },
   "commentDensityLabel": { "message": "댓글 모양" },
   "commentDensityCompact": { "message": "컴팩트" },
-  "commentDensityHint": { "message": "사진 없이 시간, 닉네임과 본문을 같은 줄에 표시. 조작은 마우스를 올리거나 키보드로 선택할 때 표시." },
+  "commentDensityHint": { "message": "시간, 작은 프로필 사진과 본문을 한 줄에 표시. 사진을 누르면 아이디와 채널 메뉴." },
   "homeDensityLabel": { "message": "홈 영상 크기" },
   "homeDensitySmall": { "message": "작게" },
   "homeDensityCompact": { "message": "더 작게" },
