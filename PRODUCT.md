@@ -24,3 +24,5 @@
 - Keyword targets have separate comments, video and Shorts switches. Existing settings default to all targets enabled.
 - The existing panel reports current covered items and reasons without exposing original titles or thumbnails. Show once resets at navigation; stable content IDs support persistent item exceptions and revocation.
 - Success: change these settings without leaving YouTube, with saved-state feedback and preserved drafts.
+- User requested compact comments resembling a dense chat view, and resizable Home video cards. Preserve native reply, translation, blocking and folding behavior.
+- Density preferences live in the management panel and backups. Native layout remains available and is the default for a new installation.

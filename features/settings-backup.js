@@ -1,7 +1,7 @@
 (() => {
   const keywords = typeof module !== 'undefined' && module.exports ? require('./keyword-core.js') : globalThis.KarmoKeywords;
   const booleans = ['shortsDate', 'shortsCount', 'shortsWatchTime', 'userBlock', 'keywordEnabled', 'keywordComments', 'keywordVideos', 'keywordShorts', 'commentTranslate'];
-  const settingKeys = [...booleans, 'shortsCountMode', 'keywordWords'];
+  const settingKeys = [...booleans, 'shortsCountMode', 'keywordWords', 'commentDensity', 'homeDensity'];
   const format = 'karmolab-youtube-backup';
   const maxBytes = 1024 * 1024;
   const idValid = id => typeof id === 'string' && (/^UC[\w-]{22}$/.test(id) || /^@[^\s/#?<>"\u0000-\u001f\u007f]{1,100}$/u.test(id));
@@ -12,6 +12,8 @@
       if (!settingKeys.includes(key)) throw Error('Unknown setting');
       if (booleans.includes(key) && typeof value !== 'boolean') throw Error('Invalid boolean');
       if (key === 'shortsCountMode' && !['both', 'unique', 'views'].includes(value)) throw Error('Invalid display mode');
+      if (key === 'commentDensity' && !['default', 'compact'].includes(value)) throw Error('Invalid comment density');
+      if (key === 'homeDensity' && !['default', 'small', 'compact'].includes(value)) throw Error('Invalid home density');
       if (key === 'keywordWords') {
         if (!Array.isArray(value) || value.some(word => typeof word !== 'string' || /[\r\n]/.test(word))) throw Error('Invalid keywords');
         settings[key] = keywords.parse(value.join('\n'));
@@ -36,7 +38,7 @@
     const settings = {};
     for (const key of settingKeys) {
       const value = key === 'shortsDate' ? sync[key] : local[key];
-      settings[key] = value === undefined ? (key === 'keywordWords' ? [] : key === 'shortsCountMode' ? 'both' : true) : value;
+      settings[key] = value === undefined ? (key === 'keywordWords' ? [] : key === 'shortsCountMode' ? 'both' : key.endsWith('Density') ? 'default' : true) : value;
     }
     const blocks = Object.entries(local).filter(([key]) => key.startsWith('blockedChannel:')).map(([key, record]) => ({ ...record, key }));
     const backup = { ...validate({ format, version: 1, settings, blocks }), exportedAt: new Date().toISOString() };

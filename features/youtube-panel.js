@@ -49,6 +49,14 @@
     <aside role="dialog" aria-modal="false" aria-labelledby="title" hidden>
       <header><h2 id="title">KarmoLab</h2><button id="close" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></header>
       <main>
+        <section><h3 data-msg="densityHeading"></h3>
+          <label for="commentDensity" data-msg="commentDensityLabel"></label>
+          <select id="commentDensity" disabled><option value="default" data-msg="densityDefault"></option><option value="compact" data-msg="commentDensityCompact"></option></select>
+          <p data-msg="commentDensityHint"></p>
+          <label for="homeDensity" data-msg="homeDensityLabel"></label>
+          <select id="homeDensity" disabled><option value="default" data-msg="densityDefault"></option><option value="small" data-msg="homeDensitySmall"></option><option value="compact" data-msg="homeDensityCompact"></option></select>
+          <p data-msg="homeDensityHint"></p>
+        </section>
         <section><h3 data-msg="panelComments"></h3>
           <label><span data-msg="commentTranslate"></span><input id="translation" type="checkbox" disabled></label>
           <p data-msg="panelTranslationHint"></p>
@@ -154,6 +162,7 @@
   }
   review?.subscribe(renderReview);
   review?.ready.then(renderReview);
+  const selects = { shortsCountMode: $('#countMode'), commentDensity: $('#commentDensity'), homeDensity: $('#homeDensity') };
   function announce(key) { status.textContent = msg(key); }
   function renderBlocks() {
     const term = $('#search').value.normalize('NFKC').toLowerCase().trim();
@@ -183,8 +192,10 @@
     }
     words.disabled = $('#search').disabled = !loaded;
     $('#save').disabled = !loaded || !dirty || savingWords || backupBusy;
-    $('#countMode').disabled = !loaded || pending.has('shortsCountMode') || backupBusy;
-    if (!pending.has('shortsCountMode')) $('#countMode').value = values.shortsCountMode || 'both';
+    for (const [key, select] of Object.entries(selects)) {
+      select.disabled = !loaded || pending.has(key) || backupBusy;
+      if (!pending.has(key)) select.value = key === 'commentDensity' ? KarmoDensity.commentMode(values[key]) : key === 'homeDensity' ? KarmoDensity.homeMode(values[key]) : values[key] || 'both';
+    }
     $('#export').disabled = $('#importFile').disabled = !loaded || backupBusy;
     $('#restore').disabled = !loaded || !selectedBackup || backupBusy || savingWords || pending.size > 0;
     if (loaded && !dirty && !savingWords) words.value = (values.keywordWords || []).join('\n');
@@ -242,7 +253,7 @@
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (!['local', 'sync'].includes(area)) return;
-    const entries = Object.entries(changes).filter(([key]) => area === 'sync' ? key === 'shortsDate' : key.startsWith('blockedChannel:') || Object.hasOwn(toggles, key) || ['keywordWords', 'shortsCountMode'].includes(key));
+    const entries = Object.entries(changes).filter(([key]) => area === 'sync' ? key === 'shortsDate' : key.startsWith('blockedChannel:') || Object.hasOwn(toggles, key) || Object.hasOwn(selects, key) || key === 'keywordWords');
     if (!entries.length) return;
     changeVersion++;
     const target = area === 'sync' ? syncValues : values;
@@ -251,12 +262,12 @@
     }
     if (loaded) render();
   });
-  $('#countMode').addEventListener('change', async () => {
-    const value = $('#countMode').value, version = changeVersion;
-    pending.add('shortsCountMode'); render();
-    try { await chrome.storage.local.set({ shortsCountMode: value }); if (version === changeVersion) values.shortsCountMode = value; announce('panelSaved'); }
+  for (const [key, select] of Object.entries(selects)) select.addEventListener('change', async () => {
+    const value = select.value, version = changeVersion;
+    pending.add(key); render();
+    try { await chrome.storage.local.set({ [key]: value }); if (version === changeVersion) values[key] = value; announce('panelSaved'); }
     catch { announce('panelSaveError'); }
-    finally { pending.delete('shortsCountMode'); render(); }
+    finally { pending.delete(key); render(); }
   });
   $('#export').addEventListener('click', async () => {
     backupBusy = true; render();

@@ -1,0 +1,49 @@
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) {
+  position:relative;
+  margin:0 !important;
+  padding:3px 0 !important;
+  min-height:20px;
+}
+html[data-kl-comment-density="compact"] ytd-comment-thread-renderer { margin-bottom:4px !important; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) :is(#author-thumbnail,#author-thumbnail-button) { display:none !important; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #body { position:relative; margin:0 !important; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #main { display:block !important; margin:0 !important; padding-inline:72px 24px; min-width:0; line-height:20px; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) :is(#header,#header-author) { display:contents !important; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #header-author h3 { display:inline !important; float:inline-start; max-width:100%; overflow-wrap:anywhere; margin:0 6px 0 0 !important; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-text { display:inline !important; width:auto !important; font-size:13px; font-weight:600; line-height:20px; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #published-time-text { position:absolute; inset-inline-start:0; top:0; width:64px; margin:0 !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:end; font-size:11px; font-variant-numeric:tabular-nums; line-height:20px; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #expander { display:block !important; margin:0 !important; font-size:14px; line-height:20px; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #content-text { font-size:14px; line-height:20px; unicode-bidi:plaintext; overflow-wrap:anywhere; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #expander > :is(#more,#less):not([hidden]) { display:inline-block; margin:0; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) .translate-button:not([hidden]) { display:inline-block; margin:0 4px; font-size:12px; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons { margin:0 !important; min-height:0 !important; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar {
+  position:absolute; inset-inline-end:24px; top:-16px; z-index:3; margin:0 !important;
+  max-width:calc(100% - 32px); flex-wrap:wrap; justify-content:flex-end; box-sizing:border-box; background:#fff; border:1px solid #ccc; border-radius:6px;
+  opacity:0; pointer-events:none;
+}
+html[data-kl-comment-density="compact"][dark] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar { background:#212121; border-color:#555; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer):is(:hover,:focus-within) #action-buttons > #toolbar { opacity:1; pointer-events:auto; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-menu { position:absolute; inset-inline-end:0; top:0; opacity:0; pointer-events:none; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-menu button { width:24px !important; height:24px !important; min-height:24px !important; padding:0 !important; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer):is(:hover,:focus-within) #action-menu { opacity:1; pointer-events:auto; }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer { margin-inline-start:16px !important; }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer .ytSubThreadSubThreadContent { margin-top:0 !important; }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies,#more-replies-sub-thread) button { height:28px !important; min-height:28px; padding-block:0; font-size:12px; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #reply-dialog:not(:empty) { margin-top:8px; }
+@media (hover:none), (pointer:coarse) {
+  html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar { position:static; max-width:100%; margin-top:4px !important; opacity:1; pointer-events:auto; border:0; background:transparent; }
+  html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar button { min-height:44px; }
+  html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies,#more-replies-sub-thread) button { height:44px !important; min-height:44px; }
+  html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-menu { opacity:1; pointer-events:auto; }
+  html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-menu button { width:44px !important; height:44px !important; min-height:44px !important; }
+  html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #main { padding-inline-end:44px; }
+}
+ytd-rich-grid-renderer[data-kl-home-grid] {
+  --ytd-rich-grid-items-per-row:var(--kl-home-columns) !important;
+  --ytd-rich-grid-posts-per-row:var(--kl-home-columns) !important;
+  --ytd-rich-grid-item-min-width:0px !important;
+  --ytd-rich-grid-item-max-width:100% !important;
+}
+ytd-rich-grid-renderer[data-kl-home-grid] > #contents > ytd-rich-grid-row,
+ytd-rich-grid-renderer[data-kl-home-grid] > #contents > ytd-rich-grid-row > #contents { display:contents !important; }
