@@ -16,18 +16,18 @@ html[data-kl-comment-density="compact"][dark] {
   --kl-comment-meta:#a0a0a0;
 }
 html[data-kl-comment-density="compact"] ytd-comment-thread-renderer { position:relative; margin-bottom:4px !important; }
-html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail { display:block !important; position:absolute !important; inset-inline-start:72px; top:1px; width:20px; height:20px; margin:0 !important; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail { display:block !important; position:absolute !important; inset-inline-start:48px; top:1px; width:20px; height:20px; margin:0 !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail-button { display:flex !important; align-items:center; justify-content:center; width:20px; height:20px; padding:0; margin:0; border-radius:50%; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail :is(yt-img-shadow,img) { width:20px !important; height:20px !important; border-radius:50%; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail .threadline { display:none; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail-button:focus-visible { outline:2px solid var(--kl-comment-author); outline-offset:2px; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #body { position:relative; margin:0 !important; }
-html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #main { display:block !important; margin:0 !important; padding-inline:100px 80px; min-width:0; line-height:var(--kl-comment-line-height,22px); }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #main { display:block !important; margin:0 !important; padding-inline:76px 80px; min-width:0; line-height:var(--kl-comment-line-height,22px); }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) :is(#header,#header-author) { display:contents !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #header-author h3 { display:none !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-text { display:inline !important; width:auto !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) :is(#author-text,#author-text span) { color:var(--kl-comment-author) !important; font-size:12px !important; font-weight:500 !important; line-height:22px !important; }
-html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #published-time-text { position:absolute; inset-inline-start:0; top:0; width:64px; margin:0 !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:end; font-variant-numeric:tabular-nums; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #published-time-text { position:absolute; inset-inline-start:0; top:0; width:40px; margin:0 !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:end; font-variant-numeric:tabular-nums; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) :is(#published-time-text,#published-time-text a) { color:var(--kl-comment-meta) !important; font-size:12px !important; font-weight:400 !important; line-height:22px !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #published-time-text a[data-kl-date] { font-size:0 !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #published-time-text a[data-kl-date]::before { content:attr(data-kl-date) / ""; font-size:12px; }
@@ -74,9 +74,9 @@ html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-r
   html[data-kl-comment-density="compact"] ytd-comment-thread-renderer:has(> #replies ytd-comment-replies-renderer) > #comment-container > :is(ytd-comment-view-model,ytd-comment-renderer) #main { padding-inline-end:80px; }
 }
 @media (hover:none), (pointer:coarse) {
-  html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail { inset-inline-start:68px; top:-11px; width:44px; height:44px; }
+  html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail { inset-inline-start:44px; top:-11px; width:44px; height:44px; }
   html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail-button { width:44px; height:44px; }
-  html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #main { padding-inline-start:116px; }
+  html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #main { padding-inline-start:92px; }
   html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar { position:static; max-width:100%; margin-top:4px !important; opacity:1; pointer-events:auto; border:0; background:transparent; }
   html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar button { min-height:44px; }
   html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies,#more-replies-sub-thread,#less-replies-sub-thread) button { height:44px !important; min-height:44px; }
@@ -107,4 +107,19 @@ ytd-rich-grid-renderer[data-kl-home-grid] > #contents > ytd-rich-grid-row > #con
 ytd-rich-grid-renderer[data-kl-home-grid] > #contents > :is(ytd-rich-section-renderer,ytd-continuation-item-renderer) { grid-column:1/-1; width:100%; }
 @supports (reading-flow:grid-rows) {
   ytd-rich-grid-renderer[data-kl-home-grid] > #contents { grid-auto-flow:row dense; reading-flow:grid-rows; }
+}
+
+html[data-kl-comment-density="compact"][data-kl-on-shorts] :is(ytd-comment-view-model,ytd-comment-renderer) #published-time-text { width:32px; }
+html[data-kl-comment-density="compact"][data-kl-on-shorts] :is(ytd-comment-view-model,ytd-comment-renderer) #author-thumbnail { inset-inline-start:40px; }
+html[data-kl-comment-density="compact"][data-kl-on-shorts] :is(ytd-comment-view-model,ytd-comment-renderer) #main,
+html[data-kl-comment-density="compact"][data-kl-on-shorts] ytd-comment-thread-renderer:has(> #replies ytd-comment-replies-renderer) > #comment-container > :is(ytd-comment-view-model,ytd-comment-renderer) #main { padding-inline:68px 28px; }
+html[data-kl-comment-density="compact"][data-kl-on-shorts] :is(ytd-comment-view-model,ytd-comment-renderer):has(.translate-button:not([hidden])) #main { padding-inline-end:76px!important; }
+html[data-kl-comment-density="compact"][data-kl-on-shorts] ytd-comment-replies-renderer > #collapsed-threads > yt-sub-thread > .ytSubThreadSubThreadContent > .show-replies-button,
+html[data-kl-comment-density="compact"][data-kl-on-shorts] ytd-comment-replies-renderer > #expanded-threads > yt-sub-thread > .ytSubThreadSubThreadContent > #less-replies-sub-thread { position:static; margin-inline-start:68px; }
+html[data-kl-comment-density="compact"][data-kl-on-shorts] ytd-comment-replies-renderer :is(#more-replies-sub-thread,#less-replies-sub-thread) button { height:24px!important;min-height:24px; }
+@media (hover:none), (pointer:coarse) {
+  html[data-kl-comment-density="compact"][data-kl-on-shorts] :is(ytd-comment-view-model,ytd-comment-renderer) #main,
+  html[data-kl-comment-density="compact"][data-kl-on-shorts] ytd-comment-thread-renderer:has(> #replies ytd-comment-replies-renderer) > #comment-container > :is(ytd-comment-view-model,ytd-comment-renderer) #main { padding-inline:88px 104px; }
+  html[data-kl-comment-density="compact"][data-kl-on-shorts] :is(ytd-comment-view-model,ytd-comment-renderer):has(.translate-button:not([hidden])) #main { padding-inline-end:104px!important; }
+  html[data-kl-comment-density="compact"][data-kl-on-shorts] ytd-comment-replies-renderer :is(#more-replies-sub-thread,#less-replies-sub-thread) button { height:44px!important;min-height:44px; }
 }

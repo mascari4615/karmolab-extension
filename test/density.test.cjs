@@ -10,7 +10,7 @@ function page(write = async()=>{}) {
   const attrs=new Map(), styles=new Map([['--ytd-rich-grid-items-per-row','3']]), events={};
   const grid={isConnected:true,setAttribute:(k,v)=>attrs.set(k,v),removeAttribute:k=>attrs.delete(k),getBoundingClientRect:()=>({width:1200}),style:{getPropertyValue:k=>styles.get(k)||'',setProperty:(k,v)=>styles.set(k,v),removeProperty:k=>styles.delete(k)}};
   const rootStyles=new Map();
-  const html={dataset:{},style:{setProperty:(key,value)=>rootStyles.set(key,value)}}, location={pathname:'/'};
+  const html={dataset:{},toggleAttribute:()=>{},style:{setProperty:(key,value)=>rootStyles.set(key,value)}}, location={pathname:'/'};
   const context={KarmoDensity:density,location,console,document:{documentElement:html,querySelector:()=>grid,querySelectorAll:()=>[],addEventListener:(k,v)=>{events[k]=v;}},ResizeObserver:class{constructor(cb){resized=cb;}observe(){}disconnect(){}},MutationObserver:class{observe(){}},setTimeout:()=>1,chrome:{storage:{local:{get:()=>new Promise(resolve=>{resolveGet=resolve;}),set:write},onChanged:{addListener:fn=>{changed=fn;}}}}};
   vm.runInNewContext(source,context);
   return {grid,attrs,styles,html,events,location,rootStyles,selectHome:(mode,count)=>context.KarmoDensityLayout.selectHome(mode,count),subscribe:fn=>context.KarmoDensityLayout.subscribeHome(fn),preview:patch=>context.KarmoDensityLayout.preview(patch),load:async values=>{resolveGet(values);await Promise.resolve();},change:values=>changed(Object.fromEntries(Object.entries(values).map(([k,v])=>[k,{newValue:v}])),'local'),resize:()=>resized()};
@@ -20,9 +20,13 @@ test('unknown modes return native layout', () => {
   assert.equal(density.homeMode('small'),'small');assert.equal(density.homeMode(undefined),'default');
 });
 test('edited marker is separated without changing ordinary date text', () => {
-  assert.deepEqual(density.publishedTime(' 3일 전(수정됨) '),{text:'3일 전',edited:true});
-  assert.deepEqual(density.publishedTime('2 days ago (edited)'),{text:'2 days ago',edited:true});
-  assert.deepEqual(density.publishedTime('1시간 전'),{text:'1시간 전',edited:false});
+  assert.deepEqual(density.publishedTime(' 3일 전(수정됨) '),{text:'3D',edited:true});
+  assert.deepEqual(density.publishedTime('2 days ago (edited)'),{text:'2D',edited:true});
+  assert.deepEqual(density.publishedTime('1시간 전'),{text:'1h',edited:false});
+  assert.deepEqual(density.publishedTime('1개월 전'),{text:'1M',edited:false});
+  assert.deepEqual(density.publishedTime('2주 전'),{text:'2W',edited:false});
+  assert.deepEqual(density.publishedTime('5 minutes ago'),{text:'5m',edited:false});
+  assert.deepEqual(density.publishedTime('5 months ago'),{text:'5M',edited:false});
   assert.deepEqual(density.publishedTime('3일 전 (다른 정보)'),{text:'3일 전 (다른 정보)',edited:false});
 });
 test('size ranges normalize invalid input and requested columns stay stable across desktop widths', () => {

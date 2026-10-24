@@ -8,8 +8,12 @@
   }
   function publishedTime(value) {
     const full = String(value ?? '').trim().replace(/\s+/g, ' ');
-    const text = full.replace(/\s*[（(](?:수정됨|edited)[）)]$/i, '').trim();
-    return { text, edited: text !== full };
+    const plain = full.replace(/\s*[（(](?:수정됨|edited)[）)]$/i, '').trim();
+    const ko=plain.match(/^(\d+(?:\.\d+)?)\s*(초|분|시간|일|주|개월|달|년)\s*전$/);
+    const en=plain.match(/^(\d+(?:\.\d+)?)\s*(second|minute|hour|day|week|month|year)s?\s+ago$/i);
+    const units={초:'s',분:'m',시간:'h',일:'D',주:'W',개월:'M',달:'M',년:'Y',second:'s',minute:'m',hour:'h',day:'D',week:'W',month:'M',year:'Y'};
+    const match=ko||en;
+    return { text:match?match[1]+units[match[2].toLowerCase()]:plain, edited:plain!==full };
   }
   function homeChoice(values) {
     const mode = homeMode(values.homeDensity);

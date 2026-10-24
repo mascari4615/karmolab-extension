@@ -19,6 +19,7 @@
   function notifyHome() { for (const listener of homeListeners) listener(homeState()); }
   function apply() {
     document.documentElement.dataset.klCommentDensity = commentMode;
+    document.documentElement.toggleAttribute('data-kl-on-shorts',location.pathname.startsWith('/shorts/'));
     document.documentElement.style.setProperty('--kl-comment-font-size', sizes.commentFontSize + 'px');
     document.documentElement.style.setProperty('--kl-comment-line-height', Math.max(sizes.commentLineHeight,sizes.commentFontSize+4) + 'px');
     if (commentMode === 'compact') {
@@ -32,6 +33,7 @@
       for (const link of document.querySelectorAll('ytd-comment-view-model #published-time-text a,ytd-comment-renderer #published-time-text a')) {
         const value = KarmoDensity.publishedTime(link.textContent);
         if (link.dataset.klDate !== value.text) link.dataset.klDate = value.text;
+        if(!link.title||link.title===link.dataset.klDateTitle){link.title=link.textContent.trim();link.dataset.klDateTitle=link.title;}
         link.toggleAttribute('data-kl-edited', value.edited);
       }
     }
