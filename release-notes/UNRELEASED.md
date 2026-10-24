@@ -1,5 +1,7 @@
 # Local development changes
 
+- 검색 결과의 차단 채널 카드와 빈 영상 묶음 숨김. Shorts 카드의 바깥 칸 제거와 남은 카드 앞당김, 차단 해제 시 복원.
+
 - 유튜브 댓글과 답글의 한국어 번역 버튼 자동 클릭, 기본 켜짐과 팝업 중지. 원문 보기 선택 보존.
 
 Not a store submission or a release approval. Keep the manifest version during local iteration.

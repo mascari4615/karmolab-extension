@@ -2,6 +2,7 @@
   const prefix = 'blockedChannel:';
   const cards = 'ytd-video-renderer,ytd-rich-item-renderer,ytd-grid-video-renderer,ytd-compact-video-renderer,yt-lockup-view-model,ytd-reel-item-renderer,yt-shorts-lockup-view-model,ytm-shorts-lockup-view-model';
   const comments = 'ytd-comment-view-model,ytd-comment-renderer';
+  const shelves = 'ytd-shelf-renderer,ytd-reel-shelf-renderer,grid-shelf-view-model';
   const ownerLinks = '#channel-name a[href],ytd-channel-name a[href],a.yt-content-metadata-view-model__metadata-text[href],.yt-lockup-metadata-view-model__metadata a[href],yt-content-metadata-view-model a[href],yt-lockup-metadata-view-model a[href]';
   let records = {}, enabled = true, loaded = false, scheduled = false;
   const metadata = new Map(), queue = [];
@@ -139,6 +140,19 @@
       }
     } else { notice?.remove(); }
   }
+  function layout() {
+    for (const shelf of document.querySelectorAll(shelves)) {
+      const items = [...shelf.querySelectorAll(cards)];
+      const hidden = items.filter(item => item.closest('.kl-block-hidden'));
+      // 소유자 미확인 카드는 유지, 모든 카드가 차단된 묶음만 숨김
+      shelf.classList.toggle('kl-block-empty', items.length > 0 && hidden.length === items.length);
+      const reflow = shelf.matches('grid-shelf-view-model') && hidden.length > 0;
+      const rows = [...shelf.querySelectorAll('.ytGridShelfViewModelGridShelfRow')];
+      for (const parent of new Set(rows.map(row => row.parentElement))) {
+        parent.classList.toggle('kl-block-grid', reflow);
+      }
+    }
+  }
   function scan() {
     if (!loaded) return;
     observer.disconnect();
@@ -150,12 +164,20 @@
         const rect = root.getBoundingClientRect();
         const visible = rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth;
         const person = direct || videoOwner(root, visible);
-        const wrapper = root.closest('ytd-rich-item-renderer');
+        const wrapper = root.closest('.ytGridShelfViewModelGridShelfItem')
+          || root.closest('ytd-rich-item-renderer,ytm-shorts-lockup-view-model-v2');
         const target = wrapper && wrapper.querySelectorAll(cards).length === 1 ? wrapper : root;
         target.classList.toggle('kl-block-hidden', Boolean(enabled && blocked(person?.id)));
         const anchor = root.querySelector('.ytLockupMetadataViewModelTextContainer, .yt-lockup-metadata-view-model__text-container, #meta, #metadata, .shortsLockupViewModelHostMetadata, .ytmShortsLockupViewModelHostMetadata');
         if (anchor) addButton(root, person, anchor, true, 'card');
       }
+      for (const root of document.querySelectorAll('ytd-channel-renderer')) {
+        const person = owner(root, 'a#main-link[href],a.channel-link[href]');
+        root.classList.toggle('kl-block-hidden', Boolean(enabled && blocked(person?.id)));
+        const anchor = root.querySelector('#info-section');
+        if (anchor) addButton(root, person, anchor, true, 'card');
+      }
+      layout();
       for (const root of document.querySelectorAll(comments)) {
         const person = owner(root, 'a#author-text[href]');
         // 차단한 부모 댓글은 답글까지 숨김, 답글 작성자 차단은 해당 답글만

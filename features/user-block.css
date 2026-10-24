@@ -1,4 +1,8 @@
 .kl-block-hidden { display: none !important; }
+.kl-block-empty { display: none !important; }
+.kl-block-grid { display: flex !important; flex-wrap: wrap; gap: 16px; }
+.kl-block-grid > .ytGridShelfViewModelGridShelfRow { display: contents !important; }
+.kl-block-grid > .ytGridShelfViewModelGridShelfRow > .ytGridShelfViewModelGridShelfItem { margin: 0 !important; }
 .kl-block-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; box-sizing: border-box; min-height: 36px; margin-inline-start: 8px; padding: 0 14px; border: 1px solid #c6c6c6; border-radius: 20px; background: #f2f2f2; color: #0f0f0f; font: 500 14px/1.4 Roboto, "Malgun Gothic", Arial, sans-serif; white-space: nowrap; cursor: pointer; vertical-align: middle; -webkit-tap-highlight-color: transparent; }
 .kl-block-button svg { width: 18px; height: 18px; flex-shrink: 0; pointer-events: none; }
 .kl-block-button:hover { background: #e5e5e5; }
