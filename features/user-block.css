@@ -37,3 +37,11 @@ yt-reel-channel-bar-view-model:has(> .kl-block-button) { flex-wrap: wrap; row-ga
 .kl-block-playback { position: relative !important; }
 .kl-block-playback > :not(.kl-block-notice) { visibility: hidden !important; }
 .kl-block-notice { position: absolute; inset: 0; z-index: 20; display: grid; place-content: center; padding: 24px; background: #000; color: #fff; text-align: center; font: 16px/1.6 Roboto, Arial, sans-serif; }
+ytd-browse[page-subtype="home"] ytd-rich-grid-renderer ytd-rich-item-renderer :is(.ytLockupMetadataViewModelTextContainer,#meta) { position:relative; padding-inline-end:36px; }
+ytd-browse[page-subtype="home"] ytd-rich-grid-renderer ytd-rich-item-renderer .kl-block-button--card { position:absolute; inset-inline-end:0; top:0; width:32px; height:32px; min-height:32px; padding:0; margin:0; opacity:0; }
+ytd-browse[page-subtype="home"] ytd-rich-grid-renderer ytd-rich-item-renderer .kl-block-button--card .kl-block-label { display:none; }
+ytd-browse[page-subtype="home"] ytd-rich-grid-renderer ytd-rich-item-renderer:is(:hover,:focus-within) .kl-block-button--card { opacity:1; }
+@media (hover:none), (pointer:coarse) {
+  ytd-browse[page-subtype="home"] ytd-rich-grid-renderer ytd-rich-item-renderer :is(.ytLockupMetadataViewModelTextContainer,#meta) { padding-inline-end:48px; }
+  ytd-browse[page-subtype="home"] ytd-rich-grid-renderer ytd-rich-item-renderer .kl-block-button--card { opacity:1;width:44px;height:44px;min-height:44px; }
+}

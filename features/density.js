@@ -3,12 +3,20 @@
   const changed = new Set();
   const sizes = Object.fromEntries(Object.keys(KarmoDensity.ranges).map(key => [key,KarmoDensity.number(key)]));
   const keys = ['commentDensity','homeDensity',...Object.keys(sizes)];
+  const homeListeners = new Set();
+  let homeLoaded = false, homeError = false, homePending = 0, homeRevision = 0;
+  let homeSaved = {homeDensity:'default',homeColumns:4}, homeQueue = Promise.resolve();
   const resize = new ResizeObserver(updateColumns);
   function updateColumns() {
     if (!grid || homeMode === 'default') return;
-    const value = String(KarmoDensity.columns(grid.getBoundingClientRect().width, homeMode, sizes.homeCardWidth));
+    const value = String(KarmoDensity.columns(grid.getBoundingClientRect().width, homeMode, sizes.homeColumns));
     if (grid.style.getPropertyValue('--kl-home-columns') !== value) grid.style.setProperty('--kl-home-columns', value);
+    notifyHome();
   }
+  function homeState() {
+    return { homeDensity:homeMode, homeColumns:sizes.homeColumns, actual: grid ? Number(grid.style.getPropertyValue('--kl-home-columns')) : null, loaded:homeLoaded, error:homeError };
+  }
+  function notifyHome() { for (const listener of homeListeners) listener(homeState()); }
   function apply() {
     document.documentElement.dataset.klCommentDensity = commentMode;
     document.documentElement.style.setProperty('--kl-comment-font-size', sizes.commentFontSize + 'px');
@@ -34,6 +42,7 @@
       grid = next; if (grid) resize.observe(grid);
     }
     if (grid) { grid.setAttribute('data-kl-home-grid', homeMode); updateColumns(); }
+    else notifyHome();
   }
   function schedule() {
     if (!timer) timer = setTimeout(() => { timer = undefined; apply(); }, 100);
@@ -44,18 +53,41 @@
     if (patch.homeDensity !== undefined) homeMode = KarmoDensity.homeMode(patch.homeDensity);
     for (const key of Object.keys(sizes)) if (Object.hasOwn(patch,key)) sizes[key] = KarmoDensity.number(key,patch[key]);
     apply();
+  }, subscribeHome(listener) { homeListeners.add(listener); listener(homeState()); return ()=>homeListeners.delete(listener); },
+  selectHome(mode,count) {
+    const patch = KarmoDensity.homeChoice({ homeDensity:mode,homeColumns:count });
+    const revision = ++homeRevision;
+    homePending++; homeError = false;
+    globalThis.KarmoDensityLayout.preview(patch);
+    const job = homeQueue.then(async()=> {
+      try { await chrome.storage.local.set(patch); homeSaved = patch; }
+      catch (error) {
+        if (revision === homeRevision) { homeError=true; globalThis.KarmoDensityLayout.preview(homeSaved); }
+        throw error;
+      } finally { homePending--; notifyHome(); }
+    });
+    homeQueue = job.catch(()=>{});
+    return job;
   } };
-  chrome.storage.local.get({ commentDensity:'default', homeDensity:'default', ...sizes }).then(values => {
+  chrome.storage.local.get({ commentDensity:'default', homeDensity:'default', ...sizes, homeColumns:null, homeCardWidth:null }).then(values => {
     if (!changed.has('commentDensity')) commentMode = KarmoDensity.commentMode(values.commentDensity);
-    if (!changed.has('homeDensity')) homeMode = KarmoDensity.homeMode(values.homeDensity);
-    for (const key of Object.keys(sizes)) if (!changed.has(key)) sizes[key] = KarmoDensity.number(key,values[key]);
+    const choice = KarmoDensity.homeChoice(values);
+    if (!changed.has('homeDensity')) homeMode = choice.homeDensity;
+    for (const key of Object.keys(sizes)) if (!changed.has(key)) sizes[key] = key === 'homeColumns' ? choice.homeColumns : KarmoDensity.number(key,values[key]);
+    homeSaved = {homeDensity:homeMode,homeColumns:sizes.homeColumns}; homeLoaded = true;
     apply();
-  }).catch(() => console.warn('KarmoLab: density settings could not be read'));
+  }).catch(() => { homeError=true; notifyHome(); console.warn('KarmoLab: density settings could not be read'); });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || !keys.some(key => changes[key])) return;
     if (changes.commentDensity) { changed.add('commentDensity'); commentMode = KarmoDensity.commentMode(changes.commentDensity.newValue); }
-    if (changes.homeDensity) { changed.add('homeDensity'); homeMode = KarmoDensity.homeMode(changes.homeDensity.newValue); }
-    for (const key of Object.keys(sizes)) if (changes[key]) { changed.add(key); sizes[key] = KarmoDensity.number(key,changes[key].newValue); }
+    if (changes.homeDensity || changes.homeColumns) {
+      const legacyMode = ['small','compact'].includes(changes.homeDensity?.newValue);
+      const choice = KarmoDensity.homeChoice({homeDensity:changes.homeDensity ? changes.homeDensity.newValue : homeSaved.homeDensity, homeColumns:changes.homeColumns ? changes.homeColumns.newValue : legacyMode ? undefined : homeSaved.homeColumns});
+      homeSaved = choice;
+      changed.add('homeDensity'); changed.add('homeColumns');
+      if (!homePending) { homeMode=choice.homeDensity; sizes.homeColumns=choice.homeColumns; homeError=false; }
+    }
+    for (const key of Object.keys(sizes)) if (key !== 'homeColumns' && changes[key]) { changed.add(key); sizes[key] = KarmoDensity.number(key,changes[key].newValue); }
     apply();
   });
   new MutationObserver(() => {

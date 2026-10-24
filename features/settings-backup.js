@@ -11,7 +11,8 @@
     if (!input || input.format !== format || input.version !== 1 || !input.settings || typeof input.settings !== 'object' || Array.isArray(input.settings) || !Array.isArray(input.blocks) || input.blocks.length > 5000) throw Error('Invalid backup format');
     const settings = {};
     for (const [key, value] of Object.entries(input.settings)) {
-      if (!settingKeys.includes(key)) throw Error('Unknown setting');
+      if (!settingKeys.includes(key) && key !== 'homeCardWidth') throw Error('Unknown setting');
+      if (key === 'homeCardWidth' && (!Number.isInteger(value) || value<180 || value>400 || (value-180)%10)) throw Error('Invalid legacy width');
       if (booleans.includes(key) && typeof value !== 'boolean') throw Error('Invalid boolean');
       if (key === 'shortsCountMode' && !['both', 'unique', 'views'].includes(value)) throw Error('Invalid display mode');
       if (key === 'commentDensity' && !['default', 'compact'].includes(value)) throw Error('Invalid comment density');
@@ -24,6 +25,9 @@
         if (!Array.isArray(value) || value.some(word => typeof word !== 'string' || /[\r\n]/.test(word))) throw Error('Invalid keywords');
         settings[key] = keywords.parse(value.join('\n'));
       } else settings[key] = value;
+    }
+    if (Object.hasOwn(settings,'homeDensity') || Object.hasOwn(settings,'homeCardWidth') || Object.hasOwn(settings,'homeColumns')) {
+      Object.assign(settings,density.homeChoice(settings));delete settings.homeCardWidth;
     }
     const seen = new Set();
     const blocks = input.blocks.map(record => {
@@ -46,6 +50,7 @@
       const value = key === 'shortsDate' ? sync[key] : local[key];
       settings[key] = value === undefined ? (ranges[key] ? ranges[key][3] : key === 'keywordWords' ? [] : key === 'shortsCountMode' ? 'both' : key.endsWith('Density') ? 'default' : true) : value;
     }
+    Object.assign(settings,density.homeChoice(local));
     const blocks = Object.entries(local).filter(([key]) => key.startsWith('blockedChannel:')).map(([key, record]) => ({ ...record, key }));
     const backup = { ...validate({ format, version: 1, settings, blocks }), exportedAt: new Date().toISOString() };
     parse(JSON.stringify(backup));

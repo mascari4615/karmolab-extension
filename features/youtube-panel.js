@@ -59,12 +59,7 @@
           <input id="commentFontSize" type="range" min="12" max="20" step="1" disabled>
           <label for="commentLineHeight"><span data-msg="commentLineHeightLabel"></span><output for="commentLineHeight" id="commentLineHeightValue"></output></label>
           <input id="commentLineHeight" type="range" min="18" max="32" step="2" disabled>
-          <label for="homeDensity" data-msg="homeDensityLabel"></label>
-          <select id="homeDensity" disabled><option value="default" data-msg="densityDefault"></option><option value="small" data-msg="homeDensitySmall"></option><option value="compact" data-msg="homeDensityCompact"></option><option value="custom" data-msg="homeDensityCustom"></option></select>
-          <p data-msg="homeDensityHint"></p>
-          <label for="homeCardWidth"><span data-msg="homeCardWidthLabel"></span><output for="homeCardWidth" id="homeCardWidthValue"></output></label>
-          <input id="homeCardWidth" type="range" min="180" max="400" step="10" disabled>
-          <p data-msg="homeCardWidthHint"></p>
+          <kl-home-size></kl-home-size><p data-msg="homeColumnsHint"></p>
         </section>
         <section><h3 data-msg="panelComments"></h3>
           <label><span data-msg="commentTranslate"></span><input id="translation" type="checkbox" disabled></label>
@@ -171,10 +166,9 @@
   }
   review?.subscribe(renderReview);
   review?.ready.then(renderReview);
-  const selects = { shortsCountMode: $('#countMode'), commentDensity: $('#commentDensity'), homeDensity: $('#homeDensity') };
-  const ranges = Object.fromEntries(Object.keys(KarmoDensity.ranges).map(key => [key,$('#'+key)]));
+  const selects = { shortsCountMode: $('#countMode'), commentDensity: $('#commentDensity') };
+  const ranges = Object.fromEntries(['commentFontSize','commentLineHeight'].map(key => [key,$('#'+key)]));
   function rangeValue(key) {
-    if (key === 'homeCardWidth' && ['small','compact'].includes(values.homeDensity)) return values.homeDensity === 'compact' ? 210 : 260;
     return KarmoDensity.number(key,values[key]);
   }
   function showRange(key, value) {
@@ -213,10 +207,10 @@
     $('#save').disabled = !loaded || !dirty || savingWords || backupBusy;
     for (const [key, select] of Object.entries(selects)) {
       select.disabled = !loaded || pending.has(key) || backupBusy;
-      if (!pending.has(key)) select.value = key === 'commentDensity' ? KarmoDensity.commentMode(values[key]) : key === 'homeDensity' ? KarmoDensity.homeMode(values[key]) : values[key] || 'both';
+      if (!pending.has(key)) select.value = key === 'commentDensity' ? KarmoDensity.commentMode(values[key]) : values[key] || 'both';
     }
     for (const [key,input] of Object.entries(ranges)) {
-      input.disabled = !loaded || backupBusy || pending.has(key) || (key !== 'homeCardWidth' && KarmoDensity.commentMode(values.commentDensity) !== 'compact');
+      input.disabled = !loaded || backupBusy || pending.has(key) || KarmoDensity.commentMode(values.commentDensity) !== 'compact';
       if (!pending.has(key)) { input.value = rangeValue(key); showRange(key,Number(input.value)); }
     }
     $('#export').disabled = $('#importFile').disabled = !loaded || backupBusy;
@@ -293,7 +287,7 @@
     finally { pending.delete(key); render(); }
   });
   for (const [key,input] of Object.entries(ranges)) {
-    const patch = () => ({ [key]:KarmoDensity.number(key,Number(input.value)), ...(key === 'homeCardWidth' ? { homeDensity:'custom' } : {}) });
+    const patch = () => ({ [key]:KarmoDensity.number(key,Number(input.value)) });
     input.addEventListener('input', () => {
       showRange(key,Number(input.value));
       if (key === 'commentFontSize') showRange('commentLineHeight',Number(ranges.commentLineHeight.value));
@@ -306,7 +300,7 @@
       catch { announce('panelSaveError'); }
       finally {
         pending.delete(key); render();
-        globalThis.KarmoDensityLayout?.preview({ commentDensity:KarmoDensity.commentMode(values.commentDensity), homeDensity:KarmoDensity.homeMode(values.homeDensity), ...Object.fromEntries(Object.keys(ranges).map(k=>[k,KarmoDensity.number(k,values[k])])) });
+        globalThis.KarmoDensityLayout?.preview({ commentDensity:KarmoDensity.commentMode(values.commentDensity), ...Object.fromEntries(Object.keys(ranges).map(k=>[k,KarmoDensity.number(k,values[k])])) });
       }
     });
   }
