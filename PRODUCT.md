@@ -1,0 +1,19 @@
+# KarmoLab extension
+
+## Product
+
+- Browser extension for managing YouTube viewing and comment preferences.
+- Existing functions: Shorts dates and daily viewing totals, user blocking, keyword folding, Korean comment translation, optional site utilities.
+- Users manage their own browser preferences while browsing YouTube.
+- Local browser storage is the source for preferences. The in-page panel and extension popup share existing keys.
+
+## Platform
+
+- Web, Chromium Manifest V3, Chrome and Edge. This user's installed trial runs in Edge.
+- Preserve the current local version and existing permissions. Store submissions require a separate request.
+
+## Current scope
+
+- User selected a KarmoLab button in YouTube's top bar opening a right-hand management panel.
+- Panel manages Korean translation, keyword editing, user blocking and unblock actions.
+- Success: change these settings without leaving YouTube, with saved-state feedback and preserved drafts.
