@@ -53,6 +53,7 @@ async function setup(page) {
 async function loadFixture(page) {
   await page.goto('https://www.youtube.com/fixture');
   await page.addStyleTag({ path: path.join(root, 'features/user-block.css') });
+  await page.addScriptTag({ path: path.join(root, 'features/block-undo.js') });
   await page.addScriptTag({ content: source });
   await page.locator('#comment .kl-block-button').waitFor({ state: 'attached' });
 }

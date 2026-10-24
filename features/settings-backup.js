@@ -1,6 +1,6 @@
 (() => {
   const keywords = typeof module !== 'undefined' && module.exports ? require('./keyword-core.js') : globalThis.KarmoKeywords;
-  const booleans = ['shortsDate', 'shortsCount', 'shortsWatchTime', 'userBlock', 'keywordEnabled', 'commentTranslate'];
+  const booleans = ['shortsDate', 'shortsCount', 'shortsWatchTime', 'userBlock', 'keywordEnabled', 'keywordComments', 'keywordVideos', 'keywordShorts', 'commentTranslate'];
   const settingKeys = [...booleans, 'shortsCountMode', 'keywordWords'];
   const format = 'karmolab-youtube-backup';
   const maxBytes = 1024 * 1024;

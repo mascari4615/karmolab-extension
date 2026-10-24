@@ -9,16 +9,17 @@ function area(initial = {}) {
 }
 test('export includes effective defaults and excludes histories, permissions and unrelated storage', () => {
   const data = api.create({ 'shortsDayView:x':{}, volumeSites:{}, base64Sites:['https://example.com/*'], other:'private' }, {});
-  assert.equal(Object.keys(data.settings).length,8);
+  assert.equal(Object.keys(data.settings).length,11);
   assert.equal(data.settings.shortsDate,true); assert.equal(data.settings.commentTranslate,true);
   assert.deepEqual(data.settings.keywordWords,[]); assert.equal(JSON.stringify(data).includes('private'),false);
   assert.deepEqual(api.parse(JSON.stringify(data)).blocks,[]);
 });
 test('backup round trip preserves Korean names, false settings and keywords', () => {
   const person=record('@한국어');
-  const data=api.create({commentTranslate:false,keywordWords:['고양이'],[person.key]:person},{shortsDate:false});
+  const data=api.create({commentTranslate:false,keywordComments:false,keywordVideos:true,keywordShorts:false,keywordWords:['고양이'],[person.key]:person},{shortsDate:false});
   const parsed=api.parse(JSON.stringify(data));
   assert.equal(parsed.settings.shortsDate,false);assert.equal(parsed.blocks[0].name,'검증 사용자');assert.deepEqual(parsed.settings.keywordWords,['고양이']);
+  assert.equal(parsed.settings.keywordComments,false);assert.equal(parsed.settings.keywordVideos,true);assert.equal(parsed.settings.keywordShorts,false);
 });
 test('invalid versions, structure, settings, modes and keywords rejected', () => {
   for (const data of [{...backup(),version:2},{...backup(),settings:42},backup({userBlock:'false'}),backup({shortsCountMode:'bad'}),backup({unknown:true}),backup({keywordWords:['a\nb']}),backup({keywordWords:['a'.repeat(201)]}),backup({keywordWords:Array.from({length:201},(_,i)=>String(i))})]) assert.throws(()=>api.parse(JSON.stringify(data)));
