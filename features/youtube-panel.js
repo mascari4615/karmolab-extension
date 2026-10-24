@@ -69,6 +69,18 @@
   trigger.textContent = 'KarmoLab'; trigger.title = msg('panelOpen');
   trigger.setAttribute('aria-label', msg('panelOpen'));
   trigger.setAttribute('aria-expanded', 'false'); trigger.setAttribute('aria-haspopup', 'dialog');
+  function syncTheme() {
+    const dark = document.documentElement.hasAttribute('dark') || document.documentElement.classList.contains('dark');
+    const colors = dark ? ['#0f0f0f', '#f1f1f1', '#aaa', '#333', '#272727', '#3ea6ff'] : ['#fff', '#0f0f0f', '#606060', '#ddd', '#eee', '#065fd4'];
+    const names = ['base-background', 'text-primary', 'text-secondary', '10-percent-layer', 'badge-chip-background', 'call-to-action'];
+    for (let i = 0; i < names.length; i++) {
+      host.style.setProperty('--yt-spec-' + names[i], colors[i]);
+      trigger.style.setProperty('--yt-spec-' + names[i], colors[i]);
+    }
+    host.style.colorScheme = dark ? 'dark' : 'light';
+  }
+  new MutationObserver(syncTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['dark', 'class'] });
+  syncTheme();
   let values = {}, loaded = false, loading = false, dirty = false, draftVersion = 0, changeVersion = 0;
   let savingWords = false, mountTimer;
   const pending = new Set();
