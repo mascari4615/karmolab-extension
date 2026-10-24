@@ -90,6 +90,7 @@
           <p id="review-count" role="status" aria-live="polite"></p><ul id="review-list"></ul>
           <h3 data-msg="reviewExceptions"></h3><ul id="review-exceptions"></ul>
         </section>
+        <section><h3 data-msg="homeHiddenHeading"></h3><p data-msg="homeHiddenHint"></p><p id="home-hidden-empty"></p><ul id="home-hidden-list"></ul></section>
         <section><h3 data-msg="backupHeading"></h3><p data-msg="backupHint"></p>
           <button id="export" type="button" disabled data-msg="backupExport"></button>
           <label for="importFile" data-msg="backupChoose"></label><input id="importFile" type="file" accept=".json,application/json" disabled>
@@ -199,6 +200,20 @@
       row.append(name, button); $('#blocked').append(row);
     }
   }
+  function renderHomeHidden() {
+    const entries=Object.entries(values).filter(([key,record])=>key.startsWith('hiddenHomeChannel:')&&Array.isArray(record?.ids));
+    $('#home-hidden-empty').textContent=entries.length?'':msg('homeHiddenEmpty');$('#home-hidden-list').replaceChildren();
+    for(const [key,person] of entries) {
+      const row=document.createElement('li'),name=document.createElement('span'),button=document.createElement('button');
+      name.textContent=person.name||person.ids[0];button.type='button';button.textContent=msg('homeHideUndo');button.disabled=pending.has(key)||backupBusy;
+      button.setAttribute('aria-label',msg('homeHideUndo')+': '+name.textContent);
+      button.addEventListener('click',async()=> {
+        pending.add(key);renderHomeHidden();const version=changeVersion;
+        try{await chrome.storage.local.remove(key);if(version===changeVersion)delete values[key];announce('panelSaved');}
+        catch{announce('panelSaveError');}finally{pending.delete(key);renderHomeHidden();$('#home-hidden-empty').tabIndex=-1;$('#home-hidden-empty').focus();}
+      });row.append(name,button);$('#home-hidden-list').append(row);
+    }
+  }
   function render() {
     for (const [key, input] of Object.entries(toggles)) {
       if (!pending.has(key)) input.checked = (key === 'shortsDate' ? syncValues : values)[key] !== false;
@@ -218,6 +233,7 @@
     $('#restore').disabled = !loaded || !selectedBackup || backupBusy || savingWords || pending.size > 0;
     if (loaded && !dirty && !savingWords) words.value = (values.keywordWords || []).join('\n');
     renderBlocks();
+    renderHomeHidden();
     renderReview();
   }
   async function load() {
@@ -271,7 +287,7 @@
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (!['local', 'sync'].includes(area)) return;
-    const entries = Object.entries(changes).filter(([key]) => area === 'sync' ? key === 'shortsDate' : key.startsWith('blockedChannel:') || Object.hasOwn(toggles, key) || Object.hasOwn(selects, key) || Object.hasOwn(ranges,key) || key === 'keywordWords');
+    const entries = Object.entries(changes).filter(([key]) => area === 'sync' ? key === 'shortsDate' : key.startsWith('blockedChannel:') || key.startsWith('hiddenHomeChannel:') || Object.hasOwn(toggles, key) || Object.hasOwn(selects, key) || Object.hasOwn(ranges,key) || key === 'keywordWords');
     if (!entries.length) return;
     changeVersion++;
     const target = area === 'sync' ? syncValues : values;
@@ -325,7 +341,7 @@
       const parsed = KarmoSettingsBackup.parse(await file.text());
       if (version !== fileVersion) return;
       selectedBackup = parsed;
-      $('#preview').textContent = chrome.i18n.getMessage('backupPreview', [String(Object.keys(parsed.settings).length), String(parsed.blocks.length)]);
+      $('#preview').textContent = chrome.i18n.getMessage('backupPreview', [String(Object.keys(parsed.settings).length), String(parsed.blocks.length), String(parsed.homeHidden.length)]);
     } catch { if (version === fileVersion) announce('backupInvalid'); }
     finally { if (version === fileVersion) render(); }
   });

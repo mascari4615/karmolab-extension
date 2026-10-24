@@ -22,6 +22,17 @@ test('backup round trip preserves Korean names, false settings and keywords', ()
   assert.equal(parsed.settings.shortsDate,false);assert.equal(parsed.blocks[0].name,'검증 사용자');assert.deepEqual(parsed.settings.keywordWords,['고양이']);
   assert.equal(parsed.settings.keywordComments,false);assert.equal(parsed.settings.keywordVideos,true);assert.equal(parsed.settings.keywordShorts,false);
 });
+test('Home-only hidden channels stay separate from blocks and merge through backups',async()=> {
+  const hidden={...record('@homeOnly','홈에서만 숨김'),key:'hiddenHomeChannel:@homeOnly'};
+  const blocked=record('@blocked');
+  const data=api.create({[hidden.key]:hidden,[blocked.key]:blocked},{});
+  assert.equal(data.blocks.length,1);assert.equal(data.homeHidden.length,1);assert.equal(data.homeHidden[0].key,hidden.key);
+  const local=area({'hiddenHomeChannel:@kept':{...hidden,key:undefined,ids:['@kept']}}),sync=area();
+  await api.restore(data,{local,sync});
+  assert.ok(local.store[hidden.key]);assert.ok(local.store['hiddenHomeChannel:@kept']);assert.ok(local.store[blocked.key]);
+  assert.equal(local.store['blockedChannel:@homeOnly'],undefined);
+  assert.throws(()=>api.parse(JSON.stringify({...backup(),homeHidden:[{...hidden,key:'blockedChannel:@homeOnly'}]})));
+});
 test('invalid versions, structure, settings, modes and keywords rejected', () => {
   for (const data of [{...backup(),version:2},{...backup(),settings:42},backup({userBlock:'false'}),backup({shortsCountMode:'bad'}),backup({unknown:true}),backup({keywordWords:['a\nb']}),backup({keywordWords:['a'.repeat(201)]}),backup({keywordWords:Array.from({length:201},(_,i)=>String(i))})]) assert.throws(()=>api.parse(JSON.stringify(data)));
 });

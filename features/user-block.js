@@ -230,7 +230,7 @@
     const current = button?._person;
     if (enabled && current && !button.disabled && !button._saving && confirm(chrome.i18n.getMessage('blockConfirm', current.name))) void addBlock(current, button);
   }
-  globalThis.KarmoUserBlock = { request(root) {
+  globalThis.KarmoUserBlock = { identify:identity, request(root) {
     const button = root.querySelector('.kl-block-button--comment');
     if (!button || !enabled || button.disabled) return false;
     requestBlock(button); return true;

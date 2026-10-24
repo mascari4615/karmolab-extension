@@ -7,6 +7,16 @@
   const format = 'karmolab-youtube-backup';
   const maxBytes = 1024 * 1024;
   const idValid = id => typeof id === 'string' && (/^UC[\w-]{22}$/.test(id) || /^@[^\s/#?<>"\u0000-\u001f\u007f]{1,100}$/u.test(id));
+  function validateRecords(list,prefix) {
+    if(!Array.isArray(list)||list.length>5000)throw Error('Invalid channel list');
+    const seen=new Set();
+    return list.map(record=> {
+      if(!record||!Array.isArray(record.ids)||!record.ids.length||record.ids.length>20||!record.ids.every(idValid)
+        ||!record.ids.some(id=>record.key===prefix+id)||seen.has(record.key)||typeof record.name!=='string'||!record.name.trim()||record.name.length>500
+        ||!Number.isSafeInteger(record.created)||record.created<0)throw Error('Invalid channel');
+      seen.add(record.key);return{key:record.key,name:record.name,ids:[...new Set(record.ids)],created:record.created};
+    });
+  }
   function validate(input) {
     if (!input || input.format !== format || input.version !== 1 || !input.settings || typeof input.settings !== 'object' || Array.isArray(input.settings) || !Array.isArray(input.blocks) || input.blocks.length > 5000) throw Error('Invalid backup format');
     const settings = {};
@@ -26,19 +36,12 @@
         settings[key] = keywords.parse(value.join('\n'));
       } else settings[key] = value;
     }
-    if (Object.hasOwn(settings,'homeDensity') || Object.hasOwn(settings,'homeCardWidth') || Object.hasOwn(settings,'homeColumns')) {
+    if (Object.hasOwn(settings,'homeDensity') || Object.hasOwn(settings,'homeCardWidth')) {
       Object.assign(settings,density.homeChoice(settings));delete settings.homeCardWidth;
     }
-    const seen = new Set();
-    const blocks = input.blocks.map(record => {
-      if (!record || !Array.isArray(record.ids) || !record.ids.length || record.ids.length > 20 || !record.ids.every(idValid)
-        || !record.ids.some(id => record.key === 'blockedChannel:' + id) || seen.has(record.key)
-        || typeof record.name !== 'string' || !record.name.trim() || record.name.length > 500
-        || !Number.isSafeInteger(record.created) || record.created < 0) throw Error('Invalid blocked user');
-      seen.add(record.key);
-      return { key: record.key, name: record.name, ids: [...new Set(record.ids)], created: record.created };
-    });
-    return { format, version: 1, settings, blocks };
+    const blocks=validateRecords(input.blocks,'blockedChannel:');
+    const homeHidden=validateRecords(input.homeHidden??[],'hiddenHomeChannel:');
+    return { format, version: 1, settings, blocks, homeHidden };
   }
   function parse(text) {
     if (typeof text !== 'string' || new TextEncoder().encode(text).length > maxBytes) throw Error('Backup exceeds 1 MiB');
@@ -52,7 +55,8 @@
     }
     Object.assign(settings,density.homeChoice(local));
     const blocks = Object.entries(local).filter(([key]) => key.startsWith('blockedChannel:')).map(([key, record]) => ({ ...record, key }));
-    const backup = { ...validate({ format, version: 1, settings, blocks }), exportedAt: new Date().toISOString() };
+    const homeHidden = Object.entries(local).filter(([key])=>key.startsWith('hiddenHomeChannel:')).map(([key,record])=>({...record,key}));
+    const backup = { ...validate({ format, version: 1, settings, blocks, homeHidden }), exportedAt: new Date().toISOString() };
     parse(JSON.stringify(backup));
     return backup;
   }
@@ -72,7 +76,7 @@
     const [local, sync] = await Promise.all([storage.local.get(null), storage.sync.get(null)]);
     const localPatch = {}, syncPatch = {};
     for (const [key, value] of Object.entries(backup.settings)) (key === 'shortsDate' ? syncPatch : localPatch)[key] = value;
-    for (const { key, ...record } of backup.blocks) {
+    for (const { key, ...record } of [...backup.blocks,...backup.homeHidden]) {
       const existing = local[key];
       localPatch[key] = existing?.ids ? { ...existing, ids: [...new Set([...existing.ids, ...record.ids])] } : record;
       if (localPatch[key].ids.length > 20) throw Error('Too many blocked-user aliases');
@@ -89,7 +93,7 @@
       for (const args of attempts.reverse()) { try { await rollback(...args); } catch { partial = true; } }
       throw Object.assign(new Error('Could not restore backup'), { cause, partial });
     }
-    return { settings: Object.keys(backup.settings).length, blocks: backup.blocks.length };
+    return { settings: Object.keys(backup.settings).length, blocks: backup.blocks.length, homeHidden:backup.homeHidden.length };
   }
   const api = { create, parse, restore, maxBytes };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
