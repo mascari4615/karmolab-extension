@@ -1,0 +1,29 @@
+<!doctype html><meta charset="utf-8"><title>Home hiding fixture</title>
+<link rel="stylesheet" href="/features/user-block.css">
+<style>body{font:16px/1.5 sans-serif;background:#fff;color:#111;padding:24px}button{min-height:44px;padding:8px 16px;cursor:pointer}ytd-rich-item-renderer{display:block;width:500px;border:1px solid #999;padding:16px;margin:16px 0}ytd-menu-popup-renderer,[role=dialog]{display:block;background:#fff;border:1px solid #777;padding:16px;margin:16px 0}[hidden]{display:none!important}.ytLockupMetadataViewModelTextContainer{position:relative}.kl-home-hide-button{margin-left:12px}.kl-home-hide-button svg{width:20px;height:20px}output{display:block;white-space:pre-wrap;margin-top:16px}</style>
+<h1>홈 추천 숨김 모의 화면</h1><p>실제 유튜브 전송과 사용자 목록 변경 없음</p>
+<ytd-browse page-subtype="home"><ytd-rich-grid-renderer><ytd-rich-item-renderer>
+<div class="ytLockupMetadataViewModelTextContainer"><h3><a href="https://www.youtube.com/watch?v=fixture0001">모의 영상</a></h3>
+<div class="ytLockupMetadataViewModelMetadata"><a href="https://www.youtube.com/@fixture-home-only">모의 채널</a></div>
+<button aria-label="추가 작업" id="more">추가 작업</button></div></ytd-rich-item-renderer></ytd-rich-grid-renderer></ytd-browse>
+<ytd-menu-popup-renderer role="menu" hidden><button role="menuitem" id="interest">관심 없음</button></ytd-menu-popup-renderer>
+<section role="dialog" aria-label="의견" hidden><button role="checkbox" aria-checked="false" id="reason">동영상이 마음에 들지 않습니다</button><button id="submit">제출</button></section>
+<output id="flow">[]</output><output id="store">{}</output>
+<script>
+(async()=>{
+  const messages=await (await fetch('/_locales/ko/messages.json')).json(),data={},listeners=[],flow=[];
+  const show=()=>{document.querySelector('#flow').textContent=JSON.stringify(flow);document.querySelector('#store').textContent=JSON.stringify(data);};
+  window.chrome={i18n:{getMessage:key=>messages[key]?.message||key},storage:{local:{
+    get:async()=>structuredClone(data),
+    set:async patch=>{const changes={};for(const [key,value]of Object.entries(patch)){changes[key]={oldValue:data[key],newValue:value};data[key]=value;}show();queueMicrotask(()=>listeners.forEach(fn=>fn(changes,'local')));},
+    remove:async key=>{const changes={[key]:{oldValue:data[key]}};delete data[key];show();queueMicrotask(()=>listeners.forEach(fn=>fn(changes,'local')));},
+  },onChanged:{addListener:fn=>listeners.push(fn)}}};
+  window.KarmoUserBlock={identify:href=>{try{const url=new URL(href);return url.origin==='https://www.youtube.com'&&url.pathname.startsWith('/@')?url.pathname.slice(1).toLowerCase():null;}catch{return null;}}};
+  const menu=document.querySelector('[role=menu]'),dialog=document.querySelector('[role=dialog]'),card=document.querySelector('ytd-rich-item-renderer');
+  document.querySelector('#more').onclick=()=>{flow.push('openMenu');menu.hidden=false;show();};
+  document.querySelector('#interest').onclick=()=>{flow.push('notInterested');menu.hidden=true;document.querySelector('#reason').setAttribute('aria-checked','false');card.querySelector('#why')?.remove();const button=document.createElement('button');button.id='why';button.textContent='이유를 알려주세요';button.onclick=()=>{flow.push('tellWhy');dialog.hidden=false;show();};card.append(button);show();};
+  document.querySelector('#reason').onclick=event=>{flow.push('dislike');event.currentTarget.setAttribute('aria-checked','true');show();};
+  document.querySelector('#submit').onclick=()=>{flow.push('submit');dialog.hidden=true;show();};
+  for(const path of ['/features/home-feedback-core.js','/features/home-hide.js']){await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=path;script.onload=resolve;script.onerror=reject;document.body.append(script);});}
+})();
+</script>
