@@ -57,6 +57,9 @@
   "popupFooter": {
     "message": "lab.mascari4615.com"
   },
+  "commentTranslate": { "message": "Auto-translate YouTube comments to Korean" },
+  "commentTranslateHint": { "message": "Automatically clicks Translate to Korean for comments and replies. Show original stays selected. Turning this off stops new translations." },
+  "commentTranslateError": { "message": "Could not read or save the automatic translation setting." },
   "keywordHeading": { "message": "Hide comment keywords" },
   "keywordEnabled": { "message": "Collapse comments containing these keywords" },
   "keywordWordsLabel": { "message": "One per line, up to 200" },

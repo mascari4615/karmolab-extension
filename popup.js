@@ -3,6 +3,22 @@ for (const el of document.querySelectorAll("[data-msg]")) {
 }
 
 const box = document.getElementById("shortsDate");
+const translateBox = document.getElementById('commentTranslate');
+const translateStatus = document.getElementById('commentTranslateStatus');
+chrome.storage.local.get({ commentTranslate: true }).then(values => {
+  translateBox.checked = values.commentTranslate !== false;
+  translateBox.disabled = false;
+}).catch(() => { translateStatus.textContent = chrome.i18n.getMessage('commentTranslateError'); });
+translateBox.addEventListener('change', async () => {
+  translateBox.disabled = true;
+  try {
+    await chrome.storage.local.set({ commentTranslate: translateBox.checked });
+    translateStatus.textContent = '';
+  } catch {
+    translateBox.checked = !translateBox.checked;
+    translateStatus.textContent = chrome.i18n.getMessage('commentTranslateError');
+  } finally { translateBox.disabled = false; }
+});
 chrome.storage.sync.get({ shortsDate: true }, (v) => { box.checked = v.shortsDate !== false; });
 box.addEventListener("change", () => chrome.storage.sync.set({ shortsDate: box.checked }));
 
