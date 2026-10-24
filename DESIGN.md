@@ -8,3 +8,6 @@
 - A close button, Escape and outside click dismiss the panel. Retain unsaved keyword input across dismissal.
 - Immediate reversible toggles. Keyword drafts have an explicit Save action. Persistent blocked users have individual Unblock actions and search.
 - Use text labels and native controls, 44px panel targets, 16px text inputs, visible keyboard focus. Keep panel within narrow viewports.
+- Extend the accepted panel with Shorts controls and a backup section. Scroll the blocked-user list independently so backup controls remain reachable.
+- Show up to three persistent block notices with Undo and Dismiss. Avoid a timeout while the user decides.
+- Download stored preferences. A selected restore file shows counts and merge semantics before an explicit restore action; preserve unsaved keyword drafts.

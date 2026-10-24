@@ -18,4 +18,6 @@
 - Panel manages Korean translation, keyword editing, user blocking and unblock actions.
 - One keyword list covers comment bodies and video/Shorts titles in result, home, subscription and recommendation cards. Channel names and video descriptions stay outside title matching.
 - Blocking masks original text and thumbnails immediately after a match; only a neutral placeholder exits before the remaining cards move.
+- User approved block undo, Shorts settings in the panel, and YouTube preferences/blocked-user JSON backup and restore.
+- Backups exclude viewing history, optional site permissions, site volume and Base64 site settings. Restore previews contents, merges blocked users and applies backed-up preferences.
 - Success: change these settings without leaving YouTube, with saved-state feedback and preserved drafts.

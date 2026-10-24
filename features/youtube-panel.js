@@ -17,7 +17,11 @@
       section { padding: 20px 0; border-bottom: 1px solid var(--yt-spec-10-percent-layer, #ccc); }
       section:last-child { border: 0; }
       label { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; cursor: pointer; }
-      input, textarea, button { font: inherit; color: inherit; }
+      input, textarea, button, select { font: inherit; color: inherit; }
+      select { width:100%;min-height:44px;font-size:16px;padding:8px;background:var(--yt-spec-base-background,#fff);border:1px solid var(--yt-spec-text-secondary,#606060);border-radius:6px; }
+      input[type=file] { max-width:100%;font-size:16px; }
+      .actions { display:flex;gap:8px;flex-wrap:wrap;margin-top:12px; }
+      #blocked { max-height:240px;overflow:auto; }
       input[type=checkbox] { width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: var(--yt-spec-call-to-action, #065fd4); }
       input[type=search], textarea { display: block; width: 100%; border: 1px solid var(--yt-spec-text-secondary, #606060); border-radius: 6px; padding: 10px 12px; background: transparent; font-size: 16px; caret-color: var(--yt-spec-call-to-action, #065fd4); }
       textarea { min-height: 108px; resize: vertical; }
@@ -52,10 +56,22 @@
           <textarea id="words" rows="3" maxlength="40200" disabled></textarea>
           <p data-msg="keywordWordsLabel"></p><button id="save" type="button" disabled data-msg="keywordSave"></button>
         </section>
+        <section><h3 data-msg="shortsCountHeadingPanel"></h3>
+          <label><span data-msg="featShortsDate"></span><input id="shortsDate" type="checkbox" disabled></label>
+          <label><span data-msg="featShortsCount"></span><input id="shortsCount" type="checkbox" disabled></label>
+          <label for="countMode" data-msg="shortsCountDisplay"></label>
+          <select id="countMode" disabled><option value="both" data-msg="shortsCountModeBoth"></option><option value="unique" data-msg="shortsCountModeUnique"></option><option value="views" data-msg="shortsCountModeViews"></option></select>
+          <label><span data-msg="shortsWatchTimeDisplay"></span><input id="watchTime" type="checkbox" disabled></label>
+        </section>
         <section><h3 data-msg="blockedUsers"></h3>
           <label><span data-msg="featUserBlock"></span><input id="blocking" type="checkbox" disabled></label>
           <input id="search" type="search" autocomplete="off" disabled>
           <p id="empty"></p><ul id="blocked"></ul>
+        </section>
+        <section><h3 data-msg="backupHeading"></h3><p data-msg="backupHint"></p>
+          <button id="export" type="button" disabled data-msg="backupExport"></button>
+          <label for="importFile" data-msg="backupChoose"></label><input id="importFile" type="file" accept=".json,application/json" disabled>
+          <p id="preview" role="status"></p><button id="restore" type="button" disabled data-msg="backupRestore"></button>
         </section>
       </main>
       <footer><p id="status" role="status" aria-live="polite"></p><button id="retry" type="button" hidden data-msg="panelRetry"></button></footer>
@@ -85,8 +101,9 @@
   syncTheme();
   let values = {}, loaded = false, loading = false, dirty = false, draftVersion = 0, changeVersion = 0;
   let savingWords = false, mountTimer;
+  let syncValues = {}, backupBusy = false, selectedBackup = null, fileVersion = 0;
   const pending = new Set();
-  const toggles = { commentTranslate: $('#translation'), keywordEnabled: $('#keywords'), userBlock: $('#blocking') };
+  const toggles = { commentTranslate: $('#translation'), keywordEnabled: $('#keywords'), userBlock: $('#blocking'), shortsDate: $('#shortsDate'), shortsCount: $('#shortsCount'), shortsWatchTime: $('#watchTime') };
   function announce(key) { status.textContent = msg(key); }
   function renderBlocks() {
     const term = $('#search').value.normalize('NFKC').toLowerCase().trim();
@@ -97,7 +114,7 @@
     for (const [key, person] of visible.sort((a, b) => (b[1].created || 0) - (a[1].created || 0))) {
       const row = document.createElement('li'), name = document.createElement('span'), button = document.createElement('button');
       name.textContent = person.name || person.ids[0];
-      button.type = 'button'; button.textContent = msg('unblockUser'); button.disabled = pending.has(key);
+      button.type = 'button'; button.textContent = msg('unblockUser'); button.disabled = pending.has(key) || backupBusy;
       button.setAttribute('aria-label', msg('unblockUser') + ': ' + name.textContent);
       button.addEventListener('click', async () => {
         pending.add(key); button.disabled = true;
@@ -111,11 +128,15 @@
   }
   function render() {
     for (const [key, input] of Object.entries(toggles)) {
-      if (!pending.has(key)) input.checked = values[key] !== false;
-      input.disabled = !loaded || pending.has(key);
+      if (!pending.has(key)) input.checked = (key === 'shortsDate' ? syncValues : values)[key] !== false;
+      input.disabled = !loaded || pending.has(key) || backupBusy;
     }
     words.disabled = $('#search').disabled = !loaded;
-    $('#save').disabled = !loaded || !dirty || savingWords;
+    $('#save').disabled = !loaded || !dirty || savingWords || backupBusy;
+    $('#countMode').disabled = !loaded || pending.has('shortsCountMode') || backupBusy;
+    if (!pending.has('shortsCountMode')) $('#countMode').value = values.shortsCountMode || 'both';
+    $('#export').disabled = $('#importFile').disabled = !loaded || backupBusy;
+    $('#restore').disabled = !loaded || !selectedBackup || backupBusy || savingWords || pending.size > 0;
     if (loaded && !dirty && !savingWords) words.value = (values.keywordWords || []).join('\n');
     renderBlocks();
   }
@@ -124,9 +145,9 @@
     loading = true; $('#retry').hidden = true; announce('panelLoading');
     const version = changeVersion;
     try {
-      const result = await chrome.storage.local.get(null);
+      const [result, sync] = await Promise.all([chrome.storage.local.get(null), chrome.storage.sync.get({ shortsDate: true })]);
       if (version !== changeVersion) { loading = false; return load(); }
-      values = result; loaded = true; status.textContent = ''; render();
+      values = result; syncValues = sync; loaded = true; status.textContent = ''; render();
     } catch { announce('panelLoadError'); $('#retry').hidden = false; }
     finally { loading = false; }
   }
@@ -151,7 +172,7 @@
   $('#save').addEventListener('click', async () => {
     let parsed;
     try { parsed = KarmoKeywords.parse(words.value); } catch { announce('keywordError'); return; }
-    const version = draftVersion, storageVersion = changeVersion; savingWords = true; $('#save').disabled = true;
+    const version = draftVersion, storageVersion = changeVersion; savingWords = true; render();
     try {
       await chrome.storage.local.set({ keywordWords: parsed });
       if (storageVersion === changeVersion) values.keywordWords = parsed;
@@ -161,19 +182,64 @@
     finally { savingWords = false; render(); }
   });
   for (const [key, input] of Object.entries(toggles)) input.addEventListener('change', async () => {
-    const checked = input.checked; pending.add(key); input.disabled = true;
+    const checked = input.checked; pending.add(key); render();
     const version = changeVersion;
-    try { await chrome.storage.local.set({ [key]: checked }); if (version === changeVersion) values[key] = checked; announce('panelSaved'); }
+    const area = key === 'shortsDate' ? 'sync' : 'local';
+    try { await chrome.storage[area].set({ [key]: checked }); if (version === changeVersion) (area === 'sync' ? syncValues : values)[key] = checked; announce('panelSaved'); }
     catch { announce('panelSaveError'); }
     finally { pending.delete(key); render(); }
   });
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== 'local') return;
+    if (!['local', 'sync'].includes(area)) return;
+    const entries = Object.entries(changes).filter(([key]) => area === 'sync' ? key === 'shortsDate' : key.startsWith('blockedChannel:') || Object.hasOwn(toggles, key) || ['keywordWords', 'shortsCountMode'].includes(key));
+    if (!entries.length) return;
     changeVersion++;
-    for (const [key, change] of Object.entries(changes)) {
-      if (change.newValue === undefined) delete values[key]; else values[key] = change.newValue;
+    const target = area === 'sync' ? syncValues : values;
+    for (const [key, change] of entries) {
+      if (change.newValue === undefined) delete target[key]; else target[key] = change.newValue;
     }
     if (loaded) render();
+  });
+  $('#countMode').addEventListener('change', async () => {
+    const value = $('#countMode').value, version = changeVersion;
+    pending.add('shortsCountMode'); render();
+    try { await chrome.storage.local.set({ shortsCountMode: value }); if (version === changeVersion) values.shortsCountMode = value; announce('panelSaved'); }
+    catch { announce('panelSaveError'); }
+    finally { pending.delete('shortsCountMode'); render(); }
+  });
+  $('#export').addEventListener('click', async () => {
+    backupBusy = true; render();
+    let url;
+    try {
+      const [local, sync] = await Promise.all([chrome.storage.local.get(null), chrome.storage.sync.get(null)]);
+      const data = KarmoSettingsBackup.create(local, sync);
+      url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:'application/json' }));
+      const link = document.createElement('a'); link.href = url; link.download = 'karmolab-youtube-' + new Date().toISOString().slice(0,10) + '.json';
+      shadow.append(link); link.click(); link.remove(); announce('backupExported');
+    } catch { announce('backupExportError'); }
+    finally { if (url) setTimeout(() => URL.revokeObjectURL(url), 60000); backupBusy = false; render(); }
+  });
+  $('#importFile').addEventListener('change', async () => {
+    const version = ++fileVersion, file = $('#importFile').files[0]; selectedBackup = null; $('#preview').textContent = ''; render();
+    if (!file) return;
+    try {
+      if (file.size > KarmoSettingsBackup.maxBytes) throw Error('File too large');
+      const parsed = KarmoSettingsBackup.parse(await file.text());
+      if (version !== fileVersion) return;
+      selectedBackup = parsed;
+      $('#preview').textContent = chrome.i18n.getMessage('backupPreview', [String(Object.keys(parsed.settings).length), String(parsed.blocks.length)]);
+    } catch { if (version === fileVersion) announce('backupInvalid'); }
+    finally { if (version === fileVersion) render(); }
+  });
+  $('#restore').addEventListener('click', async () => {
+    if (!selectedBackup || backupBusy) return;
+    backupBusy = true; render();
+    try {
+      await KarmoSettingsBackup.restore(selectedBackup, chrome.storage);
+      selectedBackup = null; $('#importFile').value = ''; $('#preview').textContent = '';
+      announce(dirty ? 'backupRestoredDraft' : 'backupRestored');
+    } catch (error) { announce(error.partial ? 'backupPartialError' : 'backupRestoreError'); }
+    finally { backupBusy = false; render(); }
   });
   function mount() {
     const target = document.querySelector('ytd-masthead #buttons');

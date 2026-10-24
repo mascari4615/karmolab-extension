@@ -20,7 +20,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["features/shorts-count.js", "features/shorts-date.js", "features/keyword-core.js", "features/user-block.js", "features/keyword-comments.js", "features/comment-translate.js", "features/youtube-panel.js"],
+      "js": ["features/shorts-count.js", "features/shorts-date.js", "features/keyword-core.js", "features/block-undo.js", "features/user-block.js", "features/settings-backup.js", "features/keyword-comments.js", "features/comment-translate.js", "features/youtube-panel.js"],
       "css": ["features/shorts-date.css", "features/user-block.css", "features/keyword-comments.css", "features/youtube-panel.css"],
       "run_at": "document_idle"
     }

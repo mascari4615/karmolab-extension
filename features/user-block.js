@@ -124,6 +124,8 @@
     return null;
   }
   async function addBlock(person, button) {
+    const operation = { cancelled: false, write: Promise.resolve() };
+    button._blockOperation = operation;
     button._saving = true;
     button.title = msg('blockButtonHint');
     button.disabled = true;
@@ -137,6 +139,11 @@
       records[key] = record;
       indexRecords();
       scan();
+      KarmoBlockUndo.show(key, record, async () => { operation.cancelled = true; await operation.write.catch(() => {}); }, () => {
+        if (button._blockOperation !== operation) return;
+        button._saving = false; button.disabled = false; button.removeAttribute('aria-busy');
+        button.querySelector('.kl-block-label').textContent = msg('blockUser');
+      });
       // 핸들과 채널 ID 연결. 실패해도 선택한 링크 기준 차단 유지
       try {
         const response = await fetch(person.href, { credentials: 'omit', signal: AbortSignal.timeout(5000) });
@@ -150,10 +157,11 @@
         }
       } catch { /* 오프라인에서도 링크 기준 차단 */ }
       // 조회 도중 해제하거나 새로 차단한 레코드의 덮어쓰기 방지
-      if (records[key]?.created === record.created && ids.length > 1) {
+      if (!operation.cancelled && records[key]?.created === record.created && ids.length > 1) {
         const enriched = { ...record, ids: [...new Set(ids)] };
         try {
-          await chrome.storage.local.set({ [key]: enriched });
+          operation.write = chrome.storage.local.set({ [key]: enriched });
+          await operation.write;
           records[key] = enriched; indexRecords(); schedule();
         } catch { /* 최초 저장한 핸들 기준 차단 유지 */ }
       }
@@ -162,7 +170,7 @@
       button.querySelector('.kl-block-label').textContent = msg('blockRetry');
       button.setAttribute('aria-label', msg('blockRetry'));
       button.title = msg('blockSaveError');
-    } finally { button._saving = false; button.removeAttribute('aria-busy'); schedule(); }
+    } finally { if (button._blockOperation === operation) { button._saving = false; button.removeAttribute('aria-busy'); } schedule(); }
   }
   function addButton(root, person, anchor, inside = false, variant = 'channel') {
     let button = root.querySelector(':scope .kl-block-button');
