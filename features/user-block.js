@@ -6,6 +6,7 @@
   const ownerLinks = '#channel-name a[href],ytd-channel-name a[href],a.yt-content-metadata-view-model__metadata-text[href],.yt-lockup-metadata-view-model__metadata a[href],yt-content-metadata-view-model a[href],yt-lockup-metadata-view-model a[href]';
   let records = {}, enabled = true, loaded = false, scheduled = false;
   let blockedIds = new Set(), scanned = false;
+  let keywordWords = [], keywordEnabled = true;
   const metadata = new Map(), queue = [];
   const exits = new Map(), moves = new WeakMap();
   const cacheKey = 'karmolab:video-owners:v1';
@@ -28,6 +29,12 @@
   }
   const indexRecords = () => { blockedIds = new Set(Object.values(records).flatMap(record => record.ids || [])); };
   const blocked = id => blockedIds.has(id);
+  function titleMatches(root) {
+    if (!keywordEnabled || !keywordWords.length) return false;
+    const title = root.querySelector('#video-title,#video-title-link,h3,.yt-lockup-metadata-view-model__title,.ytLockupMetadataViewModelTitle,.shortsLockupViewModelHostMetadataTitle,.ytmShortsLockupViewModelHostMetadataTitle');
+    const link = title || root.querySelector('a[href*="/watch?"][title],a[href*="/shorts/"][title]');
+    return Boolean(link && KarmoKeywords.match(link.getAttribute('title') || link.textContent, keywordWords));
+  }
   const motion = () => scanned && document.visibilityState === 'visible' && !matchMedia('(prefers-reduced-motion: reduce)').matches;
   const onScreen = rect => rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth;
   function cardTarget(root) {
@@ -46,11 +53,12 @@
     if (!motion() || !onScreen(target.getBoundingClientRect()) || !target.animate) {
       target.classList.add(className); return;
     }
+    // 원문은 즉시 가림, 140ms 동안 중립색 빈자리만 퇴장
+    target.classList.add('kl-block-leaving');
     const animation = target.animate([
       { opacity: 1, filter: 'blur(0px)', clipPath: 'inset(0 0 0 0)' },
       { opacity: 0, filter: 'blur(2px)', clipPath: 'inset(0 0 8% 0)' },
     ], { duration: 140, easing: 'ease-out', fill: 'forwards' });
-    target.classList.add('kl-block-leaving');
     exits.set(target, animation);
     animation.finished.then(() => {
       if (exits.get(target) !== animation) return;
@@ -233,10 +241,11 @@
       for (const root of document.querySelectorAll(cards)) {
         // Wrapper and nested lockup represent the same card, not two buttons.
         if (root.matches('ytd-rich-item-renderer') && root.querySelector(cards)) continue;
+        const keywordHit = titleMatches(root);
         const direct = owner(root);
-        const person = direct || videoOwner(root, onScreen(root.getBoundingClientRect()));
+        const person = direct || (!keywordHit && videoOwner(root, onScreen(root.getBoundingClientRect())));
         const target = cardTarget(root);
-        conceal(target, Boolean(enabled && blocked(person?.id)));
+        conceal(target, Boolean(keywordHit || (enabled && blocked(person?.id))));
         const anchor = root.querySelector('.ytLockupMetadataViewModelTextContainer, .yt-lockup-metadata-view-model__text-container, #meta, #metadata, .shortsLockupViewModelHostMetadata, .ytmShortsLockupViewModelHostMetadata');
         if (anchor) addButton(root, person, anchor, true, 'card');
       }
@@ -276,7 +285,7 @@
       }
     } finally {
       scanned = true;
-      observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['href'] });
+      observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['href', 'title', 'aria-label'] });
     }
   }
   function schedule() {
@@ -286,7 +295,7 @@
   }
   const observedContent = cards + ',' + comments + ',' + shelves + ',ytd-channel-renderer,ytd-reel-video-renderer,ytd-watch-flexy';
   const observer = new MutationObserver(changes => {
-    if (changes.some(change => change.target.closest?.(observedContent)
+    if (changes.some(change => (change.target.nodeType === 1 ? change.target : change.target.parentElement)?.closest(observedContent)
       || [...change.addedNodes, ...change.removedNodes].some(node => node.nodeType === 1 && (node.matches(observedContent) || node.querySelector(observedContent))))) schedule();
   });
   chrome.storage.onChanged.addListener((changes, area) => {
@@ -294,6 +303,8 @@
     let relevant = false;
     for (const [key, change] of Object.entries(changes)) {
       if (key === 'userBlock') { enabled = change.newValue !== false; relevant = true; }
+      if (key === 'keywordEnabled') { keywordEnabled = change.newValue !== false; relevant = true; }
+      if (key === 'keywordWords') { keywordWords = globalThis.KarmoKeywords?.parse((change.newValue || []).join('\n')) || []; relevant = true; }
       if (key.startsWith(prefix)) {
         relevant = true;
         if (change.newValue) records[key] = change.newValue;
@@ -310,6 +321,8 @@
     records = Object.fromEntries(Object.entries(values).filter(([key]) => key.startsWith(prefix)));
     indexRecords();
     enabled = values.userBlock !== false;
+    keywordEnabled = values.keywordEnabled !== false;
+    keywordWords = globalThis.KarmoKeywords?.parse((values.keywordWords || []).join('\n')) || [];
     loaded = true;
     scan();
   }).catch(() => console.error('KarmoLab: ' + msg('blockLoadError')));

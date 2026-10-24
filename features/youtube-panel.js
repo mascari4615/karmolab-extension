@@ -45,6 +45,8 @@
         <section><h3 data-msg="panelComments"></h3>
           <label><span data-msg="commentTranslate"></span><input id="translation" type="checkbox" disabled></label>
           <p data-msg="panelTranslationHint"></p>
+        </section>
+        <section><h3 data-msg="keywordHeading"></h3>
           <label><span data-msg="keywordEnabled"></span><input id="keywords" type="checkbox" disabled></label>
           <label for="words" data-msg="panelKeywords"></label>
           <textarea id="words" rows="3" maxlength="40200" disabled></textarea>
