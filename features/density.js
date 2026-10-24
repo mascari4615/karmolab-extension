@@ -10,6 +10,13 @@
   function apply() {
     document.documentElement.dataset.klCommentDensity = commentMode;
     if (commentMode === 'compact') {
+      for (const control of document.querySelectorAll('ytd-comment-view-model #author-thumbnail-button,ytd-comment-renderer #author-thumbnail')) {
+        const label = control.getAttribute('aria-label') || control.closest('ytd-comment-view-model,ytd-comment-renderer')?.querySelector('#author-text')?.textContent.trim();
+        if (label && (!control.title || control.title === control.dataset.klProfileTitle)) {
+          control.title = label;
+          control.dataset.klProfileTitle = label;
+        }
+      }
       for (const link of document.querySelectorAll('ytd-comment-view-model #published-time-text a,ytd-comment-renderer #published-time-text a')) {
         const value = KarmoDensity.publishedTime(link.textContent);
         if (link.dataset.klDate !== value.text) link.dataset.klDate = value.text;
