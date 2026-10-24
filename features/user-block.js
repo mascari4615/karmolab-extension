@@ -213,8 +213,7 @@
       button.title = msg('blockButtonHint');
       button.addEventListener('click', event => {
         event.preventDefault(); event.stopPropagation();
-        const current = button._person;
-        if (current && confirm(chrome.i18n.getMessage('blockConfirm', current.name))) addBlock(current, button);
+        requestBlock(button);
       });
     }
     if (inside) {
@@ -227,6 +226,15 @@
     }
     if (!button.title.includes(msg('blockSaveError'))) button.setAttribute('aria-label', msg('blockUser') + ': ' + person.name);
   }
+  function requestBlock(button) {
+    const current = button?._person;
+    if (enabled && current && !button.disabled && !button._saving && confirm(chrome.i18n.getMessage('blockConfirm', current.name))) void addBlock(current, button);
+  }
+  globalThis.KarmoUserBlock = { request(root) {
+    const button = root.querySelector('.kl-block-button--comment');
+    if (!button || !enabled || button.disabled) return false;
+    requestBlock(button); return true;
+  } };
   function playback(root, person, hide = Boolean(enabled && blocked(person?.id)), message = msg('blockedPlayback')) {
     root.classList.toggle('kl-block-playback', hide);
     let notice = root.querySelector(':scope > .kl-block-notice');

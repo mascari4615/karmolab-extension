@@ -20,6 +20,8 @@
       input, textarea, button, select { font: inherit; color: inherit; }
       select { width:100%;min-height:44px;font-size:16px;padding:8px;background:var(--yt-spec-base-background,#fff);border:1px solid var(--yt-spec-text-secondary,#606060);border-radius:6px; }
       input[type=file] { max-width:100%;font-size:16px; }
+      input[type=range] { display:block;width:100%;min-height:44px;margin:0;accent-color:var(--yt-spec-call-to-action,#065fd4); }
+      output { font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--yt-spec-text-secondary,#606060); }
       .actions { display:flex;gap:8px;flex-wrap:wrap;margin-top:12px; }
       #blocked { max-height:240px;overflow:auto; }
       input[type=checkbox] { width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: var(--yt-spec-call-to-action, #065fd4); }
@@ -53,9 +55,16 @@
           <label for="commentDensity" data-msg="commentDensityLabel"></label>
           <select id="commentDensity" disabled><option value="default" data-msg="densityDefault"></option><option value="compact" data-msg="commentDensityCompact"></option></select>
           <p data-msg="commentDensityHint"></p>
+          <label for="commentFontSize"><span data-msg="commentFontSizeLabel"></span><output for="commentFontSize" id="commentFontSizeValue"></output></label>
+          <input id="commentFontSize" type="range" min="12" max="20" step="1" disabled>
+          <label for="commentLineHeight"><span data-msg="commentLineHeightLabel"></span><output for="commentLineHeight" id="commentLineHeightValue"></output></label>
+          <input id="commentLineHeight" type="range" min="18" max="32" step="2" disabled>
           <label for="homeDensity" data-msg="homeDensityLabel"></label>
-          <select id="homeDensity" disabled><option value="default" data-msg="densityDefault"></option><option value="small" data-msg="homeDensitySmall"></option><option value="compact" data-msg="homeDensityCompact"></option></select>
+          <select id="homeDensity" disabled><option value="default" data-msg="densityDefault"></option><option value="small" data-msg="homeDensitySmall"></option><option value="compact" data-msg="homeDensityCompact"></option><option value="custom" data-msg="homeDensityCustom"></option></select>
           <p data-msg="homeDensityHint"></p>
+          <label for="homeCardWidth"><span data-msg="homeCardWidthLabel"></span><output for="homeCardWidth" id="homeCardWidthValue"></output></label>
+          <input id="homeCardWidth" type="range" min="180" max="400" step="10" disabled>
+          <p data-msg="homeCardWidthHint"></p>
         </section>
         <section><h3 data-msg="panelComments"></h3>
           <label><span data-msg="commentTranslate"></span><input id="translation" type="checkbox" disabled></label>
@@ -163,6 +172,16 @@
   review?.subscribe(renderReview);
   review?.ready.then(renderReview);
   const selects = { shortsCountMode: $('#countMode'), commentDensity: $('#commentDensity'), homeDensity: $('#homeDensity') };
+  const ranges = Object.fromEntries(Object.keys(KarmoDensity.ranges).map(key => [key,$('#'+key)]));
+  function rangeValue(key) {
+    if (key === 'homeCardWidth' && ['small','compact'].includes(values.homeDensity)) return values.homeDensity === 'compact' ? 210 : 260;
+    return KarmoDensity.number(key,values[key]);
+  }
+  function showRange(key, value) {
+    const effective = key === 'commentLineHeight' ? Math.max(value,Number(ranges.commentFontSize.value)+4) : value;
+    $('#'+key+'Value').textContent = effective + 'px';
+    ranges[key].setAttribute('aria-valuetext',effective + 'px');
+  }
   function announce(key) { status.textContent = msg(key); }
   function renderBlocks() {
     const term = $('#search').value.normalize('NFKC').toLowerCase().trim();
@@ -195,6 +214,10 @@
     for (const [key, select] of Object.entries(selects)) {
       select.disabled = !loaded || pending.has(key) || backupBusy;
       if (!pending.has(key)) select.value = key === 'commentDensity' ? KarmoDensity.commentMode(values[key]) : key === 'homeDensity' ? KarmoDensity.homeMode(values[key]) : values[key] || 'both';
+    }
+    for (const [key,input] of Object.entries(ranges)) {
+      input.disabled = !loaded || backupBusy || pending.has(key) || (key !== 'homeCardWidth' && KarmoDensity.commentMode(values.commentDensity) !== 'compact');
+      if (!pending.has(key)) { input.value = rangeValue(key); showRange(key,Number(input.value)); }
     }
     $('#export').disabled = $('#importFile').disabled = !loaded || backupBusy;
     $('#restore').disabled = !loaded || !selectedBackup || backupBusy || savingWords || pending.size > 0;
@@ -253,7 +276,7 @@
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (!['local', 'sync'].includes(area)) return;
-    const entries = Object.entries(changes).filter(([key]) => area === 'sync' ? key === 'shortsDate' : key.startsWith('blockedChannel:') || Object.hasOwn(toggles, key) || Object.hasOwn(selects, key) || key === 'keywordWords');
+    const entries = Object.entries(changes).filter(([key]) => area === 'sync' ? key === 'shortsDate' : key.startsWith('blockedChannel:') || Object.hasOwn(toggles, key) || Object.hasOwn(selects, key) || Object.hasOwn(ranges,key) || key === 'keywordWords');
     if (!entries.length) return;
     changeVersion++;
     const target = area === 'sync' ? syncValues : values;
@@ -269,6 +292,24 @@
     catch { announce('panelSaveError'); }
     finally { pending.delete(key); render(); }
   });
+  for (const [key,input] of Object.entries(ranges)) {
+    const patch = () => ({ [key]:KarmoDensity.number(key,Number(input.value)), ...(key === 'homeCardWidth' ? { homeDensity:'custom' } : {}) });
+    input.addEventListener('input', () => {
+      showRange(key,Number(input.value));
+      if (key === 'commentFontSize') showRange('commentLineHeight',Number(ranges.commentLineHeight.value));
+      globalThis.KarmoDensityLayout?.preview(patch());
+    });
+    input.addEventListener('change', async () => {
+      const update = patch(), version = changeVersion;
+      pending.add(key); render();
+      try { await chrome.storage.local.set(update); if (version === changeVersion) Object.assign(values,update); announce('panelSaved'); }
+      catch { announce('panelSaveError'); }
+      finally {
+        pending.delete(key); render();
+        globalThis.KarmoDensityLayout?.preview({ commentDensity:KarmoDensity.commentMode(values.commentDensity), homeDensity:KarmoDensity.homeMode(values.homeDensity), ...Object.fromEntries(Object.keys(ranges).map(k=>[k,KarmoDensity.number(k,values[k])])) });
+      }
+    });
+  }
   $('#export').addEventListener('click', async () => {
     backupBusy = true; render();
     let url;
