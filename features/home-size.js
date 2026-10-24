@@ -14,7 +14,12 @@
         input[type=radio]{appearance:none;width:20px;height:20px;flex-shrink:0;margin:4px 0 0;border:2px solid var(--hs-line,#777);border-radius:50%;background:var(--hs-bg,#fff);cursor:pointer}
         input[type=radio]:checked{background:var(--hs-accent,#065fd4);border-color:var(--hs-accent,#065fd4);box-shadow:inset 0 0 0 3px var(--hs-bg,#fff)}
         input:focus-visible{outline:2px solid var(--hs-accent,#065fd4);outline-offset:3px}input:disabled{opacity:.5;cursor:default}
-        output{color:var(--hs-secondary,#606060);font-size:12px;min-height:17px;display:block}
+        output{color:var(--hs-secondary,#606060);font-size:12px;min-height:17px;display:block}output:empty{display:none}
+        :host([data-inline]){display:grid;grid-template-columns:auto minmax(220px,1fr) auto;align-items:center;gap:4px 12px;width:560px!important}
+        :host([data-inline]) .top{display:contents}:host([data-inline]) #title{grid-column:1;grid-row:1;white-space:nowrap}
+        :host([data-inline]) .steps{grid-column:2;grid-row:1}:host([data-inline]) .native{grid-column:3;grid-row:1}
+        :host([data-inline]) output{grid-column:2;grid-row:2}
+        @media(max-width:600px){:host([data-inline]){display:block}:host([data-inline]) .top{display:flex}}
       </style><div class="top"><span id="title"></span><label class="native"><input type="checkbox" id="native"><span id="native-label"></span></label></div>
       <div class="steps" role="radiogroup"></div><output role="status" aria-live="polite"></output>`;
       this.view.querySelector('#title').textContent = msg('homeColumnsLabel');
@@ -64,13 +69,13 @@
       const state=this.state;
       const native=this.view.querySelector('#native');native.checked=state.homeDensity==='default';native.disabled=!state.loaded;
       for(const input of this.view.querySelectorAll('input[type=radio]')){input.checked=!native.checked&&Number(input.value)===state.homeColumns;input.disabled=!state.loaded;}
-      this.view.querySelector('output').textContent=state.error?msg('panelSaveError'):state.actual?chrome.i18n.getMessage('homeColumnsActual',String(state.actual)):'';
+      this.view.querySelector('output').textContent=state.error?msg('panelSaveError'):state.actual&&state.actual!==state.homeColumns?chrome.i18n.getMessage('homeColumnsActual',String(state.actual)):'';
     }
   }
   globalThis.KarmoHomeSize = { create:()=>new HomeSize().host };
   const toolbar=document.createElement('div');toolbar.id='kl-home-size-toolbar';
   toolbar.style.cssText='display:flex;justify-content:flex-end;padding:4px 24px 12px;box-sizing:border-box;';
-  const control=KarmoHomeSize.create();control.style.width='320px';control.style.maxWidth='100%';toolbar.append(control);
+  const control=KarmoHomeSize.create();control.dataset.inline='';control.style.width='320px';control.style.maxWidth='100%';toolbar.append(control);
   function mount() {
     const grid=location.pathname==='/'?document.querySelector('ytd-browse[page-subtype="home"]:not([hidden]) ytd-rich-grid-renderer'):null;
     if(grid) {if(toolbar.nextElementSibling!==grid)grid.before(toolbar);}
