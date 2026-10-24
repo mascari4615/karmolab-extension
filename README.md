@@ -128,8 +128,8 @@ main push는 검사와 ZIP 생성만 실행. 로컬 언팩판으로 사용자가
 ## 스토어 문구
 
 - 이름: KarmoLab
-- 짧은 설명 (ko): 유튜브 쇼츠 날짜 표시와 원치 않는 채널의 영상, 쇼츠, 댓글 숨김.
-- 짧은 설명 (en): Show YouTube Shorts dates and hide videos, Shorts and comments from unwanted channels.
+- 짧은 설명 (ko): 유튜브 댓글 자동 번역, 컴팩트 댓글, 홈 영상 크기 조절, 채널 숨김과 쇼츠 통계를 한곳에서 관리하세요.
+- 짧은 설명 (en): Customize YouTube comments and Home layout, translate comments into Korean, hide channels, and track Shorts viewing.
 - 분류: 도구 (Tools)
 - 권한 사유 (English, 스토어 입력용)
   - `storage`: Stores feature settings and the user's channel block list in browser extension storage.
@@ -142,6 +142,36 @@ main push는 검사와 ZIP 생성만 실행. 로컬 언팩판으로 사용자가
 Chrome 개발자 콘솔의 **개인 정보 보호 관행 → 권한 요청 이유**에서 위 사유를 각 권한의 입력란에 넣고 **임시저장**. README나 ZIP에 사유를 추가하는 것만으로 콘솔 값이 저장되지는 않음. 새 권한을 추가한 릴리스는 제출 전에 각 입력란 저장 여부 확인.
 - 개인정보: 수집하는 사용자 데이터 없음. 날짜 조회 요청에 쿠키를 싣지 않는다 (`credentials: "omit"`)
 - 원격 코드: 없음
+
+### 상세 설명 (ko)
+
+KarmoLab은 유튜브 댓글과 홈 화면을 내 취향에 맞게 조절하는 확장 프로그램입니다. 유튜브 상단의 KarmoLab 버튼에서 설정을 열고 변경 사항을 바로 확인하세요.
+
+- 댓글 한국어 자동 번역: 유튜브가 제공하는 한국어 번역 버튼을 자동으로 누릅니다. 직접 원문 보기로 바꾼 댓글은 유지합니다.
+- 컴팩트 댓글: 프로필 사진, 짧은 날짜, 수정 표시와 답글을 간결하게 배치합니다. 글자 크기와 줄 높이도 조절할 수 있습니다.
+- 홈 한 줄 영상 수: 2~6개 중 선택하고 화면에 즉시 반영합니다. 기본 유튜브 배치로 복원할 수 있습니다.
+- 키워드 필터와 채널 차단: 원치 않는 영상, 쇼츠와 댓글을 숨기고 차단 직후 되돌릴 수 있습니다.
+- 홈 추천 숨김: 댓글과 검색 결과는 유지하면서 특정 채널을 홈에서만 숨깁니다. 숨김 버튼을 누른 영상에는 유튜브 관심 없음과 동영상이 마음에 들지 않습니다 의견 전송을 진행합니다. 유튜브 화면에 따라 의견 전송이 끝나지 않을 수 있으며, 로컬 숨김 해제는 이미 전송한 의견을 취소하지 않습니다.
+- 쇼츠 정보: 게시 날짜, 오늘 본 영상 수, 재시청 포함 횟수와 시청 시간을 확인합니다.
+- 설정 백업: 유튜브 설정, 차단 목록과 홈 숨김 목록을 JSON으로 내보내고 합쳐 복원합니다.
+- 사이트 도구: 직접 켠 사이트에서 Base64 웹 주소를 링크로 표시하고, 음량을 최대 300%까지 조절합니다. 100%를 넘는 증폭은 사용자가 적용한 탭의 오디오 캡처를 사용합니다.
+
+댓글 번역은 유튜브가 한국어 번역 버튼을 제공하는 댓글에 적용됩니다. 음량 증폭은 마이크와 영상을 캡처하지 않으며 오디오를 녹음, 저장하거나 업로드하지 않습니다.
+
+### Detailed description (en)
+
+KarmoLab lets you customize YouTube comments and your Home layout. Open settings with the KarmoLab button at the top of YouTube and see changes immediately.
+
+- Automatic Korean comment translation: automatically activates YouTube's Korean translation button when available. Comments you switch back to the original remain unchanged.
+- Compact comments: a concise layout for profile pictures, short relative dates, edited indicators, and replies, with adjustable text size and line height.
+- Home layout: choose 2 to 6 videos per row with immediate updates, or restore YouTube's default layout.
+- Keyword filters and channel blocking: hide unwanted videos, Shorts, and comments, with an undo action after blocking.
+- Home-only channel hiding: hide a channel from Home while keeping its comments and search results. Clicking hide also attempts YouTube's Not interested and I don't like the video feedback flow for that video. Feedback may remain incomplete if YouTube's interface changes. Removing a local hide does not undo feedback already sent to YouTube.
+- Shorts information: view publication dates, today's unique videos, viewing visits including repeat visits, and viewing time.
+- Settings backup: export YouTube settings, blocked channels, and Home-hidden channels as JSON and merge them when restoring.
+- Site tools: turn on Base64 web address links for individual sites and adjust volume up to 300%. Amplification above 100% uses audio capture from the tab where you explicitly apply it.
+
+Comment translation requires YouTube to provide a Korean translation button. Volume amplification does not capture video or microphone audio, and audio is not recorded, stored, or uploaded.
 
 ## 개인정보
 
