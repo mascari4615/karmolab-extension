@@ -9,6 +9,13 @@
   }
   function apply() {
     document.documentElement.dataset.klCommentDensity = commentMode;
+    if (commentMode === 'compact') {
+      for (const link of document.querySelectorAll('ytd-comment-view-model #published-time-text a,ytd-comment-renderer #published-time-text a')) {
+        const value = KarmoDensity.publishedTime(link.textContent);
+        if (link.dataset.klDate !== value.text) link.dataset.klDate = value.text;
+        link.toggleAttribute('data-kl-edited', value.edited);
+      }
+    }
     const next = homeMode !== 'default' && location.pathname === '/'
       ? document.querySelector('ytd-browse[page-subtype="home"]:not([hidden]) ytd-rich-grid-renderer') : null;
     if (next !== grid) {
@@ -32,8 +39,8 @@
     apply();
   });
   new MutationObserver(() => {
-    if (homeMode !== 'default' && location.pathname === '/' && !grid?.isConnected) schedule();
-  }).observe(document.documentElement, { childList:true, subtree:true });
+    if (commentMode === 'compact' || (homeMode !== 'default' && location.pathname === '/' && !grid?.isConnected)) schedule();
+  }).observe(document.documentElement, { childList:true, characterData:true, subtree:true });
   document.addEventListener('yt-navigate-start', () => {
     resize.disconnect(); grid?.removeAttribute('data-kl-home-grid'); grid?.style.removeProperty('--kl-home-columns'); grid = null;
   });

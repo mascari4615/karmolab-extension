@@ -10,13 +10,19 @@ function page() {
   const attrs=new Map(), styles=new Map([['--ytd-rich-grid-items-per-row','3']]), events={};
   const grid={isConnected:true,setAttribute:(k,v)=>attrs.set(k,v),removeAttribute:k=>attrs.delete(k),getBoundingClientRect:()=>({width:1200}),style:{getPropertyValue:k=>styles.get(k)||'',setProperty:(k,v)=>styles.set(k,v),removeProperty:k=>styles.delete(k)}};
   const html={dataset:{}}, location={pathname:'/'};
-  const context={KarmoDensity:density,location,console,document:{documentElement:html,querySelector:()=>grid,addEventListener:(k,v)=>{events[k]=v;}},ResizeObserver:class{constructor(cb){resized=cb;}observe(){}disconnect(){}},MutationObserver:class{observe(){}},setTimeout:()=>1,chrome:{storage:{local:{get:()=>new Promise(resolve=>{resolveGet=resolve;})},onChanged:{addListener:fn=>{changed=fn;}}}}};
+  const context={KarmoDensity:density,location,console,document:{documentElement:html,querySelector:()=>grid,querySelectorAll:()=>[],addEventListener:(k,v)=>{events[k]=v;}},ResizeObserver:class{constructor(cb){resized=cb;}observe(){}disconnect(){}},MutationObserver:class{observe(){}},setTimeout:()=>1,chrome:{storage:{local:{get:()=>new Promise(resolve=>{resolveGet=resolve;})},onChanged:{addListener:fn=>{changed=fn;}}}}};
   vm.runInNewContext(source,context);
   return {grid,attrs,styles,html,events,location,load:async values=>{resolveGet(values);await Promise.resolve();},change:values=>changed(Object.fromEntries(Object.entries(values).map(([k,v])=>[k,{newValue:v}])),'local'),resize:()=>resized()};
 }
 test('unknown modes return native layout', () => {
   assert.equal(density.commentMode('compact'),'compact');assert.equal(density.commentMode('invalid'),'default');
   assert.equal(density.homeMode('small'),'small');assert.equal(density.homeMode(undefined),'default');
+});
+test('edited marker is separated without changing ordinary date text', () => {
+  assert.deepEqual(density.publishedTime(' 3일 전(수정됨) '),{text:'3일 전',edited:true});
+  assert.deepEqual(density.publishedTime('2 days ago (edited)'),{text:'2 days ago',edited:true});
+  assert.deepEqual(density.publishedTime('1시간 전'),{text:'1시간 전',edited:false});
+  assert.deepEqual(density.publishedTime('3일 전 (다른 정보)'),{text:'3일 전 (다른 정보)',edited:false});
 });
 test('home columns fit each target width, stay bounded and increase with denser modes', () => {
   assert.equal(density.columns(1200,'small'),4);assert.equal(density.columns(1200,'compact'),5);

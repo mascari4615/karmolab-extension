@@ -1,18 +1,20 @@
-html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) {
+html[data-kl-comment-density="compact"] {
   --kl-comment-body:#0f0f0f;
   --kl-comment-author:#245d91;
   --kl-comment-meta:#606060;
+}
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) {
   position:relative;
   margin:0 !important;
   padding:3px 0 !important;
   min-height:20px;
 }
-html[data-kl-comment-density="compact"][dark] :is(ytd-comment-view-model,ytd-comment-renderer) {
+html[data-kl-comment-density="compact"][dark] {
   --kl-comment-body:#f1f1f1;
   --kl-comment-author:#8ab4d8;
   --kl-comment-meta:#a0a0a0;
 }
-html[data-kl-comment-density="compact"] ytd-comment-thread-renderer { margin-bottom:4px !important; }
+html[data-kl-comment-density="compact"] ytd-comment-thread-renderer { position:relative; margin-bottom:4px !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) :is(#author-thumbnail,#author-thumbnail-button) { display:none !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #body { position:relative; margin:0 !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #main { display:block !important; margin:0 !important; padding-inline:72px 80px; min-width:0; line-height:22px; }
@@ -22,6 +24,9 @@ html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-r
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) :is(#author-text,#author-text span) { color:var(--kl-comment-author) !important; font-size:12px !important; font-weight:500 !important; line-height:22px !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #published-time-text { position:absolute; inset-inline-start:0; top:0; width:64px; margin:0 !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:end; font-variant-numeric:tabular-nums; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) :is(#published-time-text,#published-time-text a) { color:var(--kl-comment-meta) !important; font-size:12px !important; font-weight:400 !important; line-height:22px !important; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #published-time-text a[data-kl-date] { font-size:0 !important; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #published-time-text a[data-kl-date]::before { content:attr(data-kl-date) / ""; font-size:12px; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #published-time-text a[data-kl-edited]::after { content:""; display:inline-block; width:10px; height:10px; margin-inline-start:4px; background:currentColor; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m10 3 3 3M3 10l8-8 3 3-8 8-4 1z' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #expander { display:block !important; margin:0 !important; font-size:15px; line-height:22px; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #content-text { color:var(--kl-comment-body); font-size:15px; line-height:22px; unicode-bidi:plaintext; overflow-wrap:anywhere; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #expander > :is(#more,#less):not([hidden]) { display:inline-block; margin:0; }
@@ -43,10 +48,24 @@ html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-r
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-menu { position:absolute; inset-inline-end:0; top:0; opacity:0; pointer-events:none; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-menu button { width:24px !important; height:24px !important; min-height:24px !important; padding:0 !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer):is(:hover,:focus-within) #action-menu { opacity:1; pointer-events:auto; }
-html[data-kl-comment-density="compact"] ytd-comment-replies-renderer { margin-inline-start:16px !important; }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer { margin-inline-start:0 !important; }
 html[data-kl-comment-density="compact"] ytd-comment-replies-renderer .ytSubThreadSubThreadContent { margin-top:0 !important; }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > :is(#collapsed-threads,#expanded-threads) > yt-sub-thread { display:block; }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > :is(#collapsed-threads,#expanded-threads) > yt-sub-thread > .ytSubThreadThreadline { display:none; }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > :is(#collapsed-threads,#expanded-threads) > yt-sub-thread > .ytSubThreadSubThreadContent { margin:0 !important; padding:0; }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > #expanded-threads:not([hidden]) { margin:4px 0 4px 16px; padding-inline-start:8px; border-inline-start:1px solid var(--yt-spec-10-percent-layer,#555); }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > #collapsed-threads > yt-sub-thread > .ytSubThreadSubThreadContent > .show-replies-button,
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > #expanded-threads > yt-sub-thread > .ytSubThreadSubThreadContent > #less-replies-sub-thread { position:absolute; inset-inline-end:80px; top:0; }
+html[data-kl-comment-density="compact"] ytd-comment-thread-renderer:has(> #replies ytd-comment-replies-renderer) > #comment-container > :is(ytd-comment-view-model,ytd-comment-renderer) #main { padding-inline-end:172px; }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies-sub-thread,#less-replies-sub-thread) button { min-width:44px; height:26px !important; min-height:26px; padding:0 4px; color:var(--kl-comment-meta); font-size:12px; font-weight:400; }
+html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies-sub-thread,#less-replies-sub-thread) .ytSpecButtonShapeNextIcon { width:14px; height:14px; margin-inline-start:2px; }
 html[data-kl-comment-density="compact"] ytd-comment-replies-renderer :is(#more-replies,#more-replies-sub-thread) button { height:28px !important; min-height:28px; padding-block:0; font-size:12px; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #reply-dialog:not(:empty) { margin-top:8px; }
+@media (max-width:600px), (hover:none), (pointer:coarse) {
+  html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > #collapsed-threads > yt-sub-thread > .ytSubThreadSubThreadContent > .show-replies-button,
+  html[data-kl-comment-density="compact"] ytd-comment-replies-renderer > #expanded-threads > yt-sub-thread > .ytSubThreadSubThreadContent > #less-replies-sub-thread { position:static; margin-inline-start:72px; }
+  html[data-kl-comment-density="compact"] ytd-comment-thread-renderer:has(> #replies ytd-comment-replies-renderer) > #comment-container > :is(ytd-comment-view-model,ytd-comment-renderer) #main { padding-inline-end:80px; }
+}
 @media (hover:none), (pointer:coarse) {
   html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar { position:static; max-width:100%; margin-top:4px !important; opacity:1; pointer-events:auto; border:0; background:transparent; }
   html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar button { min-height:44px; }
