@@ -5,8 +5,16 @@
   const shelves = 'ytd-shelf-renderer,ytd-reel-shelf-renderer,grid-shelf-view-model';
   const ownerLinks = '#channel-name a[href],ytd-channel-name a[href],a.yt-content-metadata-view-model__metadata-text[href],.yt-lockup-metadata-view-model__metadata a[href],yt-content-metadata-view-model a[href],yt-lockup-metadata-view-model a[href]';
   let records = {}, enabled = true, loaded = false, scheduled = false;
+  let blockedIds = new Set(), scanned = false;
   const metadata = new Map(), queue = [];
-  let activeRequests = 0;
+  const exits = new Map(), moves = new WeakMap();
+  const cacheKey = 'karmolab:video-owners:v1';
+  try {
+    for (const [id, value] of JSON.parse(sessionStorage.getItem(cacheKey) || '[]')) {
+      if (/^[\w-]{11}$/.test(id) && /^UC[\w-]{22}$/.test(value?.id) && Date.now() - value.at < 86400000) metadata.set(id, value);
+    }
+  } catch { /* 캐시 접근 실패 시 기존 공개 정보 조회 유지 */ }
+  let activeRequests = 0, clientVersion;
   const msg = key => chrome.i18n.getMessage(key);
 
   function identity(href) {
@@ -18,14 +26,64 @@
       return match ? (match[1] || match[2].toLowerCase()) : null;
     } catch { return null; }
   }
-  const blocked = id => id && Object.values(records).some(record => record.ids?.includes(id));
+  const indexRecords = () => { blockedIds = new Set(Object.values(records).flatMap(record => record.ids || [])); };
+  const blocked = id => blockedIds.has(id);
+  const motion = () => scanned && document.visibilityState === 'visible' && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const onScreen = rect => rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth;
+  function cardTarget(root) {
+    const wrapper = root.closest('.ytGridShelfViewModelGridShelfItem')
+      || root.closest('ytd-rich-item-renderer,ytm-shorts-lockup-view-model-v2');
+    return wrapper && wrapper.querySelectorAll(cards).length === 1 ? wrapper : root;
+  }
+  function conceal(target, hide, className = 'kl-block-hidden') {
+    const running = exits.get(target);
+    if (!hide) {
+      if (running) { exits.delete(target); running.cancel(); target.classList.remove('kl-block-leaving'); }
+      target.classList.remove(className);
+      return;
+    }
+    if (target.classList.contains(className) || running) return;
+    if (!motion() || !onScreen(target.getBoundingClientRect()) || !target.animate) {
+      target.classList.add(className); return;
+    }
+    const animation = target.animate([
+      { opacity: 1, filter: 'blur(0px)', clipPath: 'inset(0 0 0 0)' },
+      { opacity: 0, filter: 'blur(2px)', clipPath: 'inset(0 0 8% 0)' },
+    ], { duration: 140, easing: 'ease-out', fill: 'forwards' });
+    target.classList.add('kl-block-leaving');
+    exits.set(target, animation);
+    animation.finished.then(() => {
+      if (exits.get(target) !== animation) return;
+      exits.delete(target);
+      const container = target.closest(shelves)?.parentElement || target.parentElement;
+      const candidates = container ? [...new Set([...container.querySelectorAll(cards + ',ytd-channel-renderer')].map(cardTarget))] : [];
+      const positions = [];
+      if (motion()) for (const item of candidates) {
+        moves.get(item)?.cancel();
+        const rect = item.getBoundingClientRect();
+        if (item !== target && onScreen(rect) && positions.length < 24) positions.push([item, rect]);
+      }
+      target.classList.add(className);
+      target.classList.remove('kl-block-leaving');
+      animation.cancel();
+      layout();
+      for (const [item, before] of positions) {
+        const after = item.getBoundingClientRect();
+        const dx = before.x - after.x, dy = before.y - after.y;
+        if (after.width && after.height && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
+          moves.set(item, item.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 180, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }));
+        }
+      }
+      schedule();
+    }).catch(() => { /* 차단 해제와 DOM 교체 시 이전 퇴장 취소 */ });
+  }
   function videoOwner(root, resolve = false) {
     const link = root.querySelector('a[href*="/shorts/"],a[href*="/watch?"]');
     const id = link?.getAttribute('href')?.match(/(?:\/shorts\/|[?&]v=)([\w-]{11})/)?.[1];
     if (!id) return null;
     if (!metadata.has(id) && enabled && (resolve || Object.keys(records).length)) {
       metadata.set(id, null);
-      queue.push(id);
+      if (resolve) queue.unshift(id); else queue.push(id);
       pump();
     }
     return metadata.get(id);
@@ -34,14 +92,17 @@
     while (activeRequests < 3 && queue.length) {
       const id = queue.shift();
       activeRequests++;
-      const version = [...document.scripts].map(script => script.textContent.match(/"INNERTUBE_CLIENT_VERSION":"([\d.]+)"/)?.[1]).find(Boolean) || '2.20250101.00.00';
+      clientVersion ||= [...document.scripts].map(script => script.textContent.match(/"INNERTUBE_CLIENT_VERSION":"([\d.]+)"/)?.[1]).find(Boolean) || '2.20250101.00.00';
       fetch('/youtubei/v1/player?prettyPrint=false', {
         method: 'POST', credentials: 'omit', signal: AbortSignal.timeout(5000),
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ videoId: id, context: { client: { clientName: 'WEB', clientVersion: version } } }),
+        body: JSON.stringify({ videoId: id, context: { client: { clientName: 'WEB', clientVersion } } }),
       }).then(response => response.ok ? response.json() : null).then(data => {
         const channel = data?.videoDetails?.channelId;
-        if (channel) metadata.set(id, { id: channel, name: data.videoDetails.author, href: 'https://www.youtube.com/channel/' + channel });
+        if (/^UC[\w-]{22}$/.test(channel)) {
+          metadata.set(id, { id: channel, name: data.videoDetails.author, href: 'https://www.youtube.com/channel/' + channel, at: Date.now() });
+          try { sessionStorage.setItem(cacheKey, JSON.stringify([...metadata].filter(([, value]) => value).slice(-500))); } catch { /* 저장 불가 시 메모리 캐시 유지 */ }
+        }
       }).catch(() => { /* Keep unknown authors visible when metadata is unavailable. */ }).finally(() => {
         activeRequests--; schedule(); pump();
       });
@@ -62,6 +123,12 @@
     button.querySelector('.kl-block-label').textContent = msg('blockSaving');
     try {
       const ids = [person.id];
+      const key = prefix + person.id;
+      const record = { name: person.name, ids: [...ids], created: Date.now() };
+      await chrome.storage.local.set({ [key]: record });
+      records[key] = record;
+      indexRecords();
+      scan();
       // 핸들과 채널 ID 연결. 실패해도 선택한 링크 기준 차단 유지
       try {
         const response = await fetch(person.href, { credentials: 'omit', signal: AbortSignal.timeout(5000) });
@@ -74,11 +141,14 @@
           if (handle) ids.push(decodeURIComponent(handle).toLowerCase());
         }
       } catch { /* 오프라인에서도 링크 기준 차단 */ }
-      const key = prefix + person.id;
-      const record = { name: person.name, ids: [...new Set(ids)], created: Date.now() };
-      await chrome.storage.local.set({ [key]: record });
-      records[key] = record;
-      scan();
+      // 조회 도중 해제하거나 새로 차단한 레코드의 덮어쓰기 방지
+      if (records[key]?.created === record.created && ids.length > 1) {
+        const enriched = { ...record, ids: [...new Set(ids)] };
+        try {
+          await chrome.storage.local.set({ [key]: enriched });
+          records[key] = enriched; indexRecords(); schedule();
+        } catch { /* 최초 저장한 핸들 기준 차단 유지 */ }
+      }
     } catch {
       button.disabled = false;
       button.querySelector('.kl-block-label').textContent = msg('blockRetry');
@@ -145,7 +215,7 @@
       const items = [...shelf.querySelectorAll(cards)];
       const hidden = items.filter(item => item.closest('.kl-block-hidden'));
       // 소유자 미확인 카드는 유지, 모든 카드가 차단된 묶음만 숨김
-      shelf.classList.toggle('kl-block-empty', items.length > 0 && hidden.length === items.length);
+      conceal(shelf, items.length > 0 && hidden.length === items.length, 'kl-block-empty');
       const reflow = shelf.matches('grid-shelf-view-model') && hidden.length > 0;
       const rows = [...shelf.querySelectorAll('.ytGridShelfViewModelGridShelfRow')];
       for (const parent of new Set(rows.map(row => row.parentElement))) {
@@ -157,23 +227,22 @@
     if (!loaded) return;
     observer.disconnect();
     try {
+      for (const [target, animation] of exits) {
+        if (!target.isConnected) { exits.delete(target); animation.cancel(); target.classList.remove('kl-block-leaving'); }
+      }
       for (const root of document.querySelectorAll(cards)) {
         // Wrapper and nested lockup represent the same card, not two buttons.
         if (root.matches('ytd-rich-item-renderer') && root.querySelector(cards)) continue;
         const direct = owner(root);
-        const rect = root.getBoundingClientRect();
-        const visible = rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth;
-        const person = direct || videoOwner(root, visible);
-        const wrapper = root.closest('.ytGridShelfViewModelGridShelfItem')
-          || root.closest('ytd-rich-item-renderer,ytm-shorts-lockup-view-model-v2');
-        const target = wrapper && wrapper.querySelectorAll(cards).length === 1 ? wrapper : root;
-        target.classList.toggle('kl-block-hidden', Boolean(enabled && blocked(person?.id)));
+        const person = direct || videoOwner(root, onScreen(root.getBoundingClientRect()));
+        const target = cardTarget(root);
+        conceal(target, Boolean(enabled && blocked(person?.id)));
         const anchor = root.querySelector('.ytLockupMetadataViewModelTextContainer, .yt-lockup-metadata-view-model__text-container, #meta, #metadata, .shortsLockupViewModelHostMetadata, .ytmShortsLockupViewModelHostMetadata');
         if (anchor) addButton(root, person, anchor, true, 'card');
       }
       for (const root of document.querySelectorAll('ytd-channel-renderer')) {
         const person = owner(root, 'a#main-link[href],a.channel-link[href]');
-        root.classList.toggle('kl-block-hidden', Boolean(enabled && blocked(person?.id)));
+        conceal(root, Boolean(enabled && blocked(person?.id)));
         const anchor = root.querySelector('#info-section');
         if (anchor) addButton(root, person, anchor, true, 'card');
       }
@@ -183,7 +252,7 @@
         // 차단한 부모 댓글은 답글까지 숨김, 답글 작성자 차단은 해당 답글만
         const target = root.closest('ytd-comment-thread-renderer')?.querySelector(comments) === root
           ? root.closest('ytd-comment-thread-renderer') : root;
-        target.classList.toggle('kl-block-hidden', Boolean(enabled && blocked(person?.id)));
+        conceal(target, Boolean(enabled && blocked(person?.id)));
         const actions = root.querySelector('#action-buttons #toolbar') || root.querySelector('#action-buttons');
         addButton(root, person, actions || root.querySelector('#main') || root, true, 'comment');
       }
@@ -206,25 +275,32 @@
         if (player) playback(player, person);
       }
     } finally {
+      scanned = true;
       observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['href'] });
     }
   }
   function schedule() {
     if (scheduled) return;
     scheduled = true;
-    setTimeout(() => { scheduled = false; scan(); }, 100);
+    setTimeout(() => { scheduled = false; scan(); }, 32);
   }
-  const observer = new MutationObserver(schedule);
+  const observedContent = cards + ',' + comments + ',' + shelves + ',ytd-channel-renderer,ytd-reel-video-renderer,ytd-watch-flexy';
+  const observer = new MutationObserver(changes => {
+    if (changes.some(change => change.target.closest?.(observedContent)
+      || [...change.addedNodes, ...change.removedNodes].some(node => node.nodeType === 1 && (node.matches(observedContent) || node.querySelector(observedContent))))) schedule();
+  });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
+    let relevant = false;
     for (const [key, change] of Object.entries(changes)) {
-      if (key === 'userBlock') enabled = change.newValue !== false;
+      if (key === 'userBlock') { enabled = change.newValue !== false; relevant = true; }
       if (key.startsWith(prefix)) {
+        relevant = true;
         if (change.newValue) records[key] = change.newValue;
         else delete records[key];
       }
     }
-    schedule();
+    if (relevant) { indexRecords(); schedule(); }
   });
   document.addEventListener('yt-navigate-finish', schedule);
   document.addEventListener('play', event => {
@@ -232,6 +308,7 @@
   }, true);
   chrome.storage.local.get(null).then(values => {
     records = Object.fromEntries(Object.entries(values).filter(([key]) => key.startsWith(prefix)));
+    indexRecords();
     enabled = values.userBlock !== false;
     loaded = true;
     scan();

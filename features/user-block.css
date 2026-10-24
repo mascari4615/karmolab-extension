@@ -1,4 +1,5 @@
 .kl-block-hidden { display: none !important; }
+.kl-block-leaving { pointer-events: none !important; }
 .kl-block-empty { display: none !important; }
 .kl-block-grid { display: flex !important; flex-wrap: wrap; gap: 16px; }
 .kl-block-grid > .ytGridShelfViewModelGridShelfRow { display: contents !important; }
