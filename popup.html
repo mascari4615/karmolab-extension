@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <title>KarmoLab</title>
   <style>
-    body { margin: 0; width: 320px; background: #000; color: #fff; font: 14px/1.4 "Pretendard", "Malgun Gothic", system-ui, sans-serif; color-scheme: dark; }
+    body { margin: 0; width: 320px; max-width: 100%; box-sizing: border-box; background: #000; color: #fff; font: 14px/1.4 "Pretendard", "Malgun Gothic", system-ui, sans-serif; color-scheme: dark; }
     header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid #333; }
     header img { width: 24px; height: 24px; }
     header b { font-size: 15px; }
@@ -28,7 +28,7 @@
     .count-settings { padding: 0 14px 14px; }
     .count-settings label { padding: 8px 0; }
     .count-settings label:has(input) { min-height: 28px; align-items: center; }
-    select { padding: 7px 8px; border: 1px solid #777; border-radius: 4px; background: #111; color: #fff; font: inherit; }
+    select { max-width: 100%; padding: 7px 8px; border: 1px solid #777; border-radius: 4px; background: #111; color: #fff; font: inherit; }
     #shortsCountStatus { color: #bbb; font-size: 12px; margin: 6px 0; }
     .utility { padding-top: 12px; }
     .utility label { padding: 8px 0; min-height: 28px; align-items: center; }
@@ -44,6 +44,12 @@
 </head>
 <body>
   <header><img src="icons/icon-32.png" alt=""><b>KarmoLab</b></header>
+  <section class="utility" aria-labelledby="darkModeHeading">
+    <h2 id="darkModeHeading" data-msg="darkModeHeading"></h2>
+    <p id="darkModeStatus" role="status" data-msg="base64Loading"></p>
+    <button id="darkModeSite" type="button" disabled data-msg="darkModeEnable"></button>
+    <p data-msg="darkModeHint"></p>
+  </section>
   <section class="utility" aria-labelledby="volumeHeading">
     <h2 id="volumeHeading" data-msg="volumeHeading"></h2>
     <div class="volume-row"><input id="siteVolumeRange" type="range" min="0" max="300" step="5" value="100" disabled data-msg-label="volumeValue"><input id="siteVolumeNumber" type="number" min="0" max="300" step="1" value="100" disabled data-msg-label="volumeValue"><span>%</span></div>
@@ -105,5 +111,6 @@
   <script src="features/keyword-core.js"></script>
   <script src="popup.js"></script>
   <script type="module" src="features/volume-popup.mjs"></script>
+  <script type="module" src="features/dark-mode-popup.mjs"></script>
 </body>
 </html>

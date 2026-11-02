@@ -32,6 +32,13 @@
 | Base64 웹 주소 링크화 | `features/base64-core.js`, `base64-links.js`, `.css` | 팝업의 이 사이트에서 켜기/끄기 (`chrome.storage.local`) |
 | 키워드 숨김 | `features/keyword-core.js`, `keyword-comments.js`, `user-block.js` | 댓글과 영상/Shorts 제목, 체크와 키워드 저장 |
 | 사이트별 음량 기억과 300% 증폭 | `features/volume-*`, `background.mjs` | 팝업 음량 적용, 증폭 중지 |
+| 사이트별 다크모드 | `features/dark-mode-*`, `features/vendor/` | 팝업 다크모드 켜기/끄기 |
+
+## 사이트별 다크모드 (로컬 시험판)
+
+일반 웹페이지에서 확장 아이콘 → **이 사이트 다크모드** → **다크모드 켜기**. 처음에는 해당 사이트 접근 허용 필요. 기본 꺼짐, 켠 사이트만 다음 방문과 새 탭에도 적용. 같은 프로토콜/호스트의 포트는 공유. **다크모드 끄기**로 같은 사이트의 열린 탭을 원래 색상으로 복원. 다른 기능과 공유하는 사이트 접근 권한은 유지하며, 브라우저 확장 설정에서 회수 가능.
+
+Dark Reader 4.9.134 API를 MIT 조건으로 포함. [출처와 재현](features/vendor/README.md), [허가문](features/vendor/DARKREADER-LICENSE). 페이지 내용의 수집/업로드와 원격 코드 실행 없음. 페이지가 사용하는 스타일/이미지 분석에는 일반 CORS 범위의 리소스 요청 사용. 기본 사진과 영상 색상 유지, 복잡한 그림 배경의 정확한 보정은 보장하지 않음. iframe, 브라우저 설정/스토어, PDF 뷰어는 지원 범위 밖. 이미 어두운 사이트에서 어색하면 끄기. 밝기 조절과 자동 감지는 이번 범위 밖.
 
 새 기능은 `features/` 에 파일 한 쌍, 팝업에 체크 하나, `_locales` 문구.
 

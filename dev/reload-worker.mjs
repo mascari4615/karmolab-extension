@@ -1,5 +1,5 @@
 import { buildDigest } from './build.mjs';
-import '../features/volume-background.mjs';
+import '../background.mjs';
 
 const ALARM = 'karmolab-local-reload';
 const PENDING = 'karmolabLocalReloadPending';

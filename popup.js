@@ -106,8 +106,8 @@ base64Button.addEventListener('click', async () => {
       if ((await chrome.scripting.getRegisteredContentScripts({ ids: [id] })).length) await chrome.scripting.unregisterContentScripts({ ids: [id] });
       await chrome.storage.local.set({ base64Sites: base64Sites.filter(site => site !== base64Pattern) });
       // Volume memory and YouTube may still need this shared host permission.
-      const volumeUsesSite = (await chrome.scripting.getRegisteredContentScripts()).some(script => script.id.startsWith('volume-') && script.matches.includes(base64Pattern));
-      if (base64Pattern !== 'https://www.youtube.com/*' && !volumeUsesSite) await chrome.permissions.remove({ origins: [base64Pattern] });
+      const otherFeatureUsesSite = (await chrome.scripting.getRegisteredContentScripts()).some(script => script.matches.includes(base64Pattern));
+      if (base64Pattern !== 'https://www.youtube.com/*' && !otherFeatureUsesSite) await chrome.permissions.remove({ origins: [base64Pattern] });
     } else {
       const registered = await chrome.scripting.getRegisteredContentScripts({ ids: [id] });
       if (!registered.length) await chrome.scripting.registerContentScripts([{

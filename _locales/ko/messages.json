@@ -1,4 +1,14 @@
 {
+  "darkModeHeading": { "message": "이 사이트 다크모드" },
+  "darkModeOn": { "message": "켜짐" },
+  "darkModeOff": { "message": "꺼짐" },
+  "darkModeEnable": { "message": "다크모드 켜기" },
+  "darkModeDisable": { "message": "다크모드 끄기" },
+  "darkModeHint": { "message": "켠 사이트만 다음 방문에도 적용. 화면이 어색하면 끄세요. Dark Reader 기반." },
+  "darkModeUnsupported": { "message": "일반 웹페이지에서 사용하세요. 브라우저 설정과 확장 스토어는 지원하지 않아요." },
+  "darkModeDenied": { "message": "사이트 접근을 허용하지 않아 켜지지 않았어요." },
+  "darkModeError": { "message": "변경하지 못했어요. 페이지를 확인하고 다시 시도하세요." },
+  "darkModeReload": { "message": "일부 열린 탭은 새로고침이 필요해요." },
   "extName": {
     "message": "KarmoLab"
   },
