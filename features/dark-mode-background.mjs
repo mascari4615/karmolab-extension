@@ -1,5 +1,11 @@
 import { siteInfo } from './volume-core.mjs';
 export const darkScriptId = pattern => 'dark-' + Array.from(new TextEncoder().encode(pattern), byte => byte.toString(16).padStart(2, '0')).join('');
+const files = ['features/dark-mode-engine.js', 'features/dark-mode-page.js'];
+// Replace persisted registrations before navigation can reference a removed engine file.
+void chrome.scripting.getRegisteredContentScripts({}).then(scripts => {
+  const updates = scripts.filter(script => script.id.startsWith('dark-') && JSON.stringify(script.js) !== JSON.stringify(files)).map(script => ({ id: script.id, js: files }));
+  if (updates.length) return chrome.scripting.updateContentScripts(updates);
+}).catch(error => console.warn('KarmoLab dark mode registration:', error.message));
 let updating = Promise.resolve();
 async function apply(message) {
   const tab = await chrome.tabs.get(message.tabId), site = siteInfo(tab.url);
@@ -8,9 +14,10 @@ async function apply(message) {
   const { darkModeSites = [] } = await chrome.storage.local.get('darkModeSites');
   const id = darkScriptId(site.pattern);
   const previous = await chrome.scripting.getRegisteredContentScripts({ ids: [id] });
-  const script = { id, matches: [site.pattern], js: ['features/vendor/darkreader.js', 'features/dark-mode-page.js'], runAt: 'document_start', persistAcrossSessions: true };
+  const script = { id, matches: [site.pattern], js: files, runAt: 'document_start', persistAcrossSessions: true };
   try {
     if (message.enabled && !previous.length) await chrome.scripting.registerContentScripts([script]);
+    else if (message.enabled && JSON.stringify(previous[0].js) !== JSON.stringify(files)) await chrome.scripting.updateContentScripts([{ id, js: files }]);
     else if (!message.enabled && previous.length) await chrome.scripting.unregisterContentScripts({ ids: [id] });
     const latest = siteInfo((await chrome.tabs.get(tab.id)).url);
     if (latest.pattern !== site.pattern) throw new Error('The tab changed sites; reopen the popup');

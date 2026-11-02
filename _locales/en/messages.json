@@ -4,7 +4,7 @@
   "darkModeOff": { "message": "Off" },
   "darkModeEnable": { "message": "Turn on dark mode" },
   "darkModeDisable": { "message": "Turn off dark mode" },
-  "darkModeHint": { "message": "Remembers enabled sites. Turn off if the page looks wrong. Powered by Dark Reader." },
+  "darkModeHint": { "message": "Remembers enabled sites and preserves photos and videos. Turn off if the page looks wrong." },
   "darkModeUnsupported": { "message": "Open a regular webpage. Browser settings and extension stores are unsupported." },
   "darkModeDenied": { "message": "Site access was not granted. Dark mode is still off." },
   "darkModeError": { "message": "Could not change dark mode. Check the page and try again." },

@@ -5,7 +5,7 @@ async function harness({ saved = [], failSave = false, permission = true } = {})
   let listener, sites = [...saved];
   const registered = new Map(), injected = [];
   const id = 'dark-' + Buffer.from('https://site1.example/*').toString('hex');
-  const script = { id, matches: ['https://site1.example/*'], js: ['features/vendor/darkreader.js', 'features/dark-mode-page.js'] };
+  const script = { id, matches: ['https://site1.example/*'], js: ['features/dark-mode-engine.js', 'features/dark-mode-page.js'] };
   if (saved.length) registered.set(id, script);
   globalThis.chrome = {
     runtime: { id: 'fixture', getURL: file => 'chrome-extension://fixture/' + file, onMessage: { addListener: fn => { listener = fn; } } },
@@ -13,7 +13,8 @@ async function harness({ saved = [], failSave = false, permission = true } = {})
     tabs: { get: async id => ({ id, url: `https://site${id}.example/article` }), query: async () => [{id: 1}, {id: 2}] },
     storage: { local: { get: async () => ({ darkModeSites: [...sites] }), set: async values => { if (failSave) throw new Error('Disk full'); sites = values.darkModeSites; } } },
     scripting: {
-      getRegisteredContentScripts: async ({ids}) => ids.map(id => registered.get(id)).filter(Boolean),
+      getRegisteredContentScripts: async ({ids}) => ids ? ids.map(id => registered.get(id)).filter(Boolean) : [...registered.values()],
+      updateContentScripts: async scripts => scripts.forEach(script => registered.set(script.id, { ...registered.get(script.id), ...script })),
       registerContentScripts: async scripts => scripts.forEach(script => registered.set(script.id, script)),
       unregisterContentScripts: async ({ids}) => ids.forEach(id => registered.delete(id)),
       executeScript: async config => { injected.push(config); return [{ result: false }]; },

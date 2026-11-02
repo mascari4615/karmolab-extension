@@ -3,7 +3,7 @@ export function runtimeFiles(manifest) {
     'manifest.json', 'dev/reload-worker.mjs', 'dev/build.mjs', 'popup.html', 'popup.js',
     'features/base64-core.js', 'features/base64-links.js', 'features/base64-links.css',
     'background.mjs', 'features/volume-background.mjs', 'features/volume-core.mjs', 'features/volume-offscreen.html', 'features/volume-offscreen.mjs', 'features/volume-page.js', 'features/volume-popup.mjs',
-    'features/dark-mode-background.mjs', 'features/dark-mode-popup.mjs', 'features/dark-mode-page.js', 'features/vendor/darkreader.js', 'features/vendor/DARKREADER-LICENSE',
+    'features/dark-mode-background.mjs', 'features/dark-mode-popup.mjs', 'features/dark-mode-page.js', 'features/dark-mode-engine.js',
     '_locales/ko/messages.json', '_locales/en/messages.json',
     ...Object.values(manifest.icons || {}),
     ...(manifest.content_scripts || []).flatMap(item => [...(item.js || []), ...(item.css || [])]),
