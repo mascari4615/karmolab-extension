@@ -17,11 +17,12 @@ test('export includes effective defaults and excludes histories, permissions and
   assert.deepEqual(api.parse(JSON.stringify(data)).blocks,[]);
 });
 test('backup round trip preserves Korean names, false settings and keywords', () => {
-  const person=record('@한국어');
+  const person={...record('@한국어'),autoKeyword:'고양이'};
   const data=api.create({commentTranslate:false,keywordComments:false,keywordVideos:true,keywordShorts:false,keywordWords:['고양이'],[person.key]:person},{shortsDate:false});
   const parsed=api.parse(JSON.stringify(data));
   assert.equal(parsed.settings.shortsDate,false);assert.equal(parsed.blocks[0].name,'검증 사용자');assert.deepEqual(parsed.settings.keywordWords,['고양이']);
   assert.equal(parsed.settings.keywordComments,false);assert.equal(parsed.settings.keywordVideos,true);assert.equal(parsed.settings.keywordShorts,false);
+  assert.equal(parsed.blocks[0].autoKeyword,'고양이');
 });
 test('Home-only hidden channels stay separate from blocks and merge through backups',async()=> {
   const hidden={...record('@homeOnly','홈에서만 숨김'),key:'hiddenHomeChannel:@homeOnly'};

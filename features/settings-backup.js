@@ -14,7 +14,8 @@
       if(!record||!Array.isArray(record.ids)||!record.ids.length||record.ids.length>20||!record.ids.every(idValid)
         ||!record.ids.some(id=>record.key===prefix+id)||seen.has(record.key)||typeof record.name!=='string'||!record.name.trim()||record.name.length>500
         ||!Number.isSafeInteger(record.created)||record.created<0)throw Error('Invalid channel');
-      seen.add(record.key);return{key:record.key,name:record.name,ids:[...new Set(record.ids)],created:record.created};
+      if (record.autoKeyword !== undefined && (typeof record.autoKeyword !== 'string' || !record.autoKeyword.trim() || record.autoKeyword.length > 200 || /[\r\n]/.test(record.autoKeyword))) throw Error('Invalid automatic block rule');
+      seen.add(record.key);return{key:record.key,name:record.name,ids:[...new Set(record.ids)],created:record.created,...(record.autoKeyword ? {autoKeyword:record.autoKeyword} : {})};
     });
   }
   function validate(input) {

@@ -46,6 +46,7 @@ async function renderBlocks() {
       button.addEventListener('click', async () => {
         button.disabled = true;
         try {
+          if (person.autoKeyword) await chrome.storage.local.set({ ['keywordAutoBlockAllow:' + person.ids[0]]: true });
           await chrome.storage.local.remove(key);
           await renderBlocks();
           blockBox.focus();
