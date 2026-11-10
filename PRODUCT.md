@@ -29,3 +29,10 @@
 - Shorts comments open at a requested 640px width, constrained by the available window. Drag the left separator to resize; remember the requested width locally across visits. This layout preference is independent of comment density and is not included in preference backups.
 - Replies stay concealed from document start until both author and keyword checks finish. Changed text, author identity, settings, and exceptions invalidate prior checks before the next paint. Incomplete replies remain concealed. Fully loaded, entirely filtered reply groups show a neutral status instead of an empty expander; unknown totals and remaining continuations retain native loading controls.
 - Home inline previews follow the saved video volume by default (10% fallback if unavailable). A 0-100% slider beside Home column controls sets a separate remembered preview volume; Follow video volume restores automatic following. Preserve native mute state and leave regular video and Shorts volume unchanged. Preview volume is not part of settings backups.
+# Comment safety and compact controls
+
+- Classify adult promotion locally from combined author and comment signals after Unicode normalization. Hide strong matches, fold uncertain matches, and preserve ordinary discussion that merely mentions an adult term. Keep reasons and per-comment exceptions in filter review. No external classifier or automatic account-wide blocking.
+- Hide explicit keyword matches without a placeholder. Recover through the management panel.
+- Include spam acknowledgement in the reply prepaint gate. Recheck after translation and content replacement.
+- Show an accessible translation progress icon, ending when text changes or after a 15-second response limit. Show original-language symbols from explicit comment language or conservative Japanese/Korean script clues; use an unknown-language globe otherwise. Flags represent language hints, never author nationality.
+- Prefer familiar action icons with accessible names and tooltips. Block and Home-hide notifications expire after six seconds, pausing during hover, focus or pending undo. Keep error details and restore confirmation as text.

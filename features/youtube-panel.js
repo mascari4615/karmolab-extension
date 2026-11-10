@@ -63,6 +63,7 @@
         </section>
         <section><h3 data-msg="panelComments"></h3>
           <label><span data-msg="commentTranslate"></span><input id="translation" type="checkbox" disabled></label>
+          <label><span data-msg="commentSpam"></span><input id="spam" type="checkbox" disabled></label>
           <p data-msg="panelTranslationHint"></p>
         </section>
         <section><h3 data-msg="keywordHeading"></h3>
@@ -102,6 +103,7 @@
   const $ = selector => shadow.querySelector(selector);
   $('#home-sizing').replaceWith(KarmoHomeSize.create());
   for (const node of shadow.querySelectorAll('[data-msg]')) node.textContent = msg(node.dataset.msg);
+  for (const [id, icon, label] of [['save', 'save', 'keywordSave'], ['export', 'download', 'backupExport'], ['retry', 'retry', 'panelRetry']]) KarmoControlIcons.apply($('#' + id), icon, msg(label));
   $('#close').setAttribute('aria-label', msg('panelClose'));
   $('#search').setAttribute('aria-label', msg('panelSearch'));
   $('#search').placeholder = msg('panelSearch');
@@ -129,6 +131,7 @@
   const pending = new Set();
   const toggles = { commentTranslate: $('#translation'), keywordEnabled: $('#keywords'), keywordComments: $('#scope-comments'), keywordVideos: $('#scope-videos'), keywordShorts: $('#scope-shorts'), userBlock: $('#blocking'), shortsDate: $('#shortsDate'), shortsCount: $('#shortsCount'), shortsWatchTime: $('#watchTime') };
   const review = globalThis.KarmoFilterReview, reviewPending = new Set();
+  toggles.commentSpam = $('#spam');
   let reviewSignature = '';
   function renderReview() {
     if (!review) { $('#review-count').textContent = msg('reviewUnavailable'); return; }
@@ -140,6 +143,7 @@
     const kind = value => msg({ video: 'reviewVideo', shorts: 'reviewShorts', comment: 'reviewComment', channel: 'reviewChannel' }[value] || 'reviewVideo');
     const action = (row, key, label, callback) => {
       const button = document.createElement('button'); button.type = 'button'; button.textContent = msg(label); button.disabled = reviewPending.has(key);
+      KarmoControlIcons.apply(button, { reviewShowOnce: 'show', reviewAllow: 'allow', reviewRetry: 'retry', reviewRevoke: 'retry' }[label], msg(label));
       button.addEventListener('click', async () => {
         reviewPending.add(key); renderReview();
         try { await callback(); announce('panelSaved'); }
@@ -190,6 +194,7 @@
       name.textContent = person.name || person.ids[0];
       button.type = 'button'; button.textContent = msg('unblockUser'); button.disabled = pending.has(key) || backupBusy;
       button.setAttribute('aria-label', msg('unblockUser') + ': ' + name.textContent);
+      KarmoControlIcons.apply(button, 'allow', msg('unblockUser') + ': ' + name.textContent);
       button.addEventListener('click', async () => {
         pending.add(key); button.disabled = true;
         const version = changeVersion;
@@ -207,6 +212,7 @@
       const row=document.createElement('li'),name=document.createElement('span'),button=document.createElement('button');
       name.textContent=person.name||person.ids[0];button.type='button';button.textContent=msg('homeHideUndo');button.disabled=pending.has(key)||backupBusy;
       button.setAttribute('aria-label',msg('homeHideUndo')+': '+name.textContent);
+      KarmoControlIcons.apply(button, 'show', msg('homeHideUndo') + ': ' + name.textContent);
       button.addEventListener('click',async()=> {
         pending.add(key);renderHomeHidden();const version=changeVersion;
         try{await chrome.storage.local.remove(key);if(version===changeVersion)delete values[key];announce('panelSaved');}

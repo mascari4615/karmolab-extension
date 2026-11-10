@@ -1,0 +1,7 @@
+.kl-spam-folded > :not(.kl-spam-notice) { display:none !important; }
+.kl-spam-hidden { display:none !important; }
+.kl-spam-notice { display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:6px 8px;color:#555;font:12px/1.4 Roboto,Arial,sans-serif; }
+.kl-spam-notice button { border:0;background:transparent;color:#065fd4;cursor:pointer;min-height:32px;padding:4px;font:inherit; }
+html[dark] .kl-spam-notice { color:#bbb; }
+html[dark] .kl-spam-notice button { color:#8ab4f8; }
+.kl-spam-notice button:focus-visible { outline:2px solid currentColor; }

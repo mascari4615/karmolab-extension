@@ -170,6 +170,7 @@
   "profileOpenChannel": { "message": "채널 열기" },
   "volumeHeading": { "message": "이 사이트 음량" },
   "volumeValue": { "message": "사이트 음량, 퍼센트" },
+  "commentSpam": { "message": "성인 광고 댓글 자동 숨김" },
   "volumeLoading": { "message": "사이트 음량 확인 중" },
   "volumeApply": { "message": "이 사이트에 적용" },
   "volumeStop": { "message": "이 탭 증폭 끄기" },

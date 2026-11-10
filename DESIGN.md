@@ -7,9 +7,9 @@
 - One top-bar KarmoLab button, one nonmodal panel below the masthead, separate translation, keyword and blocked-user groups without nested cards.
 - A close button, Escape and outside click dismiss the panel. Retain unsaved keyword input across dismissal.
 - Immediate reversible toggles. Keyword drafts have an explicit Save action. Persistent blocked users have individual Unblock actions and search.
-- Use text labels and native controls, 44px panel targets, 16px text inputs, visible keyboard focus. Keep panel within narrow viewports.
+- Prefer icons for familiar repeated actions, with localized accessible names, tooltips and visible focus. Keep setting labels, reasons, restore confirmation and error messages as text. Use native controls, 44px panel targets and 16px text inputs. Keep panel within narrow viewports.
 - Extend the accepted panel with Shorts controls and a backup section. Scroll the blocked-user list independently so backup controls remain reachable.
-- Show up to three persistent block notices with Undo and Dismiss. Avoid a timeout while the user decides.
+- Show up to three compact icon toasts with blocked status, Undo and Dismiss. Dismiss after six seconds, pausing on hover, keyboard focus and pending undo. Keep later recovery in the panel.
 - Download stored preferences. A selected restore file shows counts and merge semantics before an explicit restore action; preserve unsaved keyword drafts.
 - Compact comments: timestamp gutter, a 20px profile image before the author, and body on the first line. Keep short comments at 28px with the native profile control; use a 44px hit target for coarse pointers. Body type at 15px/22px, author and date at 12px/22px. Use the strongest neutral for content, muted blue for the author, and secondary neutral for the date. Preserve native content folding. Reveal reactions on hover/focus; keep actions visible for coarse pointers.
 - Place the native translation control in reserved space at the comment's trailing edge. Show short Original/Translate labels while retaining the full native accessible text and state. Avoid an extra row and preserve keyboard operation.

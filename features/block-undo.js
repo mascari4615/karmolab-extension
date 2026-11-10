@@ -24,11 +24,15 @@
       const row = document.createElement('div'), text = document.createElement('span');
       const undo = document.createElement('button'), dismiss = document.createElement('button');
       row.className = 'row'; text.textContent = msg('undoBlocked', record.name);
+      KarmoControlIcons.apply(text, 'blocked', msg('undoBlocked', record.name)); text.setAttribute('role', 'img');
       undo.type = dismiss.type = 'button'; undo.textContent = msg('undoBlock'); dismiss.textContent = msg('undoDismiss');
       undo.setAttribute('aria-label', msg('undoBlock') + ': ' + record.name);
-      dismiss.addEventListener('click', () => row.remove());
+      KarmoControlIcons.apply(undo, 'undo', msg('undoBlock') + ': ' + record.name);
+      KarmoControlIcons.apply(dismiss, 'close', msg('undoDismiss'));
+      let lifetime;
+      dismiss.addEventListener('click', () => { lifetime.cancel(); row.remove(); });
       undo.addEventListener('click', async () => {
-        undo.disabled = true; let stale = false;
+        lifetime.pause(); undo.disabled = true; let stale = false;
         try {
           await beforeUndo();
           const current = (await chrome.storage.local.get(key))[key];
@@ -37,9 +41,10 @@
           afterUndo();
           text.textContent = msg('undoRestored', record.name); undo.remove(); dismiss.focus();
         } catch { text.textContent = msg('undoFailed'); }
-        finally { undo.disabled = stale; }
+        finally { undo.disabled = stale; lifetime.restart(); }
       });
       row.append(text, undo, dismiss); stack.append(row);
+      lifetime = KarmoControlIcons.toast(row, () => row.remove());
       while (stack.children.length > 3) stack.firstElementChild.remove();
     },
   };

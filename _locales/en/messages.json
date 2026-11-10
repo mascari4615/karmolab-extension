@@ -170,6 +170,7 @@
   "profileOpenChannel": { "message": "Open channel" },
   "volumeHeading": { "message": "Volume for this site" },
   "volumeValue": { "message": "Site volume, percent" },
+  "commentSpam": { "message": "Automatically hide adult spam comments" },
   "volumeLoading": { "message": "Checking site volume" },
   "volumeApply": { "message": "Apply to this site" },
   "volumeStop": { "message": "Stop boosting this tab" },

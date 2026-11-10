@@ -5,6 +5,7 @@
   let queued = false;
   const signature = root => JSON.stringify([
     root.querySelector('#author-text')?.getAttribute('href'),
+    root.querySelector('#author-text')?.textContent,
     root.querySelector('#content-text')?.textContent,
     root.querySelector('a[href*="lc="]')?.getAttribute('href'),
   ]);
@@ -12,7 +13,7 @@
     const key = signature(root);
     let current = states.get(root);
     if (!current || current.key !== key) {
-      current = { key, users: false, words: false };
+      current = { key, users: false, words: false, spam: false };
       states.set(root, current);
       root.removeAttribute('data-kl-reply-checked');
     }
@@ -34,7 +35,7 @@
       const complete = total.count > 0 && ids.size === total.count && !group.querySelector('ytd-continuation-item-renderer');
       const empty = complete && replies.every(root => {
         const current = state(root);
-        return current.users && current.words && Boolean(root.closest('.kl-block-hidden,.kl-block-leaving,.kl-keyword-folded'));
+        return current.users && current.words && current.spam && Boolean(root.closest('.kl-block-hidden,.kl-block-leaving,.kl-keyword-folded,.kl-spam-folded'));
       });
       group.classList.toggle('kl-replies-filtered', empty);
       let notice = group.querySelector(':scope > .kl-replies-notice');
@@ -71,7 +72,7 @@
       if (!root.closest(groups)) return;
       const current = state(root);
       current[filter] = Boolean(ready);
-      root.toggleAttribute('data-kl-reply-checked', current.users && current.words);
+      root.toggleAttribute('data-kl-reply-checked', current.users && current.words && current.spam);
       schedule();
     },
     invalidate,
@@ -81,7 +82,7 @@
     attributeFilter: ['href', 'hidden', 'aria-label'],
   });
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && Object.keys(changes).some(key => key.startsWith('blockedChannel:') || key.startsWith('filterAllow:') || ['userBlock', 'keywordEnabled', 'keywordComments', 'keywordWords'].includes(key))) invalidate();
+    if (area === 'local' && Object.keys(changes).some(key => key.startsWith('blockedChannel:') || key.startsWith('filterAllow:') || ['userBlock', 'keywordEnabled', 'keywordComments', 'keywordWords', 'commentSpam'].includes(key))) invalidate();
   });
   document.addEventListener('yt-navigate-start', invalidate);
   schedule();

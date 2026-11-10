@@ -51,14 +51,19 @@
   shadow.innerHTML=`<style>:host{font:14px/1.5 Roboto,Arial,sans-serif}section{position:fixed;bottom:20px;left:20px;z-index:2400;max-width:min(440px,calc(100vw - 40px));padding:12px 16px;background:#212121;color:#f1f1f1;border:1px solid #717171;border-radius:8px;box-shadow:0 4px 16px #0003} [hidden]{display:none!important}p{margin:0 0 8px}small{display:block;margin-bottom:8px;color:#ccc}button{min-height:44px;padding:8px 12px;font:inherit;background:transparent;color:#8ecaff;border:0;cursor:pointer}button:focus-visible{outline:2px solid currentColor}</style><section hidden><p role="status"></p><small></small><button id="undo" type="button"></button><button id="close" type="button"></button></section>`;
   const notice=shadow.querySelector('section');let noticeKey;
   shadow.querySelector('#undo').textContent=msg('homeHideUndo');shadow.querySelector('#close').textContent=msg('undoDismiss');
+  KarmoControlIcons.apply(shadow.querySelector('#undo'), 'undo', msg('homeHideUndo'));
+  KarmoControlIcons.apply(shadow.querySelector('#close'), 'close', msg('undoDismiss'));
+  const lifetime = KarmoControlIcons.toast(notice, () => { notice.hidden = true; });
   shadow.querySelector('#close').addEventListener('click',()=>{notice.hidden=true;});
   shadow.querySelector('#undo').addEventListener('click',async()=> {
-    try{await chrome.storage.local.remove(noticeKey);notice.hidden=true;}catch{shadow.querySelector('p').textContent=msg('panelSaveError');}
+    lifetime.pause();
+    try{await chrome.storage.local.remove(noticeKey);notice.hidden=true;}catch{shadow.querySelector('p').textContent=msg('panelSaveError');}finally{lifetime.restart();}
   });
   function announce(key,record,feedback=false) {
     if(!host.isConnected)document.documentElement.append(host);
     noticeKey=prefix+record.id;shadow.querySelector('p').textContent=record.name+': '+msg(key);
     shadow.querySelector('small').textContent=feedback?msg('homeHideUndoHint'):'';notice.hidden=false;
+    lifetime.restart();
   }
   async function hide(card,button) {
     const current=person(card),video=card.querySelector('h3 a[href*="/watch"],a#video-title[href*="/watch"]')?.getAttribute('href');

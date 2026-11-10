@@ -42,6 +42,7 @@ async function renderBlocks() {
       button.type = 'button';
       button.textContent = message('unblockUser');
       button.setAttribute('aria-label', message('unblockUser') + ': ' + person.name);
+      KarmoControlIcons.apply(button, 'allow', message('unblockUser') + ': ' + person.name);
       button.addEventListener('click', async () => {
         button.disabled = true;
         try {

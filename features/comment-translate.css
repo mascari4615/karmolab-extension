@@ -1,0 +1,4 @@
+.kl-translation-status { display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-inline-start:4px;vertical-align:middle;font-size:13px; }
+.kl-translation-status.kl-translating::after { content:'';width:10px;height:10px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:kl-translate-spin .8s linear infinite; }
+@keyframes kl-translate-spin { to { transform:rotate(360deg); } }
+@media(prefers-reduced-motion:reduce) { .kl-translation-status.kl-translating::after { animation:none;border-right-color:currentColor;opacity:.6; } }
