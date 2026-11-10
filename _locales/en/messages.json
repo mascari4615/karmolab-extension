@@ -1,4 +1,6 @@
 {
+  "homePreviewVolume": { "message": "Preview volume" },
+  "homePreviewFollow": { "message": "Follow video volume" },
   "repliesFiltered": { "message": "All replies filtered" },
   "shortsCommentsResize": { "message": "Shorts comments width" },
   "shortsCommentsResizeHint": { "message": "Drag to resize. Left/Right: resize, Home or double-click: reset." },

@@ -74,8 +74,9 @@
   }
   globalThis.KarmoHomeSize = { create:()=>new HomeSize().host };
   const toolbar=document.createElement('div');toolbar.id='kl-home-size-toolbar';
-  toolbar.style.cssText='display:flex;justify-content:flex-end;padding:4px 24px 12px;box-sizing:border-box;';
+  toolbar.style.cssText='display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:12px 24px;padding:4px 24px 12px;box-sizing:border-box;';
   const control=KarmoHomeSize.create();control.dataset.inline='';control.style.width='320px';control.style.maxWidth='100%';toolbar.append(control);
+  if (globalThis.KarmoPreviewVolume) toolbar.append(KarmoPreviewVolume.create());
   function mount() {
     const grid=location.pathname==='/'?document.querySelector('ytd-browse[page-subtype="home"]:not([hidden]) ytd-rich-grid-renderer'):null;
     if(grid) {if(toolbar.nextElementSibling!==grid)grid.before(toolbar);}

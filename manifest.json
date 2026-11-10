@@ -20,7 +20,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["features/reply-gate.js"],
+      "js": ["features/reply-gate.js", "features/home-preview-volume.js"],
       "css": ["features/reply-gate.css"],
       "run_at": "document_start"
     },
