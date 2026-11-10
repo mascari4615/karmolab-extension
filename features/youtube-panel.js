@@ -110,6 +110,7 @@
   const panel = $('aside'), words = $('#words'), status = $('#status');
   const editor = KarmoKeywordEditor.create(words, () => words.dispatchEvent(new Event('input')));
   words.hidden = true; words.after(editor.host);
+  editor.host.after(KarmoAutoBlockExceptions.create());
   const trigger = document.createElement('button');
   trigger.id = 'kl-panel-trigger'; trigger.type = 'button';
   trigger.textContent = 'KarmoLab'; trigger.title = msg('panelOpen');
@@ -200,7 +201,7 @@
       button.addEventListener('click', async () => {
         pending.add(key); button.disabled = true;
         const version = changeVersion;
-        try { if (person.autoKeyword) await chrome.storage.local.set({ ['keywordAutoBlockAllow:' + person.ids[0]]: true }); await chrome.storage.local.remove(key); if (version === changeVersion) delete values[key]; announce('panelUnblocked'); }
+        try { if (person.autoKeyword) await chrome.storage.local.set({ ['keywordAutoBlockAllow:' + person.ids[0]]: { name:person.name, created:Date.now() } }); await chrome.storage.local.remove(key); if (version === changeVersion) delete values[key]; announce('panelUnblocked'); }
         catch { announce('panelSaveError'); }
         finally { pending.delete(key); renderBlocks(); $('#search').focus(); }
       });

@@ -282,7 +282,7 @@
       const record = { name: person.name, ids: [person.id], created: Date.now(), autoKeyword: word };
       await chrome.storage.local.set({ [key]: record });
       records[key] = record; indexRecords(); schedule();
-      KarmoBlockUndo.show(key, record, async () => { autoAllowed.add(person.id); await chrome.storage.local.set({ [exemption]: true }); }, schedule);
+      KarmoBlockUndo.show(key, record, async () => { autoAllowed.add(person.id); await chrome.storage.local.set({ [exemption]: { name:person.name, created:Date.now() } }); }, schedule);
     } finally { autoPending.delete(person.id); }
   }, request(root) {
     const button = root.querySelector('.kl-block-button--comment');
@@ -422,10 +422,11 @@
       if (key === 'keywordVideos') { keywordVideos = change.newValue !== false; relevant = true; }
       if (key === 'keywordShorts') { keywordShorts = change.newValue !== false; relevant = true; }
       if (key === 'keywordWords') { keywordWords = globalThis.KarmoKeywords?.parse((change.newValue || []).join('\n')) || []; relevant = true; }
+      if (key.startsWith('keywordAutoBlockAllow:')) { const id = key.slice('keywordAutoBlockAllow:'.length); if (change.newValue) autoAllowed.add(id); else autoAllowed.delete(id); relevant = true; }
       if (key.startsWith(prefix)) {
         if (!change.newValue && change.oldValue?.autoKeyword) {
-          const id = key.slice(prefix.length); autoAllowed.add(id);
-          chrome.storage.local.set({ ['keywordAutoBlockAllow:' + id]: true }).catch(() => console.warn('KarmoLab: automatic block exception could not be saved'));
+          const id = key.slice(prefix.length), alreadyAllowed = autoAllowed.has(id); autoAllowed.add(id);
+          if (!alreadyAllowed) chrome.storage.local.set({ ['keywordAutoBlockAllow:' + id]: { name:change.oldValue.name, created:Date.now() } }).catch(() => console.warn('KarmoLab: automatic block exception could not be saved'));
         }
         relevant = true;
         if (change.newValue) records[key] = change.newValue;

@@ -46,7 +46,7 @@ async function renderBlocks() {
       button.addEventListener('click', async () => {
         button.disabled = true;
         try {
-          if (person.autoKeyword) await chrome.storage.local.set({ ['keywordAutoBlockAllow:' + person.ids[0]]: true });
+          if (person.autoKeyword) await chrome.storage.local.set({ ['keywordAutoBlockAllow:' + person.ids[0]]: { name:person.name, created:Date.now() } });
           await chrome.storage.local.remove(key);
           await renderBlocks();
           blockBox.focus();
@@ -130,6 +130,7 @@ renderBase64();
 const keywordBox = document.getElementById('keywordEnabled'), keywordWords = document.getElementById('keywordWords'), keywordSave = document.getElementById('keywordSave'), keywordStatus = document.getElementById('keywordStatus');
 const keywordEditor = KarmoKeywordEditor.create(keywordWords, () => { keywordStatus.textContent = message('panelUnsaved'); });
 keywordWords.hidden = true; keywordWords.after(keywordEditor.host);
+keywordEditor.host.after(KarmoAutoBlockExceptions.create());
 KarmoControlIcons.apply(keywordSave, 'save', message('keywordSave'));
 const keywordScopes = ['keywordComments', 'keywordVideos', 'keywordShorts'];
 chrome.storage.local.get({ keywordWords: [], keywordAutoBlockWords: [], keywordEnabled: true, keywordComments: true, keywordVideos: true, keywordShorts: true }).then(values => {

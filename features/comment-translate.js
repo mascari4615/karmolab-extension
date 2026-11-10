@@ -2,26 +2,23 @@
   const comments = 'ytd-comment-view-model,ytd-comment-renderer';
   const states = new WeakMap();
   let enabled = false, loaded = false, timer;
-  function language(root) {
-    const body = root.querySelector('#content-text'), text = body?.textContent || '';
-    const explicit = body?.getAttribute('lang');
-    const code = explicit?.split('-')[0] || (/[ぁ-ゖァ-ヺ]/u.test(text) ? 'ja' : /[가-힣]/u.test(text) ? 'ko' : '');
-    const known = { ja: ['🇯🇵', '일본어'], ko: ['🇰🇷', '한국어'], en: ['🇬🇧', '영어'], zh: ['🌐', '중국어'], ru: ['🌐', '러시아어'], es: ['🌐', '스페인어'], fr: ['🇫🇷', '프랑스어'], de: ['🇩🇪', '독일어'] };
-    const result = known[code] || ['🌐', '원문 언어 미확인'];
-    return [...result, code, !explicit];
-  }
   function status(root, state) {
     let badge = root.querySelector('.kl-translation-status');
     if (!badge) { badge = document.createElement('span'); badge.className = 'kl-translation-status'; badge.setAttribute('role', 'status'); root.querySelector('.translate-button')?.append(badge); }
     const busy = state.pending;
     badge.classList.toggle('kl-translating', busy);
-    badge.textContent = busy ? '' : state.language[0];
-    if (!busy && state.language[2] === 'ja') badge.innerHTML = '<svg viewBox="0 0 24 16" width="18" height="12" aria-hidden="true"><path fill="#fff" d="M0 0h24v16H0z"/><circle cx="12" cy="8" r="4.5" fill="#bc002d"/></svg>';
-    const label = busy ? '번역 중' : state.failed ? '번역 응답 확인 안 됨, 원문 표시' : '원문: ' + state.language[1] + (state.language[3] && state.language[2] ? ' (추정)' : '');
+    badge.textContent = busy ? '' : state.failed ? '⚠' : state.language.code ? state.language.code.split('-')[0].toUpperCase() : '🌐';
+    if (!busy && !state.failed && state.language.flag) badge.innerHTML = state.language.flag;
+    const label = busy ? '번역 중' : state.failed ? '번역 응답 확인 안 됨, 원문 표시' : '원문: ' + state.language.name + (state.language.source === 'detected' ? ' (자동 감지, 국적 아님)' : '');
     badge.title = label; badge.setAttribute('aria-label', label);
   }
   function begin(root, state) {
-    state.language = language(root); state.original = root.querySelector('#content-text')?.textContent;
+    const body = root.querySelector('#content-text');
+    state.language ||= KarmoCommentLanguage.describe('und','unknown'); state.original = KarmoCommentText.read(body);
+    KarmoCommentLanguage.detect(state.original, body?.getAttribute('lang')).then(language => {
+      if (states.get(root) !== state) return;
+      state.language = language; status(root, state);
+    });
     state.pending = true; state.failed = false; status(root, state);
     clearTimeout(state.timeout);
     state.timeout = setTimeout(() => { if (states.get(root) === state && state.pending) { state.pending = false; state.failed = true; status(root, state); } }, 15000);
@@ -45,7 +42,7 @@
     if (!loaded) return;
     for (const root of document.querySelectorAll(comments)) {
       const state = stateFor(root);
-      if (state.pending && root.querySelector('#content-text')?.textContent !== state.original) {
+      if (state.pending && (KarmoCommentText.read(root.querySelector('#content-text')) !== state.original || root.querySelector('.translate-button')?.getAttribute('state') === 'toggled')) {
         state.pending = false; clearTimeout(state.timeout); status(root, state);
       }
       if (!enabled) continue;
