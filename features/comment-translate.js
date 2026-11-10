@@ -63,7 +63,8 @@
     const root = control?.closest(comments);
     if (root && !event.target.closest?.('.kl-translation-status')) {
       const state = stateFor(root); state.attempted = true;
-      if (control.textContent.trim().replace(/\s+/g, '') === '한국어로번역' && !state.pending) begin(root, state);
+      const button = control.querySelector('[role="button"],button');
+      if (button?.textContent.trim().replace(/\s+/g, '') === '한국어로번역' && !state.pending) begin(root, state);
     }
   }, true);
   const observer = new MutationObserver(schedule);

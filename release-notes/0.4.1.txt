@@ -1,0 +1,8 @@
+KarmoLab 0.4.1 update for the existing Chrome and Edge listings. No new permissions.
+YouTube comments: conceal newly loaded replies until user, keyword and adult-promotion checks finish. Recheck changed text and image emoji. Hide explicit keyword matches without placeholder rows; recover through the filter review panel.
+Add searchable keyword rows, emoji keywords and an optional author-block action per keyword. Automatic author blocking is off until selected. Unblocking creates an exception, searchable and reversible from the panel and popup. This is local extension filtering, not YouTube moderation or reporting.
+Use the browser's language detector for original-language badges, with reliable-result checks, SVG flags or ISO badges and an unknown fallback. Native YouTube translation shows a pending icon and a bounded timeout warning; preserve manual original/translated choices.
+Skip confirmed blocked current Shorts after closing comments, validating the current video ID. Blocked regular videos follow the native next-video link or return Home. Unknown author checks do not skip playback.
+Resize Shorts comments by dragging or keyboard, remembering width within viewport limits. Home preview volume follows stored player volume by default, with an independent 0-100% slider; retain mute state.
+Replace familiar repeated actions with accessible icons and tooltips. Block and Home-hide toasts dismiss after six seconds, pausing for hover, focus and pending undo.
+Review comments/replies, emoji rules, keyword author blocking and exceptions, translation completion/timeout, Shorts navigation, popup controls and settings backup/restore. User data stays local. The ZIP excludes local reload servers and loopback/development permissions.
