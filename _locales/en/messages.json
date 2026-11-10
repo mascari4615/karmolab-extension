@@ -1,4 +1,6 @@
 {
+  "shortsCommentsResize": { "message": "Shorts comments width" },
+  "shortsCommentsResizeHint": { "message": "Drag to resize. Left/Right: resize, Home or double-click: reset." },
   "darkModeHeading": { "message": "Dark mode for this site" },
   "darkModeOn": { "message": "On" },
   "darkModeOff": { "message": "Off" },

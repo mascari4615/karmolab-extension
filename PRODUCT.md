@@ -26,3 +26,4 @@
 - Success: change these settings without leaving YouTube, with saved-state feedback and preserved drafts.
 - User requested compact comments resembling a dense chat view, and resizable Home video cards. Preserve native reply, translation, blocking and folding behavior.
 - Density preferences live in the management panel and backups. Native layout remains available and is the default for a new installation.
+- Shorts comments open at a requested 640px width, constrained by the available window. Drag the left separator to resize; remember the requested width locally across visits. This layout preference is independent of comment density and is not included in preference backups.
