@@ -41,6 +41,7 @@
       const shadow = host.attachShadow({ mode: 'open' });
       shadow.innerHTML = `<style>
         :host{display:block;min-width:210px;max-width:100%;color:var(--yt-spec-text-primary,#0f0f0f);font:13px/1.4 Roboto,Arial,sans-serif}
+        :host-context(html[dark]){color:#f1f1f1;color-scheme:dark}
         .row,label{display:flex;align-items:center;gap:8px;min-height:32px} .row{flex-wrap:wrap}
         input[type=range]{width:120px;max-width:100%;accent-color:#065fd4} input[type=checkbox]{accent-color:#065fd4}
         label{cursor:pointer}output{min-width:36px}input:focus-visible{outline:2px solid #065fd4;outline-offset:2px}
