@@ -1,4 +1,5 @@
 .kl-block-hidden { display: none !important; }
+.kl-block-button .kl-block-label { display:none; }
 .kl-block-leaving { position: relative; visibility: hidden !important; pointer-events: none !important; }
 .kl-block-leaving::before, .kl-block-leaving *, .kl-block-leaving *::before, .kl-block-leaving *::after { visibility: hidden !important; }
 .kl-block-leaving::after { content: "" !important; position: absolute; inset: 0; visibility: visible !important; border-radius: inherit; background: var(--yt-spec-badge-chip-background, #e5e5e5); }

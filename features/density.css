@@ -39,10 +39,10 @@ html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-r
 html[data-kl-comment-density="compact"][dark] :is(ytd-comment-view-model,ytd-comment-renderer) #expander > #less:not([hidden]) { background:#0f0f0f; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) .translate-button:not([hidden]) { position:absolute; inset-inline-end:26px; top:0; display:block; margin:0 !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) .translate-button > :is([role="button"],button) { box-sizing:border-box; display:inline-flex; align-items:center; justify-content:center; min-width:44px; min-height:24px; padding:0 4px !important; margin:0 !important; color:var(--kl-comment-meta); font-size:0 !important; line-height:22px; border-radius:4px; }
-html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) .translate-button > :is([role="button"],button)::after { content:"번역" / ""; font-size:12px; font-weight:400; }
-html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) .translate-button[state="toggled"] > :is([role="button"],button)::after { content:"원문" / ""; }
-html[data-kl-comment-density="compact"]:lang(en) :is(ytd-comment-view-model,ytd-comment-renderer) .translate-button > :is([role="button"],button)::after { content:"Translate" / ""; }
-html[data-kl-comment-density="compact"]:lang(en) :is(ytd-comment-view-model,ytd-comment-renderer) .translate-button[state="toggled"] > :is([role="button"],button)::after { content:"Original" / ""; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) .translate-button > :is([role="button"],button)::after { content:"⇄" / ""; font-size:18px; font-weight:400; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) .translate-button[state="toggled"] > :is([role="button"],button)::after { content:"↶" / ""; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) .translate-button:has(.kl-translation-status) { display:flex;align-items:center; }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) .translate-button:has(.kl-translation-status) > :is([role="button"],button) { min-width:24px; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) .translate-button > :is([role="button"],button):is(:hover,:focus-visible) { color:var(--kl-comment-body); background:var(--yt-spec-badge-chip-background,rgba(127,127,127,.2)); outline:1px solid currentColor; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons { margin:0 !important; min-height:0 !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #action-buttons > #toolbar {
