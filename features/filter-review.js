@@ -5,7 +5,7 @@
   let serial = 0, generation = 0, storageVersion = 0, readError = false;
   const versions = new Map();
   const publish = () => listeners.forEach(listener => listener());
-  const notify = () => { publish(); changeListeners.forEach(listener => listener()); };
+  const notify = () => { globalThis.KarmoReplyGate?.invalidate(); publish(); changeListeners.forEach(listener => listener()); };
   function rows() {
     const merged = new Map();
     for (const entries of scopes.values()) for (const entry of entries) {

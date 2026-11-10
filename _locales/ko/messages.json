@@ -1,4 +1,5 @@
 {
+  "repliesFiltered": { "message": "답글 모두 필터링됨" },
   "shortsCommentsResize": { "message": "쇼츠 댓글창 너비" },
   "shortsCommentsResizeHint": { "message": "끌어서 너비 조절. 좌우 화살표: 조절, Home 또는 더블클릭: 기본 너비." },
   "darkModeHeading": { "message": "이 사이트 다크모드" },

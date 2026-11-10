@@ -308,6 +308,7 @@
         const hide = Boolean(enabled && blocked(person?.id) && !review?.bypass(item?.key));
         conceal(target, hide);
         if (hide && item) entries.push({ ...item, root: target, kind: 'comment', reason: msg('reviewChannelBlocked') });
+        globalThis.KarmoReplyGate?.complete(root, 'users', !enabled || blockedIds.size === 0 || Boolean(person));
         const actions = root.querySelector('#action-buttons #toolbar') || root.querySelector('#action-buttons');
         addButton(root, person, actions || root.querySelector('#main') || root, true, 'comment');
       }
@@ -374,6 +375,7 @@
     if (relevant) { indexRecords(); schedule(); }
   });
   document.addEventListener('yt-navigate-finish', schedule);
+  document.addEventListener('kl-replies-dirty', schedule);
   review?.onChange(schedule);
   document.addEventListener('play', event => {
     if (event.target.closest?.('.kl-block-playback')) event.target.pause();

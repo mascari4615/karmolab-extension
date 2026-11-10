@@ -20,6 +20,12 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
+      "js": ["features/reply-gate.js"],
+      "css": ["features/reply-gate.css"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://www.youtube.com/*"],
       "js": ["features/shorts-count.js", "features/shorts-date.js", "features/keyword-core.js", "features/density-core.js", "features/density.js", "features/home-size.js", "features/block-undo.js", "features/filter-review.js", "features/user-block.js", "features/home-feedback-core.js", "features/home-hide.js", "features/comment-tools.js", "features/settings-backup.js", "features/keyword-comments.js", "features/comment-translate.js", "features/youtube-panel.js", "features/shorts-comments.js"],
       "css": ["features/shorts-date.css", "features/user-block.css", "features/keyword-comments.css", "features/density.css", "features/youtube-panel.css", "features/shorts-comments.css"],
       "run_at": "document_idle"

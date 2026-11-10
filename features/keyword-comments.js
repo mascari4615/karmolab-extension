@@ -15,12 +15,15 @@
         const text = root.querySelector('#content-text')?.textContent || '';
         const item = review?.comment(root);
         const matching = enabled && commentsEnabled && !review?.bypass(item?.key) && words.length && KarmoKeywords.match(text, words);
+        const checked = !enabled || !commentsEnabled || !words.length || Boolean(text.trim());
         let state = states.get(root);
         if (state && state.target !== target) { state.notice.remove(); state.target.classList.remove('kl-keyword-folded'); states.delete(root); state = undefined; }
         if (!matching) {
-          state?.notice.remove(); target.classList.remove('kl-keyword-folded'); states.delete(root); continue;
+          state?.notice.remove(); target.classList.remove('kl-keyword-folded'); states.delete(root);
+          globalThis.KarmoReplyGate?.complete(root, 'words', checked); continue;
         }
         if (state && state.text === text && state.generation === generation && state.notice.parentElement === target) {
+          globalThis.KarmoReplyGate?.complete(root, 'words', checked);
           if (item && target.classList.contains('kl-keyword-folded')) entries.push({ ...item, root: target, kind: 'comment', reason: msg('reviewKeyword') + ': ' + matching });
           continue;
         }
@@ -37,6 +40,7 @@
         });
         notice.append(label, button); target.prepend(notice); target.classList.add('kl-keyword-folded');
         states.set(root, { text, notice, generation, target });
+        globalThis.KarmoReplyGate?.complete(root, 'words', checked);
         if (item) entries.push({ ...item, root: target, kind: 'comment', reason: msg('reviewKeyword') + ': ' + matching });
       }
       review?.set('keyword-comments', entries);
@@ -56,5 +60,6 @@
     generation++; schedule();
   });
   document.addEventListener('yt-navigate-finish', schedule);
+  document.addEventListener('kl-replies-dirty', schedule);
   review?.onChange(schedule);
 })();

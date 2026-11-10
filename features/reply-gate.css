@@ -1,0 +1,12 @@
+/* Document-start protection, including descendants with explicit visibility. */
+ytd-comment-replies-renderer :is(ytd-comment-view-model,ytd-comment-renderer):not([data-kl-reply-checked]),
+ytd-comment-replies-renderer :is(ytd-comment-view-model,ytd-comment-renderer):not([data-kl-reply-checked]) * {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+ytd-comment-replies-renderer :is(ytd-comment-view-model,ytd-comment-renderer):not([data-kl-reply-checked])::before,
+ytd-comment-replies-renderer :is(ytd-comment-view-model,ytd-comment-renderer):not([data-kl-reply-checked])::after,
+ytd-comment-replies-renderer :is(ytd-comment-view-model,ytd-comment-renderer):not([data-kl-reply-checked]) *::before,
+ytd-comment-replies-renderer :is(ytd-comment-view-model,ytd-comment-renderer):not([data-kl-reply-checked]) *::after { visibility: hidden !important; }
+ytd-comment-replies-renderer.kl-replies-filtered > :not(.kl-replies-notice) { display: none !important; }
+.kl-replies-notice { display:block; padding:4px 0; color:var(--yt-spec-text-secondary,#606060); font:12px/1.5 Roboto,Arial,sans-serif; }
