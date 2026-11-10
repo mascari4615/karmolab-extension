@@ -10,8 +10,9 @@
       const entries = [];
       for (const root of document.querySelectorAll(selector)) {
         const body = root.querySelector('#content-text'), author = root.querySelector('#author-text');
-        const item = review.comment(root), result = KarmoCommentSpam.classify(author?.textContent, body?.textContent);
-        const key = JSON.stringify([item.key, result, body?.textContent, author?.textContent]);
+        const text = KarmoCommentText.read(body);
+        const item = review.comment(root), result = KarmoCommentSpam.classify(author?.textContent, text);
+        const key = JSON.stringify([item.key, result, text, author?.textContent]);
         let state = states.get(root);
         if (state && state.key !== key) { state.notice.remove(); root.classList.remove('kl-spam-folded', 'kl-spam-hidden'); states.delete(root); state = undefined; }
         if (!enabled || result.level === 'none' || review.bypass(item.key)) {
@@ -37,7 +38,7 @@
         globalThis.KarmoReplyGate?.complete(root, 'spam', !enabled || Boolean(body && author?.textContent.trim() && (body.textContent.trim() || body.querySelector('img'))));
       }
       review.set('comment-spam', entries);
-    } finally { observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['href'] }); }
+    } finally { observer.observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['href', 'alt', 'src', 'aria-label'] }); }
   }
   const observer = new MutationObserver(schedule);
   Promise.all([review.ready, chrome.storage.local.get({ commentSpam: true })]).then(([, values]) => { enabled = values.commentSpam !== false; ready = true; scan(); });

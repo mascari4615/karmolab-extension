@@ -127,10 +127,14 @@ base64Button.addEventListener('click', async () => {
 renderBase64();
 
 const keywordBox = document.getElementById('keywordEnabled'), keywordWords = document.getElementById('keywordWords'), keywordSave = document.getElementById('keywordSave'), keywordStatus = document.getElementById('keywordStatus');
+const keywordEditor = KarmoKeywordEditor.create(keywordWords, () => { keywordStatus.textContent = message('panelUnsaved'); });
+keywordWords.hidden = true; keywordWords.after(keywordEditor.host);
+KarmoControlIcons.apply(keywordSave, 'save', message('keywordSave'));
 const keywordScopes = ['keywordComments', 'keywordVideos', 'keywordShorts'];
-chrome.storage.local.get({ keywordWords: [], keywordEnabled: true, keywordComments: true, keywordVideos: true, keywordShorts: true }).then(values => {
+chrome.storage.local.get({ keywordWords: [], keywordAutoBlockWords: [], keywordEnabled: true, keywordComments: true, keywordVideos: true, keywordShorts: true }).then(values => {
   keywordBox.checked = values.keywordEnabled !== false; keywordWords.value = values.keywordWords.join('\n');
   keywordBox.disabled = keywordWords.disabled = keywordSave.disabled = false;
+  keywordEditor.set(values.keywordWords, values.keywordAutoBlockWords, false);
   for (const key of keywordScopes) { const input = document.getElementById(key); input.checked = values[key] !== false; input.disabled = false; }
 }).catch(() => { keywordStatus.textContent = message('keywordError'); });
 for (const key of keywordScopes) document.getElementById(key).addEventListener('change', async event => {
@@ -147,12 +151,13 @@ keywordBox.addEventListener('change', async () => {
 });
 keywordSave.addEventListener('click', async () => {
   keywordSave.disabled = true;
+  keywordEditor.lock(true);
   try {
     const words = KarmoKeywords.parse(keywordWords.value);
-    await chrome.storage.local.set({ keywordWords: words, keywordEnabled: keywordBox.checked });
+    await chrome.storage.local.set({ keywordWords: words, keywordAutoBlockWords: keywordEditor.automatic, keywordEnabled: keywordBox.checked });
     keywordWords.value = words.join('\n'); keywordStatus.textContent = message('keywordSaved');
   } catch { keywordStatus.textContent = message('keywordError'); }
-  finally { keywordSave.disabled = false; }
+  finally { keywordSave.disabled = false; keywordEditor.lock(false); }
 });
 
 const countBox = document.getElementById('shortsCount');

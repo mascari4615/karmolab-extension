@@ -33,6 +33,9 @@
 
 - Classify adult promotion locally from combined author and comment signals after Unicode normalization. Hide strong matches, fold uncertain matches, and preserve ordinary discussion that merely mentions an adult term. Keep reasons and per-comment exceptions in filter review. No external classifier or automatic account-wide blocking.
 - Hide explicit keyword matches without a placeholder. Recover through the management panel.
+- Read image emoji alternatives and Unicode image filenames as comment text. Treat each keyword entry separately; two emoji in one entry mean an adjacent sequence.
+- Manage keywords as searchable rows with add, delete and optional author-block actions, saving the draft explicitly. Author blocking is off for every rule until selected. Store matched authors in the extension's existing local block list; preserve a local exception after undo/unblock to prevent immediate reblocking. Keep automatic rules in settings backups.
+- Skip confirmed blocked current Shorts after closing comments. Match the renderer video ID to the URL so stale authors cannot skip the next video. Stop blocked regular playback and follow the native next-video link, falling back to Home when no usable next target exists. Unresolved author checks do not trigger skipping.
 - Include spam acknowledgement in the reply prepaint gate. Recheck after translation and content replacement.
 - Show an accessible translation progress icon, ending when text changes or after a 15-second response limit. Show original-language symbols from explicit comment language or conservative Japanese/Korean script clues; use an unknown-language globe otherwise. Flags represent language hints, never author nationality.
 - Prefer familiar action icons with accessible names and tooltips. Block and Home-hide notifications expire after six seconds, pausing during hover, focus or pending undo. Keep error details and restore confirmation as text.

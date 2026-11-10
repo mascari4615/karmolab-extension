@@ -1,9 +1,9 @@
 (() => {
   const keywords = typeof module !== 'undefined' && module.exports ? require('./keyword-core.js') : globalThis.KarmoKeywords;
-  const booleans = ['shortsDate', 'shortsCount', 'shortsWatchTime', 'userBlock', 'keywordEnabled', 'keywordComments', 'keywordVideos', 'keywordShorts', 'commentTranslate'];
+  const booleans = ['shortsDate', 'shortsCount', 'shortsWatchTime', 'userBlock', 'keywordEnabled', 'keywordComments', 'keywordVideos', 'keywordShorts', 'commentTranslate', 'commentSpam'];
   const density = typeof module !== 'undefined' && module.exports ? require('./density-core.js') : globalThis.KarmoDensity;
   const ranges = density.ranges;
-  const settingKeys = [...booleans, 'shortsCountMode', 'keywordWords', 'commentDensity', 'homeDensity', ...Object.keys(ranges)];
+  const settingKeys = [...booleans, 'shortsCountMode', 'keywordWords', 'keywordAutoBlockWords', 'commentDensity', 'homeDensity', ...Object.keys(ranges)];
   const format = 'karmolab-youtube-backup';
   const maxBytes = 1024 * 1024;
   const idValid = id => typeof id === 'string' && (/^UC[\w-]{22}$/.test(id) || /^@[^\s/#?<>"\u0000-\u001f\u007f]{1,100}$/u.test(id));
@@ -31,7 +31,7 @@
         const [min,max,step] = ranges[key];
         if (!Number.isInteger(value) || value < min || value > max || (value-min)%step) throw Error('Invalid size');
       }
-      if (key === 'keywordWords') {
+      if (key === 'keywordWords' || key === 'keywordAutoBlockWords') {
         if (!Array.isArray(value) || value.some(word => typeof word !== 'string' || /[\r\n]/.test(word))) throw Error('Invalid keywords');
         settings[key] = keywords.parse(value.join('\n'));
       } else settings[key] = value;
@@ -51,7 +51,7 @@
     const settings = {};
     for (const key of settingKeys) {
       const value = key === 'shortsDate' ? sync[key] : local[key];
-      settings[key] = value === undefined ? (ranges[key] ? ranges[key][3] : key === 'keywordWords' ? [] : key === 'shortsCountMode' ? 'both' : key.endsWith('Density') ? 'default' : true) : value;
+      settings[key] = value === undefined ? (ranges[key] ? ranges[key][3] : ['keywordWords', 'keywordAutoBlockWords'].includes(key) ? [] : key === 'shortsCountMode' ? 'both' : key.endsWith('Density') ? 'default' : true) : value;
     }
     Object.assign(settings,density.homeChoice(local));
     const blocks = Object.entries(local).filter(([key]) => key.startsWith('blockedChannel:')).map(([key, record]) => ({ ...record, key }));

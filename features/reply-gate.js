@@ -6,7 +6,7 @@
   const signature = root => JSON.stringify([
     root.querySelector('#author-text')?.getAttribute('href'),
     root.querySelector('#author-text')?.textContent,
-    root.querySelector('#content-text')?.textContent,
+    globalThis.KarmoCommentText?.read(root.querySelector('#content-text')) ?? root.querySelector('#content-text')?.textContent,
     root.querySelector('a[href*="lc="]')?.getAttribute('href'),
   ]);
   function state(root) {
@@ -79,7 +79,7 @@
   };
   new MutationObserver(schedule).observe(document, {
     subtree: true, childList: true, characterData: true, attributes: true,
-    attributeFilter: ['href', 'hidden', 'aria-label'],
+    attributeFilter: ['href', 'hidden', 'aria-label', 'alt', 'src'],
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && Object.keys(changes).some(key => key.startsWith('blockedChannel:') || key.startsWith('filterAllow:') || ['userBlock', 'keywordEnabled', 'keywordComments', 'keywordWords', 'commentSpam'].includes(key))) invalidate();

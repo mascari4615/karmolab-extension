@@ -1,5 +1,6 @@
 (() => {
   const paths = {
+    add: '<path d="M12 4v16M4 12h16"/>',
     blocked: '<circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/>',
     close: '<path d="m6 6 12 12M6 18 18 6"/>',
     undo: '<path d="M9 4 3 10l6 6M3 10h10a7 7 0 0 1 7 7"/>',

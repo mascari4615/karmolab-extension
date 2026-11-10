@@ -108,6 +108,8 @@
   $('#search').setAttribute('aria-label', msg('panelSearch'));
   $('#search').placeholder = msg('panelSearch');
   const panel = $('aside'), words = $('#words'), status = $('#status');
+  const editor = KarmoKeywordEditor.create(words, () => words.dispatchEvent(new Event('input')));
+  words.hidden = true; words.after(editor.host);
   const trigger = document.createElement('button');
   trigger.id = 'kl-panel-trigger'; trigger.type = 'button';
   trigger.textContent = 'KarmoLab'; trigger.title = msg('panelOpen');
@@ -198,7 +200,7 @@
       button.addEventListener('click', async () => {
         pending.add(key); button.disabled = true;
         const version = changeVersion;
-        try { await chrome.storage.local.remove(key); if (version === changeVersion) delete values[key]; announce('panelUnblocked'); }
+        try { if (person.autoKeyword) await chrome.storage.local.set({ ['keywordAutoBlockAllow:' + person.ids[0]]: true }); await chrome.storage.local.remove(key); if (version === changeVersion) delete values[key]; announce('panelUnblocked'); }
         catch { announce('panelSaveError'); }
         finally { pending.delete(key); renderBlocks(); $('#search').focus(); }
       });
@@ -237,7 +239,8 @@
     }
     $('#export').disabled = $('#importFile').disabled = !loaded || backupBusy;
     $('#restore').disabled = !loaded || !selectedBackup || backupBusy || savingWords || pending.size > 0;
-    if (loaded && !dirty && !savingWords) words.value = (values.keywordWords || []).join('\n');
+    if (loaded && !dirty && !savingWords) editor.set(values.keywordWords || [], values.keywordAutoBlockWords || [], !loaded || backupBusy);
+    else editor.lock(!loaded || backupBusy || savingWords);
     renderBlocks();
     renderHomeHidden();
     renderReview();
@@ -276,8 +279,9 @@
     try { parsed = KarmoKeywords.parse(words.value); } catch { announce('keywordError'); return; }
     const version = draftVersion, storageVersion = changeVersion; savingWords = true; render();
     try {
-      await chrome.storage.local.set({ keywordWords: parsed });
-      if (storageVersion === changeVersion) values.keywordWords = parsed;
+      const autoWords = editor.automatic;
+      await chrome.storage.local.set({ keywordWords: parsed, keywordAutoBlockWords: autoWords });
+      if (storageVersion === changeVersion) { values.keywordWords = parsed; values.keywordAutoBlockWords = autoWords; }
       if (version === draftVersion) { dirty = false; words.value = parsed.join('\n'); announce('panelSaved'); }
       else announce('panelUnsaved');
     } catch { announce('panelSaveError'); }
@@ -293,7 +297,7 @@
   });
   chrome.storage.onChanged.addListener((changes, area) => {
     if (!['local', 'sync'].includes(area)) return;
-    const entries = Object.entries(changes).filter(([key]) => area === 'sync' ? key === 'shortsDate' : key.startsWith('blockedChannel:') || key.startsWith('hiddenHomeChannel:') || Object.hasOwn(toggles, key) || Object.hasOwn(selects, key) || Object.hasOwn(ranges,key) || key === 'keywordWords');
+    const entries = Object.entries(changes).filter(([key]) => area === 'sync' ? key === 'shortsDate' : key.startsWith('blockedChannel:') || key.startsWith('hiddenHomeChannel:') || Object.hasOwn(toggles, key) || Object.hasOwn(selects, key) || Object.hasOwn(ranges,key) || key === 'keywordWords' || key === 'keywordAutoBlockWords');
     if (!entries.length) return;
     changeVersion++;
     const target = area === 'sync' ? syncValues : values;

@@ -20,7 +20,7 @@
     for (const link of root.querySelectorAll('a[href*="lc="]')) {
       try { const id = new URL(link.href).searchParams.get('lc'); if (id && /^[\w.-]{1,200}$/.test(id)) return { key: 'comment:' + id, stable: true }; } catch { /* 불완전 링크 제외 */ }
     }
-    const signature = (root.querySelector('#author-text')?.getAttribute('href') || '') + '\n' + (root.querySelector('#content-text')?.textContent || '');
+    const signature = (root.querySelector('#author-text')?.getAttribute('href') || '') + '\n' + (globalThis.KarmoCommentText?.read(root.querySelector('#content-text')) ?? root.querySelector('#content-text')?.textContent ?? '');
     let entry = localComments.get(root);
     if (!entry || entry.signature !== signature) { entry = { signature, key: 'comment:local:' + (++serial) }; localComments.set(root, entry); }
     return { key: entry.key, stable: false };

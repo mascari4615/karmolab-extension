@@ -9,7 +9,8 @@ function area(initial = {}) {
 }
 test('export includes effective defaults and excludes histories, permissions and unrelated storage', () => {
   const data = api.create({ 'shortsDayView:x':{}, volumeSites:{}, base64Sites:['https://example.com/*'], other:'private' }, {});
-  assert.equal(Object.keys(data.settings).length,16);
+  assert.equal(Object.keys(data.settings).length,18);
+  assert.equal(data.settings.commentSpam,true); assert.deepEqual(data.settings.keywordAutoBlockWords,[]);
   assert.equal(data.settings.commentDensity,'default');assert.equal(data.settings.homeDensity,'default');
   assert.equal(data.settings.shortsDate,true); assert.equal(data.settings.commentTranslate,true);
   assert.deepEqual(data.settings.keywordWords,[]); assert.equal(JSON.stringify(data).includes('private'),false);

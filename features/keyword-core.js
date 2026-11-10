@@ -1,5 +1,5 @@
 (() => {
-  const normalize = text => String(text).normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
+  const normalize = text => String(text).normalize('NFKC').toLowerCase().replace(/\ufe0f/g, '').replace(/\s+/g, ' ').trim();
   function parse(text) {
     const unique = new Map();
     for (const word of String(text).split(/\r?\n/).map(word => word.trim()).filter(Boolean)) {
