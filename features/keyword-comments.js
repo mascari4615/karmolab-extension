@@ -15,7 +15,7 @@
         const text = root.querySelector('#content-text')?.textContent || '';
         const item = review?.comment(root);
         const matching = enabled && commentsEnabled && !review?.bypass(item?.key) && words.length && KarmoKeywords.match(text, words);
-        const checked = !enabled || !commentsEnabled || !words.length || Boolean(text.trim());
+        const checked = !enabled || !commentsEnabled || !words.length || Boolean(text.trim() || root.querySelector('#content-text img'));
         let state = states.get(root);
         if (state && state.target !== target) { state.notice.remove(); state.target.classList.remove('kl-keyword-folded'); states.delete(root); state = undefined; }
         if (!matching) {
