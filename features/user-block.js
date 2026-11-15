@@ -62,7 +62,10 @@
       let previous, stableFrames = 0;
       const started = performance.now();
       const settled = () => {
-        if (!current() || performance.now() - started > 5000) return;
+        if (!current() || performance.now() - started > 5000) {
+          if (skipping === operation) skipping = undefined;
+          return;
+        }
         const bounds = root.getBoundingClientRect();
         const centered = bounds.top < innerHeight / 2 && bounds.bottom > innerHeight / 2;
         if (document.visibilityState === 'visible' && centered && previous
@@ -509,6 +512,8 @@
     if (relevant) { indexRecords(); schedule(); }
   });
   document.addEventListener('yt-navigate-finish', schedule);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') schedule(); });
+  document.addEventListener('scroll', () => { if (location.pathname.startsWith('/shorts/')) schedule(); }, { capture: true, passive: true });
   document.addEventListener('kl-replies-dirty', schedule);
   review?.onChange(schedule);
   document.addEventListener('play', event => {

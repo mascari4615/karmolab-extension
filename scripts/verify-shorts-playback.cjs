@@ -71,6 +71,8 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
     await page.evaluate(() => { window.liveBypass = true; document.querySelector('h3').textContent = 'bypass'; });
     await page.waitForFunction(() => window.motionDone && !document.querySelector('.kl-block-playback'));
     assert.equal(await page.evaluate(() => window.clicks), 0, 'allowing a video during scroll must cancel the pending skip');
+    await page.evaluate(() => { window.liveBypass = false; document.querySelector('h3').textContent = 'block again'; });
+    await page.waitForFunction(() => window.clicks === 1);
     await setup();
     await page.waitForFunction(() => window.resumed === 1);
     assert.equal(await page.evaluate(() => window.clicks), 0, 'a blocked mention is not the video author');
@@ -127,6 +129,6 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
       assert.equal(await page.evaluate(() => window.clicks), 0, JSON.stringify(options));
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: 19 Shorts playback regressions (identity, transition, keyword, alias, bypass, settings, resume, scroll stability)');
+    console.log('PASS: 20 Shorts playback regressions (identity, transition, keyword, alias, bypass, settings, resume, scroll stability)');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
