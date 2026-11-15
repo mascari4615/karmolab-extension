@@ -14,9 +14,9 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.route('https://www.youtube.com/**', route => route.fulfill({ body: '<html><body></body></html>', contentType: 'text/html' }));
-    async function setup({ stale = false, actualBlocked = false, keyword = false, defer = false, handleOnly = false, channelProfile = false, holdNavigation = false, bypass = false, enabled = true, keywordShorts = true } = {}) {
+    async function setup({ stale = false, actualBlocked = false, keyword = false, defer = false, handleOnly = false, channelProfile = false, holdNavigation = false, initialPaused = false, bypass = false, enabled = true, keywordShorts = true } = {}) {
       await page.goto('https://www.youtube.com/shorts/' + first);
-      await page.evaluate(({ blocked, allowed, first, stale, actualBlocked, keyword, defer, handleOnly, channelProfile, holdNavigation, bypass, enabled, keywordShorts }) => {
+      await page.evaluate(({ blocked, allowed, first, stale, actualBlocked, keyword, defer, handleOnly, channelProfile, holdNavigation, initialPaused, bypass, enabled, keywordShorts }) => {
         sessionStorage.clear();
         window.clicks = 0;
         window.scans = 0;
@@ -26,6 +26,12 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
         }
         window.KarmoFilterReview = { bypass: () => bypass, set: () => { window.scans++; }, onChange: () => {} };
         document.body.innerHTML = `<ytd-reel-video-renderer style="display:block;height:800px"><a href="/shorts/${first}">video</a><h3>safe DOM title</h3><a href="/@blocked">mention</a><yt-reel-channel-bar-view-model><a href="/@${stale || actualBlocked ? 'blocked' : 'allowed'}">author</a><div id="subscribe-button"></div></yt-reel-channel-bar-view-model><video></video></ytd-reel-video-renderer><button aria-label="Next video">Next</button>`;
+        const video = document.querySelector('video');
+        let paused = initialPaused;
+        window.resumed = 0;
+        Object.defineProperty(video, 'paused', { get: () => paused });
+        video.pause = () => { paused = true; };
+        video.play = async () => { paused = false; window.resumed++; };
         document.querySelector('button').onclick = () => {
           window.clicks++;
           document.dispatchEvent(new Event('yt-navigate-start'));
@@ -38,14 +44,18 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
           window.release = () => resolve({ ok: true, json: async () => response });
           if (!defer) window.release();
         });
-      }, { blocked, allowed, first, stale, actualBlocked, keyword, defer, handleOnly, channelProfile, holdNavigation, bypass, enabled, keywordShorts });
+      }, { blocked, allowed, first, stale, actualBlocked, keyword, defer, handleOnly, channelProfile, holdNavigation, initialPaused, bypass, enabled, keywordShorts });
       await page.addScriptTag({ path: path.join(root, 'features/keyword-core.js') });
       await page.addScriptTag({ content: source });
       // 처리된 DOM 상태 대기, 시간 경과만으로 통과 판정 금지
       await page.waitForFunction(defer => defer ? document.querySelector('.kl-block-playback') : window.scans > 0, defer);
     }
     await setup();
+    await page.waitForFunction(() => window.resumed === 1);
     assert.equal(await page.evaluate(() => window.clicks), 0, 'a blocked mention is not the video author');
+    await setup({ initialPaused: true });
+    await page.waitForFunction(() => !document.querySelector('.kl-block-playback'));
+    assert.equal(await page.evaluate(() => window.resumed), 0, 'already paused video must stay paused after verification');
     await setup({ stale: true });
     await page.waitForFunction(() => !document.querySelector('.kl-block-playback'));
     assert.equal(await page.evaluate(() => window.clicks), 0, 'stale blocked channel DOM must not skip an allowed video');
@@ -93,6 +103,6 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
       assert.equal(await page.evaluate(() => window.clicks), 0, JSON.stringify(options));
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: 14 Shorts playback regressions (identity, transition, keyword, alias, bypass, settings)');
+    console.log('PASS: 16 Shorts playback regressions (identity, transition, keyword, alias, bypass, settings, resume)');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
