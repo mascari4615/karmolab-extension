@@ -27,6 +27,8 @@
   let activeRequests = 0, clientVersion;
   let skipping;
   let navigationGeneration = 0;
+  let resumeAfterSkip;
+  const nativePlayback = (type, videoId) => chrome.runtime?.sendMessage?.({ type: 'shorts-playback-' + type, videoId })?.catch(() => null) || Promise.resolve(null);
   function skipPlayback(root, shorts) {
     if (shorts ? !location.pathname.startsWith('/shorts/') : location.pathname !== '/watch') return;
     if (shorts && videoId(root) !== location.pathname.match(/^\/shorts\/([\w-]{11})/)?.[1]) return;
@@ -50,6 +52,20 @@
       if (shorts) {
         const next = [...document.querySelectorAll('button[aria-label="다음 동영상"],button[aria-label="Next video"]')].find(button => !button.disabled && button.getClientRects().length);
         if (next) next.click();
+        let previous, stable = 0;
+        const started = performance.now();
+        const recover = () => {
+          if (!current() || performance.now() - started > 3000) return;
+          const bounds = root.getBoundingClientRect();
+          if (!activeShort(root) && previous && Math.abs(bounds.top - previous) < 1) stable++; else stable = 0;
+          previous = bounds.top;
+          if (stable >= 3) void nativePlayback('recover', videoId(root)).then(result => {
+            if (result?.ok && /^[\w-]{11}$/.test(result.nextId)) resumeAfterSkip = { id: result.nextId, at: performance.now() };
+            schedule();
+          });
+          else requestAnimationFrame(recover);
+        };
+        requestAnimationFrame(recover);
       } else {
         const href = document.querySelector('a.ytp-next-button[href]')?.getAttribute('href');
         let next;
@@ -77,7 +93,7 @@
       setTimeout(() => requestAnimationFrame(settled), 0);
     } else setTimeout(navigate, 0);
   }
-  document.addEventListener('yt-navigate-start', () => { navigationGeneration++; });
+  document.addEventListener('yt-navigate-start', () => { navigationGeneration++; resumeAfterSkip = undefined; });
   document.addEventListener('yt-navigate-finish', () => {
     if (skipping?.key !== location.pathname + location.search) skipping = undefined;
     const panel = document.querySelector('#anchored-panel');
@@ -362,6 +378,12 @@
       notice.textContent = message;
     } else {
       notice?.remove();
+      const resume = resumeAfterSkip, id = videoId(root);
+      if (resume && id === resume.id && id === location.pathname.match(/^\/shorts\/([\w-]{11})/)?.[1]
+        && performance.now() - resume.at < 5000) {
+        resumeAfterSkip = undefined;
+        void nativePlayback('resume', id);
+      }
       root.querySelectorAll('video').forEach(video => {
         const id = pausedForCheck.get(video);
         pausedForCheck.delete(video);
