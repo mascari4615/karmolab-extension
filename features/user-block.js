@@ -37,6 +37,7 @@
     const operation = { key, generation: navigationGeneration };
     skipping = operation;
     const current = () => skipping === operation && operation.generation === navigationGeneration && location.pathname + location.search === key
+      && root.classList.contains('kl-block-playback') && !checkingPlayback.has(root)
       && root.isConnected && (!shorts || videoId(root) === key.match(/^\/shorts\/([\w-]{11})/)?.[1]);
     root.querySelectorAll('video').forEach(video => video.pause());
     const commentsPanel = document.querySelector('#anchored-panel');

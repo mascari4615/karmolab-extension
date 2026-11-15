@@ -24,7 +24,8 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
           const nativeTimeout = window.setTimeout;
           window.setTimeout = (callback, delay, ...args) => delay === 0 ? (window.queuedNavigation = callback) : nativeTimeout(callback, delay, ...args);
         }
-        window.KarmoFilterReview = { bypass: () => bypass, set: () => { window.scans++; }, onChange: () => {} };
+        window.liveBypass = bypass;
+        window.KarmoFilterReview = { bypass: () => window.liveBypass, set: () => { window.scans++; }, onChange: () => {} };
         document.body.innerHTML = `<ytd-reel-video-renderer style="display:block;height:800px"><a href="/shorts/${first}">video</a><h3>safe DOM title</h3><a href="/@blocked">mention</a><yt-reel-channel-bar-view-model><a href="/@${stale || actualBlocked ? 'blocked' : 'allowed'}">author</a><div id="subscribe-button"></div></yt-reel-channel-bar-view-model><video></video></ytd-reel-video-renderer><button aria-label="Next video">Next</button>`;
         const video = document.querySelector('video');
         let paused = initialPaused;
@@ -66,6 +67,10 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
     await setup({ actualBlocked: true, moving: true });
     await page.waitForFunction(() => window.clicks === 1);
     assert.equal(await page.evaluate(() => window.clickedWhileMoving), false, 'skip must wait for the previous scroll animation to settle');
+    await setup({ actualBlocked: true, moving: true });
+    await page.evaluate(() => { window.liveBypass = true; document.querySelector('h3').textContent = 'bypass'; });
+    await page.waitForFunction(() => window.motionDone && !document.querySelector('.kl-block-playback'));
+    assert.equal(await page.evaluate(() => window.clicks), 0, 'allowing a video during scroll must cancel the pending skip');
     await setup();
     await page.waitForFunction(() => window.resumed === 1);
     assert.equal(await page.evaluate(() => window.clicks), 0, 'a blocked mention is not the video author');
@@ -122,6 +127,6 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
       assert.equal(await page.evaluate(() => window.clicks), 0, JSON.stringify(options));
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: 18 Shorts playback regressions (identity, transition, keyword, alias, bypass, settings, resume, scroll stability)');
+    console.log('PASS: 19 Shorts playback regressions (identity, transition, keyword, alias, bypass, settings, resume, scroll stability)');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
