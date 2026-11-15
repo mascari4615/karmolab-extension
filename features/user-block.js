@@ -54,17 +54,13 @@
         if (next) next.click();
         if (location.pathname + location.search === key) operation.generation = navigationGeneration;
         root.setAttribute('data-kl-shorts-recovery', 'waiting');
-        let previous, stable = 0;
         const started = performance.now();
         const recover = () => {
-          if (!current() || performance.now() - started > 5000) {
-            root.setAttribute('data-kl-shorts-recovery', current() ? 'timeout' : 'cancelled');
+          if (!current()) {
+            root.setAttribute('data-kl-shorts-recovery', 'cancelled');
             return;
           }
-          const bounds = root.getBoundingClientRect();
-          if (!activeShort(root) && previous && Math.abs(bounds.top - previous) < 1) stable++; else stable = 0;
-          previous = bounds.top;
-          if (stable >= 3) {
+          if (!activeShort(root)) {
             root.setAttribute('data-kl-shorts-recovery', 'requested');
             void nativePlayback('recover', videoId(root)).then(result => {
               root.setAttribute('data-kl-shorts-recovery', result?.ok ? 'recovered' : 'unavailable');
@@ -72,9 +68,10 @@
               schedule();
             });
           }
-          else requestAnimationFrame(recover);
+          else if (performance.now() - started < 5000) setTimeout(recover, 50);
+          else root.setAttribute('data-kl-shorts-recovery', 'timeout');
         };
-        requestAnimationFrame(recover);
+        setTimeout(recover, 50);
       } else {
         const href = document.querySelector('a.ytp-next-button[href]')?.getAttribute('href');
         let next;
