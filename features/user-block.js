@@ -17,6 +17,7 @@
   let activeHandles = 0;
   const exits = new Map(), moves = new WeakMap();
   const pausedForCheck = new WeakMap();
+  const checkingPlayback = new WeakSet();
   const cacheKey = 'karmolab:video-owners:v2';
   try {
     for (const [id, value] of JSON.parse(sessionStorage.getItem(cacheKey) || '[]')) {
@@ -324,6 +325,7 @@
     requestBlock(button); return true;
   } };
   function playback(root, person, hide = Boolean(enabled && blocked(person?.id)), message = msg('blockedPlayback'), pending = false) {
+    if (hide && pending) checkingPlayback.add(root); else checkingPlayback.delete(root);
     root.classList.toggle('kl-block-playback', hide);
     let notice = root.querySelector(':scope > .kl-block-notice');
     if (hide) {
@@ -495,7 +497,10 @@
   document.addEventListener('kl-replies-dirty', schedule);
   review?.onChange(schedule);
   document.addEventListener('play', event => {
-    if (event.target.closest?.('.kl-block-playback')) event.target.pause();
+    const root = event.target.closest?.('.kl-block-playback');
+    if (!root) return;
+    if (checkingPlayback.has(root)) pausedForCheck.set(event.target, videoId(root));
+    event.target.pause();
   }, true);
   chrome.storage.local.get(null).then(async values => {
     await review?.ready;

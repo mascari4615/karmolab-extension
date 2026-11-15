@@ -32,6 +32,7 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
         Object.defineProperty(video, 'paused', { get: () => paused });
         video.pause = () => { paused = true; };
         video.play = async () => { paused = false; window.resumed++; };
+        window.startVideo = () => { paused = false; video.dispatchEvent(new Event('play')); };
         document.querySelector('button').onclick = () => {
           window.clicks++;
           document.dispatchEvent(new Event('yt-navigate-start'));
@@ -56,6 +57,9 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
     await setup({ initialPaused: true });
     await page.waitForFunction(() => !document.querySelector('.kl-block-playback'));
     assert.equal(await page.evaluate(() => window.resumed), 0, 'already paused video must stay paused after verification');
+    await setup({ initialPaused: true, defer: true });
+    await page.evaluate(() => { window.startVideo(); window.release(); });
+    await page.waitForFunction(() => window.resumed === 1);
     await setup({ stale: true });
     await page.waitForFunction(() => !document.querySelector('.kl-block-playback'));
     assert.equal(await page.evaluate(() => window.clicks), 0, 'stale blocked channel DOM must not skip an allowed video');
@@ -103,6 +107,6 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
       assert.equal(await page.evaluate(() => window.clicks), 0, JSON.stringify(options));
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: 16 Shorts playback regressions (identity, transition, keyword, alias, bypass, settings, resume)');
+    console.log('PASS: 17 Shorts playback regressions (identity, transition, keyword, alias, bypass, settings, resume)');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
