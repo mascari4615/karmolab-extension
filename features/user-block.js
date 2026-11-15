@@ -57,7 +57,21 @@
       }
       if (!shorts) setTimeout(() => { if (current()) location.assign('/'); }, 3000);
     };
-    setTimeout(navigate, 0);
+    if (shorts) {
+      let previous, stableFrames = 0;
+      const started = performance.now();
+      const settled = () => {
+        if (!current() || performance.now() - started > 5000) return;
+        const bounds = root.getBoundingClientRect();
+        const centered = bounds.top < innerHeight / 2 && bounds.bottom > innerHeight / 2;
+        if (document.visibilityState === 'visible' && centered && previous
+          && Math.abs(bounds.top - previous.top) < 1 && Math.abs(bounds.bottom - previous.bottom) < 1) stableFrames++;
+        else stableFrames = 0;
+        previous = { top: bounds.top, bottom: bounds.bottom };
+        if (stableFrames >= 3) navigate(); else requestAnimationFrame(settled);
+      };
+      setTimeout(() => requestAnimationFrame(settled), 0);
+    } else setTimeout(navigate, 0);
   }
   document.addEventListener('yt-navigate-start', () => { navigationGeneration++; });
   document.addEventListener('yt-navigate-finish', () => {

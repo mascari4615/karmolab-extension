@@ -14,9 +14,9 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
     await page.route('https://www.youtube.com/**', route => route.fulfill({ body: '<html><body></body></html>', contentType: 'text/html' }));
-    async function setup({ stale = false, actualBlocked = false, keyword = false, defer = false, handleOnly = false, channelProfile = false, holdNavigation = false, initialPaused = false, bypass = false, enabled = true, keywordShorts = true } = {}) {
+    async function setup({ stale = false, actualBlocked = false, keyword = false, defer = false, handleOnly = false, channelProfile = false, holdNavigation = false, initialPaused = false, moving = false, bypass = false, enabled = true, keywordShorts = true } = {}) {
       await page.goto('https://www.youtube.com/shorts/' + first);
-      await page.evaluate(({ blocked, allowed, first, stale, actualBlocked, keyword, defer, handleOnly, channelProfile, holdNavigation, initialPaused, bypass, enabled, keywordShorts }) => {
+      await page.evaluate(({ blocked, allowed, first, stale, actualBlocked, keyword, defer, handleOnly, channelProfile, holdNavigation, initialPaused, moving, bypass, enabled, keywordShorts }) => {
         sessionStorage.clear();
         window.clicks = 0;
         window.scans = 0;
@@ -33,8 +33,20 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
         video.pause = () => { paused = true; };
         video.play = async () => { paused = false; window.resumed++; };
         window.startVideo = () => { paused = false; video.dispatchEvent(new Event('play')); };
+        window.motionDone = !moving;
+        window.clickedWhileMoving = false;
+        if (moving) {
+          let top = 64, frames = 0;
+          document.querySelector('ytd-reel-video-renderer').getBoundingClientRect = () => new DOMRect(0, top, 600, 800);
+          const move = () => {
+            top += 2;
+            if (++frames < 20) requestAnimationFrame(move); else window.motionDone = true;
+          };
+          requestAnimationFrame(move);
+        }
         document.querySelector('button').onclick = () => {
           window.clicks++;
+          if (!window.motionDone) window.clickedWhileMoving = true;
           document.dispatchEvent(new Event('yt-navigate-start'));
           document.querySelector('h3').textContent = 'navigation starting ' + window.clicks;
         };
@@ -45,12 +57,15 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
           window.release = () => resolve({ ok: true, json: async () => response });
           if (!defer) window.release();
         });
-      }, { blocked, allowed, first, stale, actualBlocked, keyword, defer, handleOnly, channelProfile, holdNavigation, initialPaused, bypass, enabled, keywordShorts });
+      }, { blocked, allowed, first, stale, actualBlocked, keyword, defer, handleOnly, channelProfile, holdNavigation, initialPaused, moving, bypass, enabled, keywordShorts });
       await page.addScriptTag({ path: path.join(root, 'features/keyword-core.js') });
       await page.addScriptTag({ content: source });
       // 처리된 DOM 상태 대기, 시간 경과만으로 통과 판정 금지
       await page.waitForFunction(defer => defer ? document.querySelector('.kl-block-playback') : window.scans > 0, defer);
     }
+    await setup({ actualBlocked: true, moving: true });
+    await page.waitForFunction(() => window.clicks === 1);
+    assert.equal(await page.evaluate(() => window.clickedWhileMoving), false, 'skip must wait for the previous scroll animation to settle');
     await setup();
     await page.waitForFunction(() => window.resumed === 1);
     assert.equal(await page.evaluate(() => window.clicks), 0, 'a blocked mention is not the video author');
@@ -107,6 +122,6 @@ const first = 'aaaaaaaaaaa', second = 'bbbbbbbbbbb';
       assert.equal(await page.evaluate(() => window.clicks), 0, JSON.stringify(options));
     }
     assert.deepEqual(errors, []);
-    console.log('PASS: 17 Shorts playback regressions (identity, transition, keyword, alias, bypass, settings, resume)');
+    console.log('PASS: 18 Shorts playback regressions (identity, transition, keyword, alias, bypass, settings, resume, scroll stability)');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
