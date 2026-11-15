@@ -58,4 +58,7 @@ test('background scopes native execution to its own top-level YouTube sender and
   await new Promise(resolve => listener(message, sender, result => { assert.equal(result.ok, true); resolve(); }));
   assert.equal(calls.length, 1); assert.equal(calls[0].world, 'MAIN'); assert.equal(calls[0].target.tabId, 7);
   assert.deepEqual(calls[0].args, ['recover', first]);
+  const spaSender = { ...sender, url: 'https://www.youtube.com/shorts/' + next };
+  await new Promise(resolve => listener(message, spaSender, result => { assert.equal(result.ok, true); resolve(); }));
+  assert.equal(calls.length, 2, 'sender document URL may precede the current SPA route');
 });

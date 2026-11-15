@@ -34,7 +34,7 @@ export function registerShortsPlayback(api) {
     const action = message?.type === 'shorts-playback-recover' ? 'recover' : message?.type === 'shorts-playback-resume' ? 'resume' : null;
     if (!action || sender.id !== api.runtime.id || sender.frameId !== 0 || !sender.tab?.id || !/^[\w-]{11}$/.test(message.videoId)) return;
     const expected = 'https://www.youtube.com/shorts/' + message.videoId;
-    if (sender.url?.split(/[?#]/)[0] !== expected) return;
+    if (!/^https:\/\/www\.youtube\.com\/shorts\/[\w-]{11}(?:[/?#]|$)/.test(sender.url || '')) return;
     api.tabs.get(sender.tab.id).then(tab => {
       if (tab.url?.split(/[?#]/)[0] !== expected) return { ok: false };
       return api.scripting.executeScript({ target: { tabId: sender.tab.id }, world: 'MAIN', func: nativeShortsPlayback, args: [action, message.videoId] })

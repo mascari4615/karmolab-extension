@@ -52,17 +52,26 @@
       if (shorts) {
         const next = [...document.querySelectorAll('button[aria-label="다음 동영상"],button[aria-label="Next video"]')].find(button => !button.disabled && button.getClientRects().length);
         if (next) next.click();
+        if (location.pathname + location.search === key) operation.generation = navigationGeneration;
+        root.setAttribute('data-kl-shorts-recovery', 'waiting');
         let previous, stable = 0;
         const started = performance.now();
         const recover = () => {
-          if (!current() || performance.now() - started > 3000) return;
+          if (!current() || performance.now() - started > 5000) {
+            root.setAttribute('data-kl-shorts-recovery', current() ? 'timeout' : 'cancelled');
+            return;
+          }
           const bounds = root.getBoundingClientRect();
           if (!activeShort(root) && previous && Math.abs(bounds.top - previous) < 1) stable++; else stable = 0;
           previous = bounds.top;
-          if (stable >= 3) void nativePlayback('recover', videoId(root)).then(result => {
-            if (result?.ok && /^[\w-]{11}$/.test(result.nextId)) resumeAfterSkip = { id: result.nextId, at: performance.now() };
-            schedule();
-          });
+          if (stable >= 3) {
+            root.setAttribute('data-kl-shorts-recovery', 'requested');
+            void nativePlayback('recover', videoId(root)).then(result => {
+              root.setAttribute('data-kl-shorts-recovery', result?.ok ? 'recovered' : 'unavailable');
+              if (result?.ok && /^[\w-]{11}$/.test(result.nextId)) resumeAfterSkip = { id: result.nextId, at: performance.now() };
+              schedule();
+            });
+          }
           else requestAnimationFrame(recover);
         };
         requestAnimationFrame(recover);
@@ -412,6 +421,7 @@
   }
   function scan() {
     if (!loaded) return;
+    if (skipping?.key !== location.pathname + location.search) skipping = undefined;
     observer.disconnect();
     try {
       const entries = [];
