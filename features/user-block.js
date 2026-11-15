@@ -12,8 +12,11 @@
   const localKeys = new WeakMap();
   let keySerial = 0;
   const metadata = new Map(), queue = [];
+  const handleOwners = new Map();
+  const handleQueue = [];
+  let activeHandles = 0;
   const exits = new Map(), moves = new WeakMap();
-  const cacheKey = 'karmolab:video-owners:v1';
+  const cacheKey = 'karmolab:video-owners:v2';
   try {
     for (const [id, value] of JSON.parse(sessionStorage.getItem(cacheKey) || '[]')) {
       if (/^[\w-]{11}$/.test(id) && /^UC[\w-]{22}$/.test(value?.id) && Date.now() - value.at < 86400000) metadata.set(id, value);
@@ -21,14 +24,18 @@
   } catch { /* 캐시 접근 실패 시 기존 공개 정보 조회 유지 */ }
   let activeRequests = 0, clientVersion;
   let skipping;
+  let navigationGeneration = 0;
   function skipPlayback(root, shorts) {
     if (shorts ? !location.pathname.startsWith('/shorts/') : location.pathname !== '/watch') return;
     if (shorts && videoId(root) !== location.pathname.match(/^\/shorts\/([\w-]{11})/)?.[1]) return;
     const rect = root.getBoundingClientRect();
     if (shorts && !(rect.top < innerHeight / 2 && rect.bottom > innerHeight / 2)) return;
     const key = location.pathname + location.search;
-    if (skipping === key) return;
-    skipping = key;
+    if (skipping?.key === key) return;
+    const operation = { key, generation: navigationGeneration };
+    skipping = operation;
+    const current = () => skipping === operation && operation.generation === navigationGeneration && location.pathname + location.search === key
+      && root.isConnected && (!shorts || videoId(root) === key.match(/^\/shorts\/([\w-]{11})/)?.[1]);
     root.querySelectorAll('video').forEach(video => video.pause());
     const commentsPanel = document.querySelector('#anchored-panel');
     if (commentsPanel) {
@@ -36,20 +43,23 @@
       commentsPanel.querySelector('button[aria-label="닫기"],button[aria-label="Close"]')?.click();
     }
     const navigate = () => {
+      if (!current()) return;
       if (shorts) {
         const next = [...document.querySelectorAll('button[aria-label="다음 동영상"],button[aria-label="Next video"]')].find(button => !button.disabled && button.getClientRects().length);
-        if (next) next.click(); else location.assign('/');
+        if (next) next.click();
       } else {
         const href = document.querySelector('a.ytp-next-button[href]')?.getAttribute('href');
         let next;
         try { const url = new URL(href || '/', location.origin); if (url.origin === 'https://www.youtube.com' && (url.pathname === '/watch' || url.pathname.startsWith('/shorts/')) && url.pathname + url.search !== key) next = url.href; } catch { /* 유효한 다음 영상만 이동 */ }
         location.assign(next || '/');
       }
-      setTimeout(() => { if (location.pathname + location.search === key) location.assign('/'); }, 3000);
+      if (!shorts) setTimeout(() => { if (current()) location.assign('/'); }, 3000);
     };
     setTimeout(navigate, 0);
   }
+  document.addEventListener('yt-navigate-start', () => { navigationGeneration++; });
   document.addEventListener('yt-navigate-finish', () => {
+    if (skipping?.key !== location.pathname + location.search) skipping = undefined;
     const panel = document.querySelector('#anchored-panel');
     if (panel?.style.visibility === 'hidden') {
       panel.querySelector('button[aria-label="닫기"],button[aria-label="Close"]')?.click();
@@ -140,7 +150,7 @@
   function videoOwner(root, resolve = false) {
     const id = videoId(root);
     if (!id) return null;
-    if (!metadata.has(id) && enabled && (resolve || Object.keys(records).length)) {
+    if (!metadata.has(id) && (resolve || (enabled && Object.keys(records).length))) {
       metadata.set(id, null);
       if (resolve) queue.unshift(id); else queue.push(id);
       pump();
@@ -158,8 +168,10 @@
         body: JSON.stringify({ videoId: id, context: { client: { clientName: 'WEB', clientVersion } } }),
       }).then(response => response.ok ? response.json() : null).then(data => {
         const channel = data?.videoDetails?.channelId;
-        if (/^UC[\w-]{22}$/.test(channel)) {
-          metadata.set(id, { id: channel, name: data.videoDetails.author, href: 'https://www.youtube.com/channel/' + channel, at: Date.now() });
+        if (/^UC[\w-]{22}$/.test(channel) && data.videoDetails.videoId === id) {
+          const profile = data.microformat?.playerMicroformatRenderer?.ownerProfileUrl;
+          const handle = profile && identity(profile.replace(/^http:\/\/www\.youtube\.com\//, 'https://www.youtube.com/'));
+          metadata.set(id, { id: channel, handle: handle?.startsWith('@') ? handle : null, title: data.videoDetails.title || '', name: data.videoDetails.author, href: 'https://www.youtube.com/channel/' + channel, at: Date.now() });
           try { sessionStorage.setItem(cacheKey, JSON.stringify([...metadata].filter(([, value]) => value).slice(-500))); } catch { /* 저장 불가 시 메모리 캐시 유지 */ }
         }
       }).catch(() => { /* 조회 실패 상태는 복구 목록에서 재시도 */ }).finally(() => {
@@ -174,6 +186,27 @@
       if (id) return { id, name: link.textContent.trim() || id, href: link.href };
     }
     return null;
+  }
+  function handleOwner(handle) {
+    if (!handleOwners.has(handle)) {
+      handleOwners.set(handle, null);
+      handleQueue.push(handle);
+      pumpHandles();
+    }
+    return handleOwners.get(handle);
+  }
+  function pumpHandles() {
+    while (activeHandles < 3 && handleQueue.length) {
+      const handle = handleQueue.shift();
+      activeHandles++;
+      fetch('https://www.youtube.com/' + encodeURI(handle), { credentials: 'omit', signal: AbortSignal.timeout(5000) })
+        .then(response => response.ok ? response.text() : '')
+        .then(html => {
+          const id = html.match(/"externalId"\s*:\s*"(UC[\w-]{22})"/)?.[1]
+            || html.match(/<link[^>]+href="https:\/\/www.youtube.com\/channel\/(UC[\w-]{22})"/)?.[1];
+          handleOwners.set(handle, id || false);
+        }).catch(() => { handleOwners.set(handle, false); }).finally(() => { activeHandles--; schedule(); pumpHandles(); });
+    }
   }
   async function addBlock(person, button) {
     const operation = { cancelled: false, write: Promise.resolve() };
@@ -367,18 +400,28 @@
         addButton(root, person, actions || root.querySelector('#main') || root, true, 'comment');
       }
       for (const root of document.querySelectorAll('ytd-reel-video-renderer')) {
-        const person = owner(root, 'a[href^="/@"],a[href^="/channel/"]') || videoOwner(root);
-        const item = contentKey(root), bypass = review?.bypass(item.key);
-        const pending = Boolean(enabled && blockedIds.size && videoId(root) && !person && !bypass);
-        const failed = pending && metadata.get(videoId(root)) === false;
-        const hide = Boolean(!bypass && (pending || (enabled && blocked(person?.id))));
-        const subscribe = root.querySelector('.ytReelChannelBarViewModelReelSubscribeButton, #subscribe-button, ytd-subscribe-button-renderer');
         const bar = root.querySelector('yt-reel-channel-bar-view-model');
+        const direct = bar && owner(bar, 'a[href]');
+        const needsOwner = Boolean(enabled && blockedIds.size);
+        const needsTitle = Boolean(keywordEnabled && keywordShorts && keywordWords.length);
+        // 전환 중 남은 채널 링크와 본문 멘션 대신 영상 ID에 연결된 공개 정보로 판정
+        const verified = (needsOwner || needsTitle) ? videoOwner(root, true) : null;
+        const person = verified || (!(needsOwner || needsTitle) ? direct : null);
+        const handles = needsOwner && verified && !verified.handle ? [...blockedIds].filter(id => id.startsWith('@')
+          && !Object.values(records).some(record => record.ids?.includes(id) && record.ids.some(value => /^UC[\w-]{22}$/.test(value)))) : [];
+        const aliases = handles.map(handleOwner);
+        const item = contentKey(root), bypass = review?.bypass(item.key);
+        const keywordHit = needsTitle && verified && KarmoKeywords.match(verified.title, keywordWords);
+        const channelBlocked = enabled && (blocked(person?.id) || blocked(verified?.handle) || (verified && aliases.includes(verified.id)));
+        const pending = Boolean(!bypass && !channelBlocked && !keywordHit && (((needsOwner || needsTitle) && videoId(root) && !verified) || aliases.some(value => !value)));
+        const failed = pending && (metadata.get(videoId(root)) === false || aliases.includes(false));
+        const hide = Boolean(!bypass && (pending || keywordHit || channelBlocked));
+        const subscribe = root.querySelector('.ytReelChannelBarViewModelReelSubscribeButton, #subscribe-button, ytd-subscribe-button-renderer');
         const anchor = subscribe || bar;
         if (anchor) addButton(root, person, anchor, !subscribe, 'shorts');
-        playback(root, person, hide, pending ? msg(failed ? 'reviewFailed' : 'reviewChecking') : msg('blockedPlayback'));
+        playback(root, person, hide, pending ? msg(failed ? 'reviewFailed' : 'reviewChecking') : (keywordHit ? msg('reviewKeyword') + ': ' + keywordHit : msg('blockedPlayback')));
         if (hide && !pending) skipPlayback(root, true);
-        if (hide) entries.push({ ...item, root, kind: 'shorts', reason: pending ? msg(failed ? 'reviewFailed' : 'reviewChecking') : msg('reviewChannelBlocked'), retry: failed ? () => { metadata.delete(videoId(root)); schedule(); } : undefined });
+        if (hide) entries.push({ ...item, root, kind: 'shorts', reason: pending ? msg(failed ? 'reviewFailed' : 'reviewChecking') : (keywordHit ? msg('reviewKeyword') + ': ' + keywordHit : msg('reviewChannelBlocked')), retry: failed ? () => { metadata.delete(videoId(root)); for (const handle of handles) if (handleOwners.get(handle) === false) handleOwners.delete(handle); schedule(); } : undefined });
       }
       const watch = document.querySelector('ytd-watch-flexy');
       if (watch) {
