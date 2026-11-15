@@ -348,6 +348,7 @@
     let notice = root.querySelector(':scope > .kl-block-notice');
     if (hide) {
       root.querySelectorAll('video').forEach(video => {
+        if (root.matches('ytd-reel-video-renderer') && !activeShort(root)) return;
         if (pending && !video.paused) pausedForCheck.set(video, videoId(root));
         if (!pending) pausedForCheck.delete(video);
         video.pause();
@@ -368,6 +369,11 @@
           && document.visibilityState === 'visible' && onScreen(root.getBoundingClientRect())) video.play().catch(() => { /* 브라우저 자동 재생 제한 유지 */ });
       });
     }
+  }
+  function activeShort(root) {
+    const rect = root.getBoundingClientRect();
+    return videoId(root) === location.pathname.match(/^\/shorts\/([\w-]{11})/)?.[1]
+      && rect.top < innerHeight / 2 && rect.bottom > innerHeight / 2;
   }
   function layout() {
     for (const shelf of document.querySelectorAll(shelves)) {
@@ -519,6 +525,7 @@
   document.addEventListener('play', event => {
     const root = event.target.closest?.('.kl-block-playback');
     if (!root) return;
+    if (root.matches('ytd-reel-video-renderer') && !activeShort(root)) return;
     if (checkingPlayback.has(root)) pausedForCheck.set(event.target, videoId(root));
     event.target.pause();
   }, true);
