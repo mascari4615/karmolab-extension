@@ -1,0 +1,5 @@
+KarmoLab 0.4.2 fixes YouTube Shorts filtering and playback. No new permissions.
+Confirm the video ID, channel and title using public video metadata before skipping. Account mentions and stale channel links during transitions must not identify the video author. Preserve existing blocked users, handle-only records, keyword scopes and filter exceptions.
+Skip each blocked visit once, cancel outdated navigation, and wait for the previous scroll to settle. Recover a native Shorts player index mismatch when returning to a blocked video. Resume only the verified allowed next video; preserve an existing user pause and cancel stale requests after navigation.
+The native playback recovery is restricted to this extension's top-level YouTube tab, with current tab URL, video ID and player ID checks. No arbitrary scripts, external navigation, account changes or user-list uploads.
+Verified with 83 Node tests, 20 isolated Edge playback regressions and actual signed-in YouTube account/keyword skips followed by normal Shorts playback. Store ZIP excludes the local reload receiver and development permissions.
