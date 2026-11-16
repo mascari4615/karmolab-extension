@@ -5,7 +5,7 @@
 
 ## 기능
 
-유튜브 상단 **KarmoLab** 버튼에서 오른쪽 관리 패널 열기. 한국어 자동 번역, 키워드 편집, 사용자 차단 켜기/끄기와 차단 목록 검색/해제. 기존 팝업과 설정 공유. Escape 또는 바깥 클릭으로 닫기, 저장하지 않은 키워드 입력은 유지.
+확장 아이콘 또는 유튜브 상단 **KarmoLab** 버튼에서 공통 팝업 열기. 왼쪽 탭으로 유튜브, 아카라이브, 사이트 도구 구분. 한국어 자동 번역, 키워드 편집, 사용자 차단 켜기/끄기와 차단 목록 검색/해제. Escape 또는 바깥 클릭으로 닫기, 저장하지 않은 키워드 입력은 유지.
 
 차단 직후 화면 왼쪽 아래 **되돌리기**로 취소. 최근 알림 최대 3개, 직접 닫기. 늦게 끝나는 채널 정보 조회가 취소한 차단을 다시 만들지 않음.
 
@@ -109,7 +109,7 @@ node scripts/reload-local.mjs
 
 완료 판정은 버전 번호가 아니라 새 실행 식별자, 현재 소스의 SHA256, 갱신 요청 응답 모두 일치. 응답 없음/포트 점유/새 코드 불일치는 실패. 명령 서버 없이 상시 로컬 서버 실행 불필요. 로컬 연결은 확장 ID와 전용 헤더 확인, 웹페이지 Origin 및 preflight 거부. 임의 코드나 페이지 조작 명령 미지원.
 
-로컬 manifest의 개발용 background는 제품용 `background.mjs`로 교체하고, alarms와 loopback 접근은 `pack.mjs`에서 제거. 스토어 ZIP에 개발 수신기 파일 제외. 제품용 음량 background와 offscreen 문서는 유지. 버전 0.4.0 유지. `node scripts/verify-local-reload.cjs`는 임시 Edge 프로필에서 같은 버전의 코드 변경과 자기 재로드, 유튜브 재주입을 두 차례 검증. `VERIFY_BROWSER=chromium`은 추가 Chromium 시험용.
+로컬 manifest의 개발용 background는 제품용 `background.mjs`로 교체하고, alarms와 loopback 접근은 `pack.mjs`에서 제거. 스토어 ZIP에 개발 수신기 파일 제외. 제품용 음량 background와 offscreen 문서는 유지. `node scripts/verify-local-reload.cjs`는 임시 Edge 프로필에서 같은 버전의 코드 변경과 자기 재로드, 유튜브 재주입을 두 차례 검증. `VERIFY_BROWSER=chromium`은 추가 Chromium 시험용.
 
 ## 스토어 zip
 
@@ -119,7 +119,7 @@ node pack.mjs
 
 `dist/karmolab-<버전>.zip`. 로컬 개발과 화면 수정마다 manifest 버전을 올리지 않음. 같은 개발 묶음에서는 번호 고정, 서로 다른 작업본은 Git 커밋과 ZIP SHA256으로 구분.
 
-사용자 체험 뒤 배포를 맡긴 릴리스 묶음을 확정할 때 스토어에 제출한 버전과 비교해 다음 번호를 한 번 선택. 이미 정한 미제출 버전은 묶음 확정 시 그대로 사용할 수 있음. 현재 0.4.0은 로컬 개발 번호, 스토어 제출이나 공개 증거 아님. CI는 같은 번호의 runtime 수정 허용, 번호를 바꿀 때의 역행은 차단.
+사용자 체험 뒤 배포를 맡긴 릴리스 묶음을 확정할 때 스토어에 제출한 버전과 비교해 다음 번호를 한 번 선택. 이미 정한 미제출 버전은 묶음 확정 시 그대로 사용할 수 있음. 버전 번호만으로 스토어 제출이나 공개를 판정하지 않음. CI는 같은 번호의 runtime 수정 허용, 번호를 바꿀 때의 역행은 차단.
 
 ## 업데이트 자동화
 
@@ -144,7 +144,7 @@ main push는 검사와 ZIP 생성만 실행. 로컬 언팩판으로 사용자가
   - `storage`: Stores feature settings and the user's channel block list in browser extension storage.
   - `www.youtube.com`: Displays YouTube Shorts publication dates, retrieves public channel and video information, adds channel blocking controls, and hides content according to the user's settings.
   - `activeTab`: Used after an explicit user action in the extension popup to access the current tab for Base64 link detection and per-site volume controls.
-  - `scripting`: Injects packaged Base64 link detection and volume control scripts and styles into supported websites enabled by the user. Registers or unregisters content scripts to apply these features on subsequent visits to permitted sites. No remotely hosted code is executed.
+  - `scripting`: Injects packaged Base64 link detection, volume control, dark mode and optional Arca.live scripts and styles into websites enabled by the user. Registers or unregisters content scripts to apply these features on subsequent visits to permitted sites. No remotely hosted code is executed.
   - `offscreen`: Maintains an offscreen document that uses Web Audio to play audio from a user-selected tab and adjust its volume up to 300%. It does not use the microphone or record, store, or upload audio.
   - `tabCapture`: An optional permission used only when the user explicitly applies a volume setting above 100% in the extension popup. Captures audio from that tab for amplified playback. It does not capture video or microphone audio, and it does not record, store, or upload audio.
 
