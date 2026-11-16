@@ -13,9 +13,13 @@ if (document.documentElement.dataset.karmoArcaOwner) return;
 document.documentElement.dataset.karmoArcaOwner = nativeChrome.runtime.id;
 ${dev ? `let stopped = false;
 nativeChrome.storage.onChanged.addListener((changes, area) => {
-  if (area !== 'local' || changes.arcaHandoff?.newValue?.status !== 'committed') return;
-  stopped = true;
+  if (area !== 'local' || !changes.arcaHandoff) return;
+  stopped = changes.arcaHandoff.newValue?.status === 'committed';
+  const existing = document.querySelector('[data-karmo-handoff]');
+  if (!stopped) { existing?.remove(); return; }
+  if (existing) return;
   const notice = document.createElement('div');
+  notice.dataset.karmoHandoff = 'true';
   notice.setAttribute('role', 'status');
   notice.textContent = '아카라이브 기능이 KarmoLab으로 이전되었습니다. 이 탭을 새로고침하세요.';
   notice.style.cssText = 'position:fixed;bottom:16px;left:16px;z-index:2147483647;padding:12px;background:#222;color:white';
