@@ -13,5 +13,9 @@
   "privacyPolicy": "https://lab.mascari4615.com/extension/#privacy",
   "contact": "dev@mascari4615.com",
   "preparedFor": "0.4.3",
-  "publicationStatus": "prepared-not-saved-to-store"
+  "publicationStatus": {
+    "chrome": "not-saved-console-access-blocked",
+    "edge": "draft-saved-publish-blocked-by-existing-review",
+    "packageShortDescriptions": "proposed-not-in-0.4.3-package"
+  }
 }
