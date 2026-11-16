@@ -1,0 +1,284 @@
+const status = document.getElementById("status");
+
+function show(msg, ok = true) {
+  status.textContent = msg;
+  status.style.color = ok ? "#0a0" : "#c00";
+}
+
+/* 아카라이브. 저장 형식은 block-core.js 머리 주석, 기본값은 block-defaults.js */
+const SITE = "arca";
+const D = globalThis.KARMO_BLOCK_DEFAULTS;
+const LABEL = { block: "차단", like: "팔로우" };
+let state = { settings: { ...D }, lists: { block: {}, like: {} } };
+
+function loadAll(cb) {
+  chrome.storage.local.get({ karmoSettings: {}, blocklist: {}, likelist: {} }, (items) => {
+    const raw = items.karmoSettings || {};
+    state = {
+      settings: { ...D, ...(raw[SITE] || (raw.linkStyle ? raw : {})) },
+      lists: { block: items.blocklist, like: items.likelist },
+    };
+    cb();
+  });
+}
+
+/* 설정 한 부분을 저장. 저장 뒤 화면을 다시 그림 */
+async function mutate(command) {
+  const result = await chrome.runtime.sendMessage({ type: "arca.block.mutate", command });
+  if (!result?.ok) throw new Error(result?.error || "차단 저장 응답 없음");
+  return result;
+}
+function patch(change) {
+  return mutate({ op: "settings", patch: change }).then(() => loadAll(render)).catch((error) => show(error.message, false));
+}
+
+const el = (id) => document.getElementById(id);
+
+function colorInput(value, onChange) {
+  const c = document.createElement("input");
+  c.type = "color";
+  c.value = value;
+  c.addEventListener("change", () => onChange(c.value));
+  return c;
+}
+
+function renderPalette() {
+  const box = el("palette");
+  box.textContent = "";
+  state.settings.palette.forEach((hex, i) => {
+    const w = document.createElement("span");
+    w.className = "swatch";
+    w.append(colorInput(hex, (v) => patch({ palette: state.settings.palette.map((x, j) => (j === i ? v : x)) })));
+    if (state.settings.palette.length > 1) {
+      const d = document.createElement("button");
+      d.type = "button";
+      d.className = "del";
+      d.textContent = "x";
+      d.title = "이 색 빼기";
+      d.addEventListener("click", () => patch({ palette: state.settings.palette.filter((_, j) => j !== i) }));
+      w.append(d);
+    }
+    box.append(w);
+  });
+}
+
+function nameOf(key) {
+  for (const kind of ["block", "like"]) {
+    const v = (state.lists[kind][SITE] || {})[key];
+    if (v) return v.name;
+  }
+  return key;
+}
+
+function renderUserColors() {
+  const ul = el("userColors");
+  ul.textContent = "";
+  const entries = Object.entries(state.settings.colors || {});
+  for (const [key, hex] of entries) {
+    const li = document.createElement("li");
+    const rm = document.createElement("button");
+    rm.type = "button";
+    rm.className = "secondary";
+    rm.textContent = "자동 색으로";
+    rm.addEventListener("click", () => {
+      const next = { ...state.settings.colors };
+      delete next[key];
+      patch({ colors: next });
+    });
+    const label = document.createElement("span");
+    label.textContent = nameOf(key);
+    const code = document.createElement("code");
+    code.textContent = key;
+    li.append(colorInput(hex, (v) => patch({ colors: { ...state.settings.colors, [key]: v } })), label, code, rm);
+    ul.append(li);
+  }
+  if (!entries.length) ul.textContent = "없음";
+}
+
+/* 차단 항목의 사유, 메모, 만료일 입력. 바꾸면 바로 저장 */
+function blockFields(site, key, v) {
+  const save = (fields) => {
+    mutate({ op: "patch", site, key, fields }).then(() => loadAll(render)).catch((error) => show(error.message, false));
+  };
+  const tags = [...new Set([...(state.settings.reasonTags || []), ...(v.reason ? [v.reason] : [])])];
+  const sel = document.createElement("select");
+  sel.append(new Option("사유 없음", ""));
+  for (const t of tags) sel.append(new Option(t, t));
+  sel.value = v.reason || "";
+  sel.addEventListener("change", () => save({ reason: sel.value }));
+  const note = document.createElement("input");
+  note.type = "text";
+  note.placeholder = "메모";
+  note.value = v.note || "";
+  note.addEventListener("change", () => save({ note: note.value.trim() }));
+  const until = document.createElement("input");
+  until.type = "date";
+  until.title = "이 날까지만 차단 (비우면 영구)";
+  until.value = (v.until || "").slice(0, 10);
+  until.addEventListener("change", () => save({ until: until.value ? new Date(`${until.value}T23:59:59`).toISOString() : "" }));
+  const level = document.createElement("select");
+  level.title = "차단 단계";
+  level.append(new Option("1단계: 개념글, 추천수 예외 허용", "normal"), new Option("2단계: 예외 없이 숨김", "all"));
+  level.value = v.hideAll ? "all" : "normal";
+  level.addEventListener("change", () => save({ hideAll: level.value === "all" }));
+  return [level, sel, note, until];
+}
+
+function renderLists() {
+  const box = el("lists");
+  box.textContent = "";
+  for (const kind of ["block", "like"]) {
+    const h = document.createElement("h3");
+    h.textContent = LABEL[kind];
+    const ul = document.createElement("ul");
+    for (const [site, users] of Object.entries(state.lists[kind])) {
+      for (const [key, v] of Object.entries(users)) {
+        const li = document.createElement("li");
+        const rm = document.createElement("button");
+        rm.type = "button";
+        rm.className = "secondary";
+        rm.textContent = "해제";
+        rm.addEventListener("click", async () => {
+          rm.disabled = true;
+          try { await mutate({ op: kind === "block" ? "remove" : "removeLike", site, key }); loadAll(render); }
+          catch (error) { rm.disabled = false; show(error.message, false); }
+        });
+        const label = document.createElement("span");
+        label.textContent = `${site} / ${v.name} `;
+        const code = document.createElement("code");
+        code.textContent = key;
+        li.append(rm, label, code);
+        if (kind === "block") li.append(...blockFields(site, key, v));
+        ul.append(li);
+      }
+    }
+    if (!ul.children.length) ul.textContent = "없음";
+    box.append(h, ul);
+  }
+}
+
+function render() {
+  const s = state.settings;
+  for (const r of document.querySelectorAll('input[name="linkStyle"]')) r.checked = r.value === s.linkStyle;
+  el("panel").checked = !!s.panel;
+  el("hoverHl").checked = !!s.hoverHl;
+  el("exBest").checked = !!s.exBest;
+  el("insight").checked = !!s.insight;
+  el("scanPages").value = String(s.scanPages);
+  el("candSeen").value = String(s.candSeen);
+  el("reasonTags").value = (s.reasonTags || []).join(", ");
+  if (document.activeElement !== el("keywords")) el("keywords").value = (s.keywords || []).join(String.fromCharCode(10));
+  if (document.activeElement !== el("blockedChannels")) el("blockedChannels").value = (s.blockedChannels || []).join(String.fromCharCode(10));
+  if (document.activeElement !== el("autoBlockChannels")) el("autoBlockChannels").value = (s.autoBlockChannels || []).join(String.fromCharCode(10));
+  el("autoBlockSeen").checked = s.autoBlockSeen !== false;
+  el("autoBlockHistory").checked = s.autoBlockHistory !== false;
+  const allow = el("autoAllowKeys");
+  allow.textContent = "";
+  for (const key of s.autoAllowKeys || []) {
+    const li = document.createElement("li");
+    const label = document.createElement("span");
+    label.textContent = key;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "예외 해제";
+    remove.addEventListener("click", () => mutate({ op: "allowRemove", key }).then(() => loadAll(render)).catch((error) => show(error.message, false)));
+    li.append(label, remove);
+    allow.append(li);
+  }
+  if (!allow.children.length) allow.textContent = "예외 없음";
+  el("resolveAccounts").checked = !!s.resolveAccounts;
+  el("minRec").value = String(s.minRec);
+  el("blockSort").value = s.blockSort;
+  el("likeColor").value = s.likeColor;
+  renderPalette();
+  renderUserColors();
+  renderLists();
+}
+
+for (const r of document.querySelectorAll('input[name="linkStyle"]')) r.addEventListener("change", () => patch({ linkStyle: r.value }));
+el("panel").addEventListener("change", (e) => patch({ panel: e.target.checked }));
+el("hoverHl").addEventListener("change", (e) => patch({ hoverHl: e.target.checked }));
+el("resolveAccounts").addEventListener("change", (e) => patch({ resolveAccounts: e.target.checked }));
+el("reasonTags").addEventListener("change", (e) => patch({ reasonTags: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) }));
+el("keywords").addEventListener("change", (e) => patch({ keywords: e.target.value.split(String.fromCharCode(10)).map((x) => x.trim()).filter(Boolean) }));
+function parseChannels(value) {
+  const channels = [];
+  for (const line of value.split(/\r?\n/).map((x) => x.trim()).filter(Boolean)) {
+    let channel = line;
+    if (line.startsWith("/") || /^https?:\/\//i.test(line)) {
+      try {
+        const url = new URL(line, "https://arca.live");
+        channel = /^(arca\.live|namu\.la)$/.test(url.hostname) ? /^\/b\/([^/]+)(?:\/|$)/.exec(url.pathname)?.[1] || "" : "";
+      } catch { channel = ""; }
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(channel) || ["breaking", "best", "all", "search", "headlines"].includes(channel)) throw new Error(`원문 채널 주소 확인 필요: ${line}`);
+    channels.push(channel);
+  }
+  return [...new Set(channels)];
+}
+el("blockedChannels").addEventListener("change", (e) => {
+  try { patch({ blockedChannels: parseChannels(e.target.value) }); }
+  catch (error) { show(error.message, false); }
+});
+el("autoBlockChannels").addEventListener("change", (e) => {
+  let channels;
+  try { channels = parseChannels(e.target.value); }
+  catch (error) { show(error.message, false); return; }
+  patch({ autoBlockChannels: channels });
+});
+el("autoBlockSeen").addEventListener("change", (e) => patch({ autoBlockSeen: e.target.checked }));
+el("autoBlockHistory").addEventListener("change", (e) => patch({ autoBlockHistory: e.target.checked }));
+el("insight").addEventListener("change", (e) => patch({ insight: e.target.checked }));
+el("scanPages").addEventListener("change", (e) => patch({ scanPages: Math.min(10, Math.max(1, parseInt(e.target.value, 10) || 1)) }));
+el("candSeen").addEventListener("change", (e) => patch({ candSeen: Math.max(2, parseInt(e.target.value, 10) || 6) }));
+el("statsClear").addEventListener("click", () => {
+  chrome.storage.local.remove(["karmoStats", "karmoScan"], () => show("취향 통계를 지움"));
+});
+el("exBest").addEventListener("change", (e) => patch({ exBest: e.target.checked }));
+el("minRec").addEventListener("change", (e) => patch({ minRec: Math.max(0, parseInt(e.target.value, 10) || 0) }));
+el("blockSort").addEventListener("change", (e) => patch({ blockSort: e.target.value }));
+el("likeColor").addEventListener("change", (e) => patch({ likeColor: e.target.value }));
+el("paletteAdd").addEventListener("click", () => patch({ palette: [...state.settings.palette, "#888888"] }));
+el("paletteReset").addEventListener("click", () => patch({ palette: [...D.palette] }));
+
+/* 파일 저장 상태. 내보내기 본체는 userlists.js */
+function renderSaveState() {
+  chrome.storage.local.get({ [UL_STATE]: null }, (items) => {
+    const s = items[UL_STATE];
+    el("saveState").textContent = !s ? "아직 저장 안 함" : s.error ? `실패: ${s.error}` : `${new Date(s.at).toLocaleString()} 저장, 차단 ${s.block}명, 팔로우 ${s.like}명`;
+  });
+}
+el("listSave").addEventListener("click", async () => {
+  const s = await exportUserlists();
+  const t = await exportStats();
+  show(s.error ? `저장 실패: ${s.error}` : `다운로드/${s.file}${t.skipped ? "" : ` 와 stats.json (유저 ${t.users}명)`} 에 저장`, !s.error);
+});
+renderSaveState();
+
+const listFile = el("listFile");
+el("listImport").addEventListener("click", () => listFile.click());
+listFile.addEventListener("change", async () => {
+  const f = listFile.files[0];
+  if (!f) return;
+  let incoming;
+  try {
+    incoming = JSON.parse(await f.text());
+  } catch {
+    show("JSON 이 아닙니다.", false);
+    return;
+  }
+  /* { block, like } 형태. 옛 형태 (사이트 맵 하나) 는 차단으로 본다 */
+  if (!incoming.block && !incoming.like) incoming = { block: incoming };
+  try {
+    const result = await mutate({ op: "import", data: incoming });
+    loadAll(render);
+    show(`가져옴. 새로 ${result.added}명`);
+  } catch (error) { show(error.message, false); }
+  listFile.value = "";
+});
+
+loadAll(render);
+chrome.storage.onChanged.addListener((ch, area) => {
+  if (area === "local" && (ch.karmoSettings || ch.blocklist || ch.likelist)) loadAll(render);
+  if (area === "local" && ch[UL_STATE]) renderSaveState();
+});

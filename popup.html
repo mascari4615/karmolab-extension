@@ -107,6 +107,13 @@
     <p id="blockStatus" role="status" data-msg="blockLoading"></p>
     <ul id="blockedList"></ul>
   </section>
+  <section aria-labelledby="arcaHeading">
+    <h2 id="arcaHeading">아카라이브</h2>
+    <p id="arcaStatus" role="status">설정 확인 중...</p>
+    <button id="arcaToggle" type="button" disabled>아카라이브 켜기</button>
+    <button id="arcaManage" type="button" disabled>차단과 팔로우 관리</button>
+    <p>끄거나 이전한 뒤에는 열린 아카라이브 탭을 새로고침하세요. 기존 데이터는 보관합니다.</p>
+  </section>
   <footer><a href="https://lab.mascari4615.com/" target="_blank" data-msg="popupFooter"></a></footer>
   <script src="features/keyword-core.js"></script>
   <script src="features/control-icons.js"></script>
@@ -115,5 +122,6 @@
   <script src="popup.js"></script>
   <script type="module" src="features/volume-popup.mjs"></script>
   <script type="module" src="features/dark-mode-popup.mjs"></script>
+  <script type="module" src="features/arca/popup.mjs"></script>
 </body>
 </html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KarmoLab 아카라이브 설정</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 46rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      label {
+        display: block;
+        margin-bottom: 0.35rem;
+        font-weight: 600;
+      }
+      label.opt {
+        font-weight: 400;
+        margin: 0.25rem 0;
+      }
+      input[type="url"] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.5rem 0.6rem;
+        font-size: 1rem;
+      }
+      input[type="number"] {
+        width: 5rem;
+        padding: 0.25rem 0.4rem;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        align-items: center;
+      }
+      button {
+        padding: 0.45rem 1rem;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #f0f0f0;
+        border: 1px solid #ccc;
+      }
+      #status {
+        margin-top: 0.75rem;
+        min-height: 1.25rem;
+        color: #0a0;
+      }
+      p.hint {
+        font-size: 0.9rem;
+        color: #444;
+        margin-top: 0.5rem;
+      }
+      nav.tabs {
+        display: flex;
+        gap: 0.25rem;
+        border-bottom: 2px solid #ccc;
+        margin: 1rem 0 1.25rem;
+      }
+      nav.tabs button {
+        border: 0;
+        background: none;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        padding: 0.5rem 1rem;
+        color: #555;
+      }
+      nav.tabs button.on {
+        border-bottom-color: #1c7ed6;
+        color: #000;
+        font-weight: 600;
+      }
+      section.tab {
+        display: none;
+      }
+      section.tab.on {
+        display: block;
+      }
+      fieldset {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin: 0 0 1rem;
+        padding: 0.5rem 1rem 0.75rem;
+      }
+      legend {
+        font-weight: 700;
+        padding: 0 0.4rem;
+      }
+      .swatches {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+        margin: 0.4rem 0;
+      }
+      .swatch {
+        position: relative;
+      }
+      .swatch input[type="color"],
+      input.like[type="color"] {
+        width: 2.2rem;
+        height: 2.2rem;
+        padding: 0;
+        border: 1px solid #aaa;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .swatch button.del {
+        position: absolute;
+        top: -0.5rem;
+        right: -0.5rem;
+        width: 1.1rem;
+        height: 1.1rem;
+        padding: 0;
+        line-height: 1;
+        font-size: 0.75rem;
+        border-radius: 50%;
+        border: 1px solid #888;
+        background: #fff;
+      }
+      #lists li,
+      #userColors li {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin: 0.2rem 0;
+      }
+      #lists select, #lists input[type="date"], #lists input[type="text"] {
+        font-size: 0.85rem;
+      }
+      #lists code,
+      #userColors code {
+        color: #666;
+      }
+      #userColors input[type="color"] {
+        width: 1.8rem;
+        height: 1.8rem;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>KarmoLab 아카라이브</h1>
+    <p>차단 목록에서 해제하거나 강도를 바꿀 수 있습니다. <a href="arca-liked.html">팔로우 글 모아보기</a></p>
+    <p id="status" aria-live="polite"></p>
+
+    <section class="tab on" id="tab-arca">
+      <fieldset>
+        <legend>같은 유저의 글 구분</legend>
+        <p class="hint">한 페이지에 두 줄 이상 쓴 유저를 유저마다 다른 색으로 보입니다. 닉네임은 색 알약, 줄 왼쪽에 색 띠.</p>
+        <label class="opt"><input type="radio" name="linkStyle" value="tint" /> 알약, 색 띠, 줄 바탕까지 연한 색</label>
+        <label class="opt"><input type="radio" name="linkStyle" value="pill" /> 알약과 색 띠만 (바탕 없음)</label>
+        <label class="opt"><input type="radio" name="linkStyle" value="off" /> 끔</label>
+        <label class="opt"><input type="checkbox" id="panel" /> 화면 왼쪽에 "여러 글 쓴 유저" 목록 (너비 1500px 이상. 색 동그라미를 눌러 그 유저 색을 바꿈)</label>
+        <label class="opt"><input type="checkbox" id="hoverHl" /> 글 줄에 마우스를 올리면 같은 유저의 글을 강조</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>색</legend>
+        <p class="hint">자동 색은 아래 팔레트에서 유저마다 하나씩 고릅니다. 한 페이지에서 겹치지 않게 다음 칸으로 넘어갑니다.</p>
+        <div class="swatches" id="palette"></div>
+        <div class="row">
+          <button type="button" id="paletteAdd" class="secondary">색 추가</button>
+          <button type="button" id="paletteReset" class="secondary">기본 팔레트로</button>
+        </div>
+        <div class="row">
+          <label for="likeColor" style="margin: 0">팔로우 유저 줄 색</label>
+          <input type="color" id="likeColor" class="like" />
+        </div>
+        <p class="hint">유저별로 지정한 색 (왼쪽 패널에서 바꾼 것)</p>
+        <ul id="userColors"></ul>
+      </fieldset>
+
+      <fieldset>
+        <legend>차단</legend>
+        <p class="hint">차단한 유저의 글은 숨기고 페이지 맨 아래 블록에 모읍니다. 1단계 차단은 아래 예외 허용. 작성자 옆 ××로 2단계 차단하면 예외도 숨김.</p>
+        <label class="opt"><input type="checkbox" id="resolveAccounts" /> 목록의 계정 유저는 확장이 그 글을 열어 번호를 확인 (같은 닉의 다른 계정이 같이 가려지지 않게. 한 번 확인한 글은 저장해 두고 다시 안 엶)</label>
+        <label class="opt"><input type="checkbox" id="exBest" /> 개념글은 보임</label>
+        <label class="opt">추천이 <input type="number" id="minRec" min="0" step="1" /> 이상이면 보임 (0 이면 끔)</label>
+        <label class="opt">차단 사유 칩 (쉼표로 구분) <input type="text" id="reasonTags" style="width: 22rem" /></label>
+        <label class="opt">하단 블록 기본 정렬
+          <select id="blockSort">
+            <option value="name">이름순</option>
+            <option value="id">번호순</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>인사이트 (왼쪽 패널)</legend>
+        <p class="hint">팔로우 유저 최근 글, 최근 작성량, 취향 제안 (차단 후보와 팔로우 후보) 을 왼쪽 패널에 보입니다. 확장이 같은 보기의 앞쪽 글 목록을 직접 받아 읽고 (10분에 한 번), 내가 연 글과 본 글 수를 유저별로 쌓습니다.</p>
+        <label class="opt"><input type="checkbox" id="insight" /> 인사이트 켜기 (바꾸면 페이지를 새로고침)</label>
+        <label class="opt">읽을 목록 쪽 수 <input type="number" id="scanPages" min="1" max="10" step="1" /></label>
+        <label class="opt">후보에 올리려면 최소 <input type="number" id="candSeen" min="2" step="1" /> 건 이상 본 유저</label>
+        <div class="row"><button type="button" id="statsClear" class="secondary">쌓인 취향 통계 지우기</button><span id="statsState"></span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>키워드 숨김</legend>
+        <p class="hint">제목에 이 단어가 들어 있는 글을 숨깁니다 (한 줄에 하나, 대소문자 무시, <code>re:</code> 로 시작하면 정규식). 숨긴 글은 차단 글과 같이 페이지 맨 아래 블록에 모이고 거기서 "키워드 빼기"로 풀 수 있습니다.</p>
+        <textarea id="keywords" rows="4" style="width: 100%; box-sizing: border-box" spellcheck="false"></textarea>
+      </fieldset>
+
+      <fieldset>
+        <legend>채널 차단</legend>
+        <p class="hint">채널×는 해당 글의 원문 채널 차단. breaking과 검색에서는 원문을 확인한 뒤 적용. 차단 직후 되돌리기, 게시판 상단 차단 관리에서 해제. 채널 주소의 이름이나 URL을 한 줄에 하나씩 입력.</p>
+        <label for="blockedChannels">차단할 채널</label>
+        <textarea id="blockedChannels" rows="4" style="width: 100%; box-sizing: border-box" spellcheck="false" placeholder="채널 주소의 /b/ 뒤 이름 또는 https://arca.live/b/채널"></textarea>
+      </fieldset>
+
+      <fieldset>
+        <legend>지정 채널 작성자 자동 차단</legend>
+        <p class="hint">아래 채널에 글 쓴 작성자를 완전 차단. 빈 목록이면 꺼짐. 작성자 구별이 확인된 사람만 대상. 공개 프로필의 최근 작성글 범위이며 전체 과거 이력 검사는 아닙니다. 실패한 조회는 이력 없음으로 처리하지 않습니다.</p>
+        <label for="autoBlockChannels">자동 차단 기준 채널 (한 줄에 하나, 이름 또는 URL)</label>
+        <textarea id="autoBlockChannels" rows="3" style="width:100%;box-sizing:border-box" spellcheck="false"></textarea>
+        <label class="opt"><input type="checkbox" id="autoBlockSeen" /> 목록에서 지정 채널 글을 만났을 때 그 작성자 차단</label>
+        <label class="opt"><input type="checkbox" id="autoBlockHistory" /> 만난 작성자의 공개 최근 작성글도 확인</label>
+        <p class="hint">기준 채널을 지우면 그 규칙으로 자동 차단한 작성자도 해제. 수동 차단은 유지. 자동 차단한 사람을 직접 해제하면 예외로 남아 다시 차단되지 않습니다.</p>
+        <h3>자동 차단 예외</h3>
+        <ul id="autoAllowKeys"></ul>
+      </fieldset>
+
+      <fieldset>
+        <legend>차단, 팔로우 목록</legend>
+        <p><a href="arca-liked.html" target="_blank" rel="noopener">팔로우 글 모아보기 열기</a>, 작성자 기준, 모든 채널의 최근 글</p>
+        <p class="hint">글의 팔로우와 차단 버튼으로 추가합니다. 차단 목록의 해제로 되돌릴 수 있습니다. 목록과 설정은 이 브라우저에 저장합니다. 파일로 저장을 눌러 백업하고, JSON 가져오기로 합쳐 복원할 수 있습니다.</p>
+        <div class="row">
+          <button type="button" id="listSave">지금 파일로 저장</button>
+          <span id="saveState"></span>
+        </div>
+        <div class="row">
+          <button type="button" id="listImport" class="secondary">JSON 가져오기 (합침)</button>
+          <input type="file" id="listFile" accept="application/json" hidden />
+        </div>
+        <div id="lists"></div>
+      </fieldset>
+    </section>
+
+    <script src="block-defaults.js"></script>
+    <script src="data.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

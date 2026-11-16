@@ -6,6 +6,9 @@
 - Existing functions: Shorts dates and daily viewing totals, user blocking, keyword folding, Korean comment translation, optional site utilities.
 - Users manage their own browser preferences while browsing YouTube.
 - Local browser storage is the source for preferences. The in-page panel and extension popup share existing keys.
+- Optional Arca.live tools: two-level user blocking, original-channel blocking, automatic blocking based on encountered posts and public recent author history, follow feed, read markers, scrap markers and local insights.
+- Enabling Arca.live requires its optional origin permission. Existing tabs refresh to switch ownership. Disabling unregisters future injections and preserves data.
+- The local Dev extension transfers only Arca data through an allowlisted extension handoff. Destination preferences win conflicts, channel rules are combined once, and the Dev original is retained. Completed activation never reimports deleted entries. Store publication is separate from this local implementation.
 
 ## Platform
 
