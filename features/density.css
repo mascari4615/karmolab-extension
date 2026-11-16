@@ -25,6 +25,9 @@ html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-r
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #main { display:block !important; margin:0 !important; padding-inline:76px 80px; min-width:0; line-height:var(--kl-comment-line-height,22px); }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) :is(#header,#header-author) { display:contents !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #header-author h3 { display:none !important; }
+/* The header is display:contents; a badge must not create a line before the block expander. */
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #sponsor-comment-badge { float:inline-start; line-height:0; padding-block:max(0px,calc((var(--kl-comment-line-height,22px) - 14px)/2)); }
+html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #sponsor-comment-badge ytd-sponsor-comment-badge-renderer { margin-top:0; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #author-text { display:inline !important; width:auto !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) :is(#author-text,#author-text span) { color:var(--kl-comment-author) !important; font-size:12px !important; font-weight:500 !important; line-height:22px !important; }
 html[data-kl-comment-density="compact"] :is(ytd-comment-view-model,ytd-comment-renderer) #published-time-text { position:absolute; inset-inline-start:0; top:0; width:40px; margin:0 !important; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:end; font-variant-numeric:tabular-nums; }
