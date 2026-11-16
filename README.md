@@ -136,6 +136,8 @@ main push는 검사와 ZIP 생성만 실행. 로컬 언팩판으로 사용자가
 
 ## 스토어 문구
 
+최신 등록용 한, 영 설명과 짧은 설명 제안은 [store-listing](store-listing/README.md)에 관리합니다. 아래 초기 문구와 콘솔의 실제 저장 상태를 구분합니다.
+
 - 이름: KarmoLab
 - 짧은 설명 (ko): 유튜브 댓글 자동 번역, 컴팩트 댓글, 홈 영상 크기 조절, 채널 숨김과 쇼츠 통계를 한곳에서 관리하세요.
 - 짧은 설명 (en): Customize YouTube comments and Home layout, translate comments into Korean, hide channels, and track Shorts viewing.

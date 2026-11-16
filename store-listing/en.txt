@@ -1,0 +1,31 @@
+Read YouTube and Arca.live your way, and manage useful site tools in one place.
+
+KarmoLab lets you adjust comment layouts, video grids, unwanted content, site appearance and volume. Open the extension icon to switch between YouTube, Arca.live and site tools in one settings popup.
+
+YouTube
+- Use compact comments with adjustable text size and line height.
+- Choose 2 to 6 videos per row on Home.
+- Filter videos, Shorts and comments by keyword, and manage blocked authors and channels.
+- Automatically activate YouTube's Korean translation button when available. Comments you switch back to the original are preserved.
+- See Shorts publication dates, today's Shorts count, repeat Shorts visits and Shorts viewing time.
+- Export settings and block lists as JSON and merge them when restoring.
+
+Arca.live: optional, enabled by you
+- Choose normal blocking or stronger blocking that also hides popular posts.
+- Block a post's original channel, including in search results and mixed-channel feeds.
+- Undo a block immediately, or find and unblock an author in settings.
+- Automatically block authors based on posts encountered in selected channels and their public recent post history. This does not search every historical post.
+- Browse followed authors' posts, track read and scrap markers, and view local activity information.
+- Refresh open Arca.live tabs after enabling or disabling the feature. Some Arca.live controls are currently in Korean.
+
+Site tools
+- Enable dark mode on individual sites.
+- Remember site volume and amplify it up to 300%.
+- Turn Base64-encoded HTTP/HTTPS web addresses into clickable links.
+
+Things to know
+Comment translation works only when YouTube provides a Korean translation button. Home-only hiding also attempts YouTube's Not interested feedback for the clicked video. Removing a local hide does not undo feedback already sent.
+
+Volume amplification above 100% uses audio capture from the tab where you apply it. It does not capture microphone audio or video, record audio, or upload audio.
+
+Settings, block lists and feature activity records stay in browser storage and are not sent to a separate collection server. Arca.live requests for public posts, profiles and signed-in scrap lists use your existing site session. Arca.live and site tools apply only where you explicitly enable the feature and allow site access.

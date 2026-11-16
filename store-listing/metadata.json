@@ -1,0 +1,17 @@
+{
+  "name": "KarmoLab",
+  "shortDescription": {
+    "ko": "유튜브 댓글, 영상 필터, 아카라이브 차단, 팔로우, 사이트별 다크모드와 음량을 한곳에서 관리하세요.",
+    "en": "Customize YouTube, manage Arca.live blocks and follows, and control dark mode and volume on sites you choose."
+  },
+  "singlePurpose": {
+    "ko": "사용자가 선택한 웹사이트의 읽기 환경과 콘텐츠 표시를 맞춤 설정합니다.",
+    "en": "Customize the reading experience and displayed content on websites chosen by the user."
+  },
+  "homepage": "https://lab.mascari4615.com/extension/",
+  "support": "https://github.com/mascari4615/karmolab-extension/issues",
+  "privacyPolicy": "https://lab.mascari4615.com/extension/#privacy",
+  "contact": "dev@mascari4615.com",
+  "preparedFor": "0.4.3",
+  "publicationStatus": "prepared-not-saved-to-store"
+}
