@@ -130,6 +130,11 @@
   syncTheme();
   let values = {}, loaded = false, loading = false, dirty = false, draftVersion = 0, changeVersion = 0;
   let savingWords = false, mountTimer;
+  let draftQueue = Promise.resolve();
+  const storeDraft = value => { draftQueue = draftQueue.catch(() => {}).then(() => chrome.storage.session.set({ youtubeKeywordDraft:value })); draftQueue.catch(() => announce('panelSaveError')); };
+  const draftInput = editor.host.querySelector('input[type=text]');
+  const persistDraft = () => queueMicrotask(() => storeDraft({ words:words.value, automatic:editor.automatic, entry:draftInput.value }));
+  draftInput.addEventListener('input', persistDraft);
   let syncValues = {}, backupBusy = false, selectedBackup = null, fileVersion = 0;
   const pending = new Set();
   const toggles = { commentTranslate: $('#translation'), keywordEnabled: $('#keywords'), keywordComments: $('#scope-comments'), keywordVideos: $('#scope-videos'), keywordShorts: $('#scope-shorts'), userBlock: $('#blocking'), shortsDate: $('#shortsDate'), shortsCount: $('#shortsCount'), shortsWatchTime: $('#watchTime') };
@@ -257,24 +262,9 @@
     } catch { announce('panelLoadError'); $('#retry').hidden = false; }
     finally { loading = false; }
   }
-  function close(restoreFocus = true) {
-    panel.hidden = true; trigger.setAttribute('aria-expanded', 'false');
-    if (restoreFocus && trigger.isConnected) trigger.focus();
-  }
-  trigger.addEventListener('click', () => {
-    if (!panel.hidden) { close(); return; }
-    panel.hidden = false; trigger.setAttribute('aria-expanded', 'true');
-    $('#close').focus(); if (!loaded) void load();
-  });
-  $('#close').addEventListener('click', () => close());
-  shadow.addEventListener('keydown', event => { event.stopPropagation(); if (event.key === 'Escape') { event.preventDefault(); close(); } });
-  shadow.addEventListener('keyup', event => event.stopPropagation());
-  document.addEventListener('pointerdown', event => {
-    if (!panel.hidden && !event.composedPath().includes(host) && !event.composedPath().includes(trigger)) close(false);
-  });
   $('#retry').addEventListener('click', () => void load());
   $('#search').addEventListener('input', renderBlocks);
-  words.addEventListener('input', () => { dirty = true; draftVersion++; $('#save').disabled = savingWords; announce('panelUnsaved'); });
+  words.addEventListener('input', () => { dirty = true; draftVersion++; $('#save').disabled = savingWords; announce('panelUnsaved'); persistDraft(); });
   $('#save').addEventListener('click', async () => {
     let parsed;
     try { parsed = KarmoKeywords.parse(words.value); } catch { announce('keywordError'); return; }
@@ -283,7 +273,11 @@
       const autoWords = editor.automatic;
       await chrome.storage.local.set({ keywordWords: parsed, keywordAutoBlockWords: autoWords });
       if (storageVersion === changeVersion) { values.keywordWords = parsed; values.keywordAutoBlockWords = autoWords; }
-      if (version === draftVersion) { dirty = false; words.value = parsed.join('\n'); announce('panelSaved'); }
+      if (version === draftVersion) {
+        dirty = false; words.value = parsed.join('\n');
+        if (draftInput.value) persistDraft(); else storeDraft(null);
+        announce('panelSaved');
+      }
       else announce('panelUnsaved');
     } catch { announce('panelSaveError'); }
     finally { savingWords = false; render(); }
@@ -366,16 +360,26 @@
     } catch (error) { announce(error.partial ? 'backupPartialError' : 'backupRestoreError'); }
     finally { backupBusy = false; render(); }
   });
-  function mount() {
-    const target = document.querySelector('ytd-masthead #buttons');
-    if (target && trigger.parentElement !== target) target.prepend(trigger);
-    if (!host.isConnected) document.documentElement.append(host);
-  }
-  new MutationObserver(() => {
-    if (mountTimer || (host.isConnected && trigger.isConnected)) return;
-    mountTimer = setTimeout(() => { mountTimer = undefined; mount(); }, 100);
-  }).observe(document.documentElement, { childList: true, subtree: true });
-  document.addEventListener('yt-navigate-start', () => close(false));
-  document.addEventListener('yt-navigate-finish', mount);
-  mount();
+  document.body.append(host);
+  panel.hidden = false;
+  panel.removeAttribute('role'); panel.removeAttribute('aria-modal');
+  $('header').hidden = true;
+  const style = document.createElement('style');
+  style.textContent = 'aside{position:static;width:100%;max-width:none;height:auto;border:0;border-radius:0;box-shadow:none;overflow:visible}main{padding:0 16px;overflow:visible}section{padding:18px 0}footer{position:sticky;bottom:0;background:#0f0f0f}nav{position:sticky;top:0;display:flex;gap:4px;flex-wrap:wrap;padding:10px 12px;background:#0f0f0f;z-index:1;border-bottom:1px solid #333}nav button{font-size:13px;min-height:40px;padding:8px 10px;background:transparent;color:#aaa}nav button[aria-selected=true]{background:#353535;color:#fff}';
+  shadow.append(style);
+  const sections = [...shadow.querySelectorAll('main>section')];
+  const groups = [[0,1,3],[2,4,6],[5],[7]];
+  const ko = navigator.language.startsWith('ko');
+  const labels = ko ? ['화면과 재생','필터와 차단','숨긴 항목','백업'] : ['Viewing','Filters','Hidden items','Backup'];
+  const nav = document.createElement('nav'); nav.setAttribute('role','tablist'); nav.setAttribute('aria-label',ko?'유튜브 설정':'YouTube settings');
+  function select(index) { groups.forEach((ids,i)=>{ids.forEach(id=>{ if(sections[id]) sections[id].hidden=i!==index; }); nav.children[i].setAttribute('aria-selected',String(i===index));nav.children[i].tabIndex=i===index?0:-1;}); }
+  labels.forEach((label,i)=>{const button=document.createElement('button');button.type='button';button.textContent=label;button.setAttribute('role','tab');button.addEventListener('click',()=>select(i));nav.append(button);});
+  nav.addEventListener('keydown',event=>{const i=[...nav.children].indexOf(shadow.activeElement);let next=event.key==='ArrowRight'?(i+1)%4:event.key==='ArrowLeft'?(i+3)%4:event.key==='Home'?0:event.key==='End'?3:-1;if(next<0)return;event.preventDefault();select(next);nav.children[next].focus();});
+  $('main').before(nav); select(0);
+  void (async () => {
+    const saved = await chrome.storage.session.get('youtubeKeywordDraft');
+    if (saved.youtubeKeywordDraft && !dirty) { dirty=true; const draft=saved.youtubeKeywordDraft; editor.set(String(draft.words || '').split('\n').filter(Boolean), draft.automatic || [], true); draftInput.value = draft.entry || ''; }
+    await load();
+    if (dirty) announce('panelUnsaved');
+  })().catch(() => { void load(); });
 })();

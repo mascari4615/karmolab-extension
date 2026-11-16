@@ -1,10 +1,16 @@
-# YouTube management panel
+# KarmoLab unified management panel
+
+- One extension action popup is the settings surface. The YouTube masthead button and Arca settings actions open it through the background worker. Browsers unable to open it receive a toolbar instruction.
+- The popup uses a fixed left navigation for YouTube, Arca.live and site tools. Only the selected pane is visible and focusable. Keep navigation separate from the scrolling form, with arrow and Home/End keyboard navigation.
+- Existing dark neutral palette, system type, restrained borders and familiar controls. YouTube subcategories: Viewing, Filters, Hidden items and Backup. Arca subcategories: Authors, Block rules, Auto block, Appearance and Backup.
+- Preserve settings keys and all existing management actions. Keyword drafts and automatic author selections survive popup destruction through session storage. The selected page supplies filter review through an internal message bridge.
+- Arca authors are searchable; unblock and strength controls remain beside each author. Use the same control palette in Arca settings and the follow feed.
 
 - Mode: Operate. Inherit the existing YouTube screen and extension controls.
-- User-selected reference: YouTube's top-bar entry and right-side panel composition.
+- Original reference: YouTube's top-bar entry and right-side panel composition. User replaced the separate page panel with the unified extension popup on 2026-11-16.
 - Live reference: masthead height 56px, existing `#buttons` action group, dark theme on 2026-10-24.
 - Follow YouTube's root dark attribute for the surface, text and action palette. Actual YouTube no longer exposes the legacy theme variables; set them locally on the panel and trigger, keeping the page unchanged.
-- One top-bar KarmoLab button, one nonmodal panel below the masthead, separate translation, keyword and blocked-user groups without nested cards.
+- One top-bar KarmoLab shortcut to the extension popup, with separate translation, keyword and blocked-user groups without nested cards.
 - A close button, Escape and outside click dismiss the panel. Retain unsaved keyword input across dismissal.
 - Immediate reversible toggles. Keyword drafts have an explicit Save action. Persistent blocked users have individual Unblock actions and search.
 - Prefer icons for familiar repeated actions, with localized accessible names, tooltips and visible focus. Keep setting labels, reasons, restore confirmation and error messages as text. Use native controls, 44px panel targets and 16px text inputs. Keep panel within narrow viewports.

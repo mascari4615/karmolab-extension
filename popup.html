@@ -41,6 +41,7 @@
     textarea { width: 100%; box-sizing: border-box; min-height: 80px; padding: 8px; border: 1px solid #777; border-radius: 4px; background: #111; color: #fff; font: inherit; resize: vertical; }
     @media (pointer: coarse) { .utility button, .volume-row input, .volume-row input[type="range"] { min-height: 44px; } }
   </style>
+  <link rel="stylesheet" href="features/settings-shell.css">
 </head>
 <body>
   <header><img src="icons/icon-32.png" alt=""><b>KarmoLab</b></header>
@@ -63,50 +64,6 @@
     <p id="base64Status" role="status" data-msg="base64Loading"></p>
     <button id="base64Site" type="button" disabled data-msg="base64Enable"></button>
   </section>
-  <label>
-    <input type="checkbox" id="shortsDate">
-    <span><span data-msg="featShortsDate"></span><small data-msg="featShortsDateHint"></small></span>
-  </label>
-  <label>
-    <input type="checkbox" id="userBlock" disabled>
-    <span><span data-msg="featUserBlock"></span><small data-msg="featUserBlockHint"></small></span>
-  </label>
-  <section class="count-settings" aria-labelledby="shortsCountHeading">
-    <label>
-      <input type="checkbox" id="shortsCount" disabled>
-      <span><span id="shortsCountHeading" data-msg="featShortsCount"></span><small data-msg="featShortsCountHint"></small></span>
-    </label>
-    <label for="shortsCountMode" data-msg="shortsCountDisplay"></label>
-    <select id="shortsCountMode" disabled>
-      <option value="both" data-msg="shortsCountModeBoth"></option>
-      <option value="unique" data-msg="shortsCountModeUnique"></option>
-      <option value="views" data-msg="shortsCountModeViews"></option>
-    </select>
-    <label><input type="checkbox" id="shortsWatchTime" disabled><span data-msg="shortsWatchTimeDisplay"></span></label>
-    <p id="shortsCountStatus" role="status"></p>
-  </section>
-  <section class="utility">
-    <label><input id="commentTranslate" type="checkbox" disabled><span data-msg="commentTranslate"></span></label>
-    <p data-msg="commentTranslateHint"></p>
-    <p id="commentTranslateStatus" role="status"></p>
-  </section>
-  <section class="utility" aria-labelledby="keywordHeading">
-    <h2 id="keywordHeading" data-msg="keywordHeading"></h2>
-    <label><input id="keywordEnabled" type="checkbox" disabled><span data-msg="keywordEnabled"></span></label>
-    <label><input id="keywordComments" type="checkbox" disabled><span data-msg="keywordComments"></span></label>
-    <label><input id="keywordVideos" type="checkbox" disabled><span data-msg="keywordVideos"></span></label>
-    <label><input id="keywordShorts" type="checkbox" disabled><span data-msg="keywordShorts"></span></label>
-    <p data-msg="reviewHint"></p>
-    <label for="keywordWords" data-msg="keywordWordsLabel"></label>
-    <textarea id="keywordWords" rows="3" maxlength="40200" disabled></textarea>
-    <button id="keywordSave" type="button" disabled data-msg="keywordSave"></button>
-    <p id="keywordStatus" role="status"></p>
-  </section>
-  <section aria-labelledby="blockHeading">
-    <h2 id="blockHeading" data-msg="blockedUsers"></h2>
-    <p id="blockStatus" role="status" data-msg="blockLoading"></p>
-    <ul id="blockedList"></ul>
-  </section>
   <section aria-labelledby="arcaHeading">
     <h2 id="arcaHeading">아카라이브</h2>
     <p id="arcaStatus" role="status">설정 확인 중...</p>
@@ -119,6 +76,8 @@
   <script src="features/control-icons.js"></script>
   <script src="features/keyword-editor.js"></script>
   <script src="features/auto-block-exceptions.js"></script>
+  <script src="features/settings-navigation.js"></script>
+  <script src="features/popup-navigation.js"></script>
   <script src="popup.js"></script>
   <script type="module" src="features/volume-popup.mjs"></script>
   <script type="module" src="features/dark-mode-popup.mjs"></script>

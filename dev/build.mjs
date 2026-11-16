@@ -1,6 +1,7 @@
 export function runtimeFiles(manifest) {
   return [...new Set([
     'manifest.json', 'dev/reload-worker.mjs', 'dev/build.mjs', 'popup.html', 'popup.js',
+    'features/settings-navigation.js', 'features/settings-shell.css', 'features/popup-navigation.js', 'features/youtube-settings.html', 'features/youtube-panel.js', 'features/panel-background.mjs', 'features/panel-review-client.js', 'features/arca/options-navigation.js', 'features/arca/options.css',
     'features/base64-core.js', 'features/base64-links.js', 'features/base64-links.css',
     'background.mjs', 'features/shorts-playback-background.mjs', 'features/volume-background.mjs', 'features/volume-core.mjs', 'features/volume-offscreen.html', 'features/volume-offscreen.mjs', 'features/volume-page.js', 'features/volume-popup.mjs',
     'features/dark-mode-background.mjs', 'features/dark-mode-popup.mjs', 'features/dark-mode-page.js', 'features/dark-mode-engine.js',

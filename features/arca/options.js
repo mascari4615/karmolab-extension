@@ -2,7 +2,7 @@ const status = document.getElementById("status");
 
 function show(msg, ok = true) {
   status.textContent = msg;
-  status.style.color = ok ? "#0a0" : "#c00";
+  status.style.color = ok ? "#bde3bc" : "#ffaaaa";
 }
 
 /* 아카라이브. 저장 형식은 block-core.js 머리 주석, 기본값은 block-defaults.js */
@@ -144,7 +144,7 @@ function renderLists() {
           catch (error) { rm.disabled = false; show(error.message, false); }
         });
         const label = document.createElement("span");
-        label.textContent = `${site} / ${v.name} `;
+        label.textContent = `${v.name} `;
         const code = document.createElement("code");
         code.textContent = key;
         li.append(rm, label, code);

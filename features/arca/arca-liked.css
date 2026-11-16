@@ -45,6 +45,9 @@ html { scrollbar-color: var(--muted) var(--bg); }
 [hidden] { display: none !important; }
 @media (prefers-color-scheme: dark) { :root { --bg: #20232c; --surface: #282d38; --text: #eceef3; --muted: #b4bbcd; --line: #444b5e; --accent: #f19cba; --tint: #3c2d3a; } button { color: #252936; } }
 @media (prefers-color-scheme: dark) { .view-controls button[aria-pressed="true"] { color: #252936; } }
+:root { color-scheme:dark; --bg:#0f0f0f; --surface:#181818; --text:#f1f1f1; --muted:#aaa; --line:#383838; --accent:#9dc9ff; --tint:#292929; }
+button { background:#303030;color:#f1f1f1;border-color:#555; }
+.view-controls button[aria-pressed="true"] { background:#eee;color:#111; border-color:#eee; }
 @media (max-width: 640px) {
   main { padding: 24px 16px; }
   header { display: block; margin-bottom: 24px; }

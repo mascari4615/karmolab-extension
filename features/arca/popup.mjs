@@ -4,9 +4,12 @@ let enabled = false;
 async function render() {
   const result = await chrome.runtime.sendMessage({ type: 'arca.feature.status' });
   enabled = !!result.state?.enabled;
+  toggle.setAttribute('aria-pressed', String(enabled));
   toggle.textContent = enabled ? '아카라이브 기능 끄기' : '아카라이브 켜기, 기존 데이터 이전';
-  status.textContent = enabled ? `${result.state.migrated ? 'Dev 데이터 이전 완료. ' : ''}${result.permission ? '열린 아카라이브 탭은 새로고침하세요.' : '사이트 권한이 없습니다. 껐다가 다시 켜세요.'}` : '차단, 팔로우 글, 읽음 표시, 스크랩과 통계를 함께 관리합니다.';
+  status.textContent = enabled ? (result.permission ? '사용 중. 아래에서 차단과 팔로우를 관리하세요.' : '사이트 권한이 없습니다. 껐다가 다시 켜세요.') : '차단, 팔로우 글, 읽음 표시, 스크랩과 통계를 함께 관리합니다.';
   document.getElementById('arcaManage').disabled = !enabled;
+  document.getElementById('arcaSettingsFrame').hidden = !enabled;
+  document.getElementById('arcaManage').hidden = enabled;
   toggle.disabled = false;
 }
 toggle.addEventListener('click', async () => {
@@ -19,5 +22,5 @@ toggle.addEventListener('click', async () => {
     await render();
   } catch (error) { status.textContent = error.message; toggle.disabled = false; }
 });
-document.getElementById('arcaManage').addEventListener('click', () => chrome.runtime.sendMessage({ type: 'arca.settings.open' }));
+document.getElementById('arcaManage').addEventListener('click', () => { document.getElementById('arcaSettingsFrame').hidden = false; });
 render().catch(error => { status.textContent = error.message; });

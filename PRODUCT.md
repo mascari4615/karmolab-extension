@@ -17,7 +17,7 @@
 
 ## Current scope
 
-- User selected a KarmoLab button in YouTube's top bar opening a right-hand management panel.
+- User selected one unified extension popup with a left category sidebar. The KarmoLab button in YouTube's top bar is a shortcut to that popup, not a separate page panel.
 - Panel manages Korean translation, keyword editing, user blocking and unblock actions.
 - One keyword list covers comment bodies and video/Shorts titles in result, home, subscription and recommendation cards. Channel names and video descriptions stay outside title matching.
 - Blocking masks original text and thumbnails immediately after a match; only a neutral placeholder exits before the remaining cards move.

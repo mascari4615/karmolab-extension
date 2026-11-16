@@ -1,0 +1,28 @@
+body.kl-arca-options { margin:0 auto; padding:0; max-width:1120px; background:var(--kl-bg); color:var(--kl-text); font:14px/1.6 system-ui,sans-serif; }
+.kl-arca-options>h1 { font-size:20px; margin:24px 24px 4px; }
+.kl-arca-options>p { margin:4px 24px 12px; color:var(--kl-muted); }
+.kl-arca-options a { color:#9dc9ff; text-underline-offset:3px; }
+.kl-arca-options fieldset { margin:0 0 24px; padding:16px 0; border:0; border-bottom:1px solid var(--kl-line); min-width:0; }
+.kl-arca-options legend { font-size:16px; font-weight:600; padding:0; }
+.kl-arca-options p.hint { color:#aaa; line-height:1.6; font-size:13px; }
+.kl-arca-options button,.kl-arca-options input:not([type=checkbox]):not([type=radio]):not([type=color]),.kl-arca-options select,.kl-arca-options textarea { font:inherit; background:#202020; color:#f1f1f1; border:1px solid #666; border-radius:6px; padding:8px 10px; max-width:100%; box-sizing:border-box; min-height:40px; }
+.kl-arca-options button:hover { background:#353535; }
+.kl-arca-options input[type=checkbox],.kl-arca-options input[type=radio] { accent-color:#fff; width:16px;height:16px;vertical-align:middle; }
+.kl-arca-options label.opt { min-height:40px; padding:6px 0; box-sizing:border-box; }
+.kl-arca-options #lists ul { padding:0;list-style:none; }
+.kl-arca-options #lists li { display:flex; flex-wrap:wrap; gap:8px; padding:12px 0; border-top:1px solid #383838; }
+.kl-arca-options #lists li[hidden] { display:none; }
+.kl-arca-options #lists li input { min-width:0; flex:1 1 100px; }
+.kl-arca-options input[type=search] { width:100%; }
+.kl-arca-options #status { position:sticky; top:0; z-index:3; background:#181818; color:#bde3bc; padding:0 12px; margin:0; }
+.kl-arca-options #status:not(:empty) { padding:10px 12px; }
+.kl-arca-options.embedded>h1,.kl-arca-options.embedded>p:not(#status) { display:none; }
+.kl-arca-options.embedded .kl-settings-layout { display:block; }
+.kl-arca-options.embedded .kl-settings-nav { flex-direction:row;flex-wrap:wrap;position:sticky;top:0;z-index:2;padding:8px;background:#0f0f0f;border:0;border-bottom:1px solid #383838; }
+.kl-arca-options.embedded .kl-settings-nav button { padding:8px; min-height:40px; font-size:13px; }
+.kl-arca-options.embedded .kl-settings-pane>h1 { display:none; }
+.kl-arca-options.embedded .kl-settings-content { padding:16px; }
+.kl-arca-options .kl-settings-nav button { border:0;background:transparent; }
+.kl-arca-options .kl-settings-nav button[aria-selected="true"] { background:#353535;color:#fff; }
+.kl-arca-options .kl-settings-nav button:hover { background:#292929; }
+.kl-arca-options.embedded fieldset>p.hint { font-size:12px; }

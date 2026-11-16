@@ -108,6 +108,12 @@ chrome.runtime.onMessage.addListener((msg, sender, respond) => {
       return globalThis.KarmoBlockStore.apply(command);
     }
     if (msg.type === 'arca.liked.open' || msg.type === 'arca.settings.open') {
+      if (msg.type === 'arca.settings.open') {
+        await chrome.storage.session.set({ panelSection:'arca' });
+        try { await chrome.action.openPopup(sender.tab ? { windowId:sender.tab.windowId } : {}); }
+        catch { throw new Error('브라우저 오른쪽 위 KarmoLab 확장 아이콘을 눌러 아카라이브 설정을 여세요.'); }
+        return {};
+      }
       await chrome.tabs.create({ url: chrome.runtime.getURL(ROOT + (msg.type === 'arca.liked.open' ? 'arca-liked.html' : 'options.html')) }); return {};
     }
     throw new Error('지원하지 않는 아카라이브 요청');

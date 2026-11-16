@@ -1,5 +1,10 @@
 /* 팔로우 정본은 기존 likelist.arca, 프로필 결과만 별도 캐시 */
 (() => {
+  document.querySelector('a.settings')?.addEventListener('click', async event => {
+    event.preventDefault();
+    const result = await chrome.runtime.sendMessage({ type:'arca.settings.open' });
+    if (!result?.ok) document.getElementById('status').textContent = result?.error || 'KarmoLab 확장 아이콘에서 설정을 여세요.';
+  });
   const CACHE = "karmoLikedProfiles";
   const el = (id) => document.getElementById(id);
   const api = globalThis.KarmoProfile;
