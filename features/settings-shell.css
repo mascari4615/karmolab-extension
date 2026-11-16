@@ -12,7 +12,7 @@
 .kl-settings-layout input,.kl-settings-layout textarea { caret-color:var(--kl-text); accent-color:#fff; }
 .kl-settings-layout ::selection { background:#36536e; color:white; }
 .kl-settings-layout * { scrollbar-color:#666 var(--kl-bg); }
-body.kl-popup { width:600px; max-width:100vw; background:var(--kl-bg); }
+body.kl-popup { width:600px; background:var(--kl-bg); }
 .kl-popup .kl-settings-layout { height:490px; }
 .kl-popup .kl-settings-content { overflow-y:auto; overscroll-behavior:contain; }
 .kl-popup .kl-settings-pane>section,.kl-popup .kl-settings-pane>label { padding:12px 0 18px; }

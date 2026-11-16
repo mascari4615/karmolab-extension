@@ -4,7 +4,6 @@ const nativeChrome = globalThis.chrome;
 if (!(await nativeChrome.runtime.sendMessage({ type: 'arca.canRun' }))?.ok) return;
 if (document.documentElement.dataset.karmoArcaOwner) return;
 document.documentElement.dataset.karmoArcaOwner = nativeChrome.runtime.id;
-
 /**
  * 유저 차단 설정 기본값. 콘텐츠 스크립트 (block-core.js) 와 옵션 페이지가 함께 읽음
  * 저장 위치: chrome.storage.local 의 karmoSettings[사이트]. 저장된 값이 이 기본값을 덮음
