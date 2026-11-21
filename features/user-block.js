@@ -532,7 +532,7 @@
       if (key === 'keywordEnabled') { keywordEnabled = change.newValue !== false; relevant = true; }
       if (key === 'keywordVideos') { keywordVideos = change.newValue !== false; relevant = true; }
       if (key === 'keywordShorts') { keywordShorts = change.newValue !== false; relevant = true; }
-      if (key === 'keywordWords') { keywordWords = globalThis.KarmoKeywords?.parse((change.newValue || []).join('\n')) || []; relevant = true; }
+      if (key === 'keywordWords') { keywordWords = globalThis.KarmoKeywords?.merge(change.newValue) || []; relevant = true; }
       if (key.startsWith('keywordAutoBlockAllow:')) { const id = key.slice('keywordAutoBlockAllow:'.length); if (change.newValue) autoAllowed.add(id); else autoAllowed.delete(id); relevant = true; }
       if (key.startsWith(prefix)) {
         if (!change.newValue && change.oldValue?.autoKeyword) {
@@ -566,7 +566,7 @@
     keywordEnabled = values.keywordEnabled !== false;
     keywordVideos = values.keywordVideos !== false;
     keywordShorts = values.keywordShorts !== false;
-    keywordWords = globalThis.KarmoKeywords?.parse((values.keywordWords || []).join('\n')) || [];
+    keywordWords = globalThis.KarmoKeywords?.merge(values.keywordWords) || [];
     loaded = true;
     scan();
   }).catch(() => console.error('KarmoLab: ' + msg('blockLoadError')));

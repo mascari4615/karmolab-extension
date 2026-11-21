@@ -256,11 +256,16 @@
     loading = true; $('#retry').hidden = true; announce('panelLoading');
     const version = changeVersion;
     try {
+      await sendSettings({ type: 'karmolab.keywords.ready' });
       const [result, sync] = await Promise.all([chrome.storage.local.get(null), chrome.storage.sync.get({ shortsDate: true })]);
       if (version !== changeVersion) { loading = false; return load(); }
       values = result; syncValues = sync; loaded = true; status.textContent = ''; render();
     } catch { announce('panelLoadError'); $('#retry').hidden = false; }
     finally { loading = false; }
+  }
+  async function sendSettings(message) {
+    const result = await chrome.runtime.sendMessage(message);
+    if (!result?.ok) throw Object.assign(new Error('Settings could not be saved or read'), { partial: result?.partial });
   }
   $('#retry').addEventListener('click', () => void load());
   $('#search').addEventListener('input', renderBlocks);
@@ -271,7 +276,7 @@
     const version = draftVersion, storageVersion = changeVersion; savingWords = true; render();
     try {
       const autoWords = editor.automatic;
-      await chrome.storage.local.set({ keywordWords: parsed, keywordAutoBlockWords: autoWords });
+      await sendSettings({ type: 'karmolab.keywords.save', words: parsed, autoWords });
       if (storageVersion === changeVersion) { values.keywordWords = parsed; values.keywordAutoBlockWords = autoWords; }
       if (version === draftVersion) {
         dirty = false; words.value = parsed.join('\n');
@@ -354,7 +359,7 @@
     if (!selectedBackup || backupBusy) return;
     backupBusy = true; render();
     try {
-      await KarmoSettingsBackup.restore(selectedBackup, chrome.storage);
+      await sendSettings({ type: 'karmolab.backup.restore', backup: selectedBackup });
       selectedBackup = null; $('#importFile').value = ''; $('#preview').textContent = '';
       announce(dirty ? 'backupRestoredDraft' : 'backupRestored');
     } catch (error) { announce(error.partial ? 'backupPartialError' : 'backupRestoreError'); }
@@ -373,6 +378,11 @@
   const labels = ko ? ['화면과 재생','필터와 차단','숨긴 항목','백업'] : ['Viewing','Filters','Hidden items','Backup'];
   const nav = document.createElement('nav'); nav.setAttribute('role','tablist'); nav.setAttribute('aria-label',ko?'유튜브 설정':'YouTube settings');
   function select(index) { groups.forEach((ids,i)=>{ids.forEach(id=>{ if(sections[id]) sections[id].hidden=i!==index; }); nav.children[i].setAttribute('aria-selected',String(i===index));nav.children[i].tabIndex=i===index?0:-1;}); }
+  window.addEventListener('message', event => {
+    if (event.origin !== location.origin || event.source !== window.parent || event.data !== 'karmolab.openKeywords') return;
+    select(1);
+    $('#keywords').closest('section').scrollIntoView({ block: 'start' });
+  });
   labels.forEach((label,i)=>{const button=document.createElement('button');button.type='button';button.textContent=label;button.setAttribute('role','tab');button.addEventListener('click',()=>select(i));nav.append(button);});
   nav.addEventListener('keydown',event=>{const i=[...nav.children].indexOf(shadow.activeElement);let next=event.key==='ArrowRight'?(i+1)%4:event.key==='ArrowLeft'?(i+3)%4:event.key==='Home'?0:event.key==='End'?3:-1;if(next<0)return;event.preventDefault();select(next);nav.children[next].focus();});
   $('main').before(nav); select(0);

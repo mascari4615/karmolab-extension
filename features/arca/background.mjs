@@ -1,3 +1,4 @@
+import '../keyword-core.js';
 import './block-store.js';
 
 
@@ -56,7 +57,10 @@ chrome.runtime.onMessage.addListener((msg, sender, respond) => {
   return true;
 });
 chrome.permissions.onRemoved.addListener(() => { register().catch(console.error); });
-const recover = () => serial(register).catch(console.error);
+const recover = () => serial(async () => {
+  await globalThis.KarmoBlockStore.apply({ op: 'migrateKeywords' });
+  await register();
+}).catch(console.error);
 chrome.runtime.onStartup.addListener(recover);
 chrome.runtime.onInstalled.addListener(recover);
 recover();

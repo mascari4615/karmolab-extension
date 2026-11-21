@@ -13,7 +13,6 @@ globalThis.KARMO_BLOCK_DEFAULTS = {
   insight: true, // 좋아요 유저 새 글, 작성량 순위, 취향 제안 (왼쪽 패널)
   scanPages: 5, // 인사이트가 읽는 목록 쪽 수 (현재 쪽 포함)
   candSeen: 6, // 후보로 올리려면 최소로 본 글 수
-  keywords: [], // 제목에 들어 있으면 숨기는 단어. 대소문자 무시, re: 로 시작하면 정규식
   blockedChannels: [], // 채널 주소의 이름으로 차단, 개념글과 추천수 예외 없음
   autoBlockChannels: [], // 이 채널에 글 쓴 작성자 자동 완전 차단. 빈 목록이면 꺼짐
   autoBlockSeen: true,

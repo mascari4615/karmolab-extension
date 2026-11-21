@@ -71,6 +71,15 @@
     <button id="arcaManage" type="button" disabled>차단과 팔로우 관리</button>
     <p>켜거나 끈 뒤에는 열린 아카라이브 탭을 새로고침하세요. 저장된 목록은 유지됩니다.</p>
   </section>
+  <section class="utility" aria-labelledby="dcinsideHeading">
+    <h2 id="dcinsideHeading">디시인사이드</h2>
+    <p id="dcinsideStatus" role="status"></p>
+    <div class="actions">
+      <button id="dcinsideToggle" type="button" disabled>디시인사이드 켜기</button>
+      <button id="dcinsideKeywords" type="button">공통 키워드 편집</button>
+    </div>
+    <ul id="dcinsideBlocks" aria-label="차단된 디시인사이드 작성자"></ul>
+  </section>
   <footer><a href="https://lab.mascari4615.com/" target="_blank" data-msg="popupFooter"></a></footer>
   <script src="features/keyword-core.js"></script>
   <script src="features/control-icons.js"></script>
@@ -82,5 +91,6 @@
   <script type="module" src="features/volume-popup.mjs"></script>
   <script type="module" src="features/dark-mode-popup.mjs"></script>
   <script type="module" src="features/arca/popup.mjs"></script>
+  <script type="module" src="features/dcinside/popup.mjs"></script>
 </body>
 </html>

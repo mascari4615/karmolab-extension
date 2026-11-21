@@ -138,7 +138,7 @@
     /* 하단 블록의 해제: 키워드로 숨겼으면 그 키워드를 빼고, 아니면 차단 해제 */
     const release = (h) => h.channel
       ? mutate({ op: "channelRemove", channel: h.channel })
-      : h.keyword ? setSetting({ keywords: (settings.keywords || []).filter((k) => k !== h.keyword) }) : unblock(h.key);
+      : h.keyword ? mutate({ op: "keywordRemove", word: h.keyword }) : unblock(h.key);
     /* 차단 직후 토스트로 사유, 기간, 메모 */
     const setBlock = async (key, name, fields = {}) => {
       const { previous } = await mutate({ op: "block", key, name, fields });
@@ -607,7 +607,7 @@
           const un = document.createElement("button");
           un.type = "button";
           un.className = "un";
-          un.textContent = h.channel ? "채널 차단 해제" : h.keyword ? "키워드 빼기" : "차단 해제";
+          un.textContent = h.channel ? "채널 차단 해제" : h.keyword ? "공통 키워드 빼기" : "차단 해제";
           un.title = whyOf(h);
           un.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); release(h).catch(reportSave); });
           c.append(un);
@@ -630,7 +630,7 @@
           if (h.href) a.href = h.href;
           const un = document.createElement("button");
           un.type = "button";
-          un.textContent = h.channel ? "채널 차단 해제" : h.keyword ? "키워드 빼기" : "차단 해제";
+          un.textContent = h.channel ? "채널 차단 해제" : h.keyword ? "공통 키워드 빼기" : "차단 해제";
           un.title = whyOf(h);
           un.addEventListener("click", () => release(h).catch(reportSave));
           li.append(nm, a, un);
@@ -676,6 +676,7 @@
       likeMap = Object.assign(Object.create(null), (items[K.like] || {})[site] || {});
       const raw = items[K.settings] || {};
       settings = { ...DEFAULTS, ...(raw[site] || (raw.linkStyle ? raw : {})) };
+      settings.keywords = KarmoKeywords.merge(items.keywordWords, settings.keywords);
       if (!STYLES.includes(settings.linkStyle)) settings.linkStyle = DEFAULTS.linkStyle; // 옛 값 (lines, stripe)
       document.documentElement.dataset.karmoLink = settings.linkStyle;
       loaded = true;
@@ -688,10 +689,10 @@
       panelSig = "";
       schedule();
     }
-    const read = () => chrome.storage.local.get({ [K.block]: {}, [K.like]: {}, [K.settings]: {} }, load);
+    const read = () => chrome.storage.local.get({ [K.block]: {}, [K.like]: {}, [K.settings]: {}, keywordWords: [] }, load);
     read();
     chrome.storage.onChanged.addListener((ch, area) => {
-      if (area === "local" && (ch[K.block] || ch[K.like] || ch[K.settings])) read();
+      if (area === "local" && (ch[K.block] || ch[K.like] || ch[K.settings] || ch.keywordWords)) read();
     });
     const ours = (n) => n.nodeType === 1 && (n.classList.contains(MANAGER) || n.classList.contains(PANEL) || n.classList.contains(BLOCK) || n.classList.contains(BTNS) || n.classList.contains("karmo-toast"));
     new MutationObserver((muts) => {

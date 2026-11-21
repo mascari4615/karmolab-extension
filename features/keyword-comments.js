@@ -39,11 +39,11 @@
   const observer = new MutationObserver(schedule);
   chrome.storage.local.get({ keywordWords: [], keywordAutoBlockWords: [], keywordEnabled: true, keywordComments: true }).then(async values => {
     await review?.ready;
-    words = KarmoKeywords.parse(values.keywordWords.join('\n')); autoWords = KarmoKeywords.parse(values.keywordAutoBlockWords.join('\n')); enabled = values.keywordEnabled !== false; commentsEnabled = values.keywordComments !== false; loaded = true; scan();
+    words = KarmoKeywords.merge(values.keywordWords); autoWords = KarmoKeywords.parse(values.keywordAutoBlockWords.join('\n')); enabled = values.keywordEnabled !== false; commentsEnabled = values.keywordComments !== false; loaded = true; scan();
   }).catch(() => console.warn('KarmoLab: keyword settings could not be read'));
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || (!changes.keywordWords && !changes.keywordEnabled && !changes.keywordComments && !changes.keywordAutoBlockWords && !Object.keys(changes).some(key => key.startsWith('keywordAutoBlockAllow:')))) return;
-    if (changes.keywordWords) words = KarmoKeywords.parse((changes.keywordWords.newValue || []).join('\n'));
+    if (changes.keywordWords) words = KarmoKeywords.merge(changes.keywordWords.newValue);
     if (changes.keywordAutoBlockWords) autoWords = KarmoKeywords.parse((changes.keywordAutoBlockWords.newValue || []).join('\n'));
     if (changes.keywordEnabled) enabled = changes.keywordEnabled.newValue !== false;
     if (changes.keywordComments) commentsEnabled = changes.keywordComments.newValue !== false;

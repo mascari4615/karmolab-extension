@@ -167,7 +167,6 @@ function render() {
   el("scanPages").value = String(s.scanPages);
   el("candSeen").value = String(s.candSeen);
   el("reasonTags").value = (s.reasonTags || []).join(", ");
-  if (document.activeElement !== el("keywords")) el("keywords").value = (s.keywords || []).join(String.fromCharCode(10));
   if (document.activeElement !== el("blockedChannels")) el("blockedChannels").value = (s.blockedChannels || []).join(String.fromCharCode(10));
   if (document.activeElement !== el("autoBlockChannels")) el("autoBlockChannels").value = (s.autoBlockChannels || []).join(String.fromCharCode(10));
   el("autoBlockSeen").checked = s.autoBlockSeen !== false;
@@ -200,7 +199,10 @@ el("panel").addEventListener("change", (e) => patch({ panel: e.target.checked })
 el("hoverHl").addEventListener("change", (e) => patch({ hoverHl: e.target.checked }));
 el("resolveAccounts").addEventListener("change", (e) => patch({ resolveAccounts: e.target.checked }));
 el("reasonTags").addEventListener("change", (e) => patch({ reasonTags: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) }));
-el("keywords").addEventListener("change", (e) => patch({ keywords: e.target.value.split(String.fromCharCode(10)).map((x) => x.trim()).filter(Boolean) }));
+el("sharedKeywords").addEventListener("click", () => {
+  if (window.parent !== window) window.parent.postMessage("karmolab.openKeywords", location.origin);
+  else location.href = "../../popup.html#keywords";
+});
 function parseChannels(value) {
   const channels = [];
   for (const line of value.split(/\r?\n/).map((x) => x.trim()).filter(Boolean)) {

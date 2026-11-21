@@ -11,7 +11,7 @@
       search.style.cssText = 'width:100%;box-sizing:border-box;margin-top:8px;background:transparent;color:inherit;border:1px solid #777;padding:8px;font:inherit';
       list.style.cssText = 'max-height:240px;overflow:auto';
       let automatic = [], disabled = true;
-      const current = () => KarmoKeywords.parse(textarea.value);
+      const current = () => KarmoKeywords.merge(textarea.value.split('\n'));
       const commit = words => { textarea.value = words.join('\n'); error.textContent = ''; changed(); render(); };
       function render() {
         const words = current(), term = KarmoKeywords.normalize(search.value); list.replaceChildren();

@@ -4,7 +4,25 @@
   async function mutate(command) {
     const site = command.site || "arca";
     if (["__proto__", "prototype", "constructor"].includes(site)) throw new Error("지원하지 않는 저장 키");
-    const got = await chrome.storage.local.get({ blocklist: {}, likelist: {}, karmoSettings: {} });
+    const got = await chrome.storage.local.get({ blocklist: {}, likelist: {}, karmoSettings: {}, keywordWords: [] });
+    let keywordsChanged = false;
+    const migrate = config => {
+      if (!config || !Object.hasOwn(config, "keywords")) return;
+      got.keywordWords = KarmoKeywords.merge(got.keywordWords, config.keywords);
+      delete config.keywords;
+      keywordsChanged = true;
+    };
+    migrate(got.karmoSettings.arca);
+    migrate(got.karmoSettings);
+    if (command.op === "migrateKeywords" || command.op === "keywordReplace") {
+      const patch = keywordsChanged ? { keywordWords: got.keywordWords, karmoSettings: got.karmoSettings } : {};
+      if (command.op === "keywordReplace") {
+        patch.keywordWords = KarmoKeywords.parse(command.words.join("\n"));
+        patch.keywordAutoBlockWords = KarmoKeywords.parse(command.autoWords.join("\n"));
+      }
+      if (Object.keys(patch).length) await chrome.storage.local.set(patch);
+      return {};
+    }
     const blocks = got.blocklist[site] ||= {};
     const likes = got.likelist[site] ||= {};
     const settings = got.karmoSettings[site] ||= (site === "arca" && got.karmoSettings.linkStyle ? { ...got.karmoSettings } : {});
@@ -68,6 +86,10 @@
       case "channelRemove": settings.blockedChannels = (settings.blockedChannels || []).filter((c) => c !== command.channel); break;
       case "allowRemove": settings.autoAllowKeys = (settings.autoAllowKeys || []).filter((k) => k !== key); break;
       case "settings": Object.assign(settings, command.patch); prune(); break;
+      case "keywordRemove":
+        got.keywordWords = got.keywordWords.filter(word => word !== command.word);
+        keywordsChanged = true;
+        break;
       case "prune": prune(); break;
       case "import":
         for (const [kind, target] of [["block", got.blocklist], ["like", got.likelist]]) {
@@ -80,10 +102,16 @@
             }
           }
         }
-        for (const [site, config] of Object.entries(command.data.settings || {})) if (config && typeof config === "object" && !["__proto__", "prototype", "constructor"].includes(site)) got.karmoSettings[site] = { ...config, ...(got.karmoSettings[site] || {}) };
+        for (const [site, config] of Object.entries(command.data.settings || {})) {
+          if (!config || typeof config !== "object" || ["__proto__", "prototype", "constructor"].includes(site)) continue;
+          const imported = { ...config };
+          if (site === "arca") migrate(imported);
+          got.karmoSettings[site] = { ...imported, ...(got.karmoSettings[site] || {}) };
+        }
         break;
       default: throw new Error("지원하지 않는 차단 변경");
     }
+    if (!keywordsChanged) delete got.keywordWords;
     await chrome.storage.local.set(got);
     return { previous, changed: true, added };
   }

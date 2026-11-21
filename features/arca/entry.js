@@ -4,6 +4,37 @@ const nativeChrome = globalThis.chrome;
 if (!(await nativeChrome.runtime.sendMessage({ type: 'arca.canRun' }))?.ok) return;
 if (document.documentElement.dataset.karmoArcaOwner) return;
 document.documentElement.dataset.karmoArcaOwner = nativeChrome.runtime.id;
+(() => {
+  const normalize = text => String(text).normalize('NFKC').toLowerCase().replace(/\ufe0f/g, '').replace(/\s+/g, ' ').trim();
+  function merge(...lists) {
+    const unique = new Map();
+    for (const list of lists) {
+      if (!Array.isArray(list)) continue;
+      for (const value of list) {
+        if (typeof value !== 'string') continue;
+        const word = value.trim();
+        const key = word.startsWith('re:') ? word : normalize(word);
+        if (key && !unique.has(key)) unique.set(key, word);
+      }
+    }
+    return [...unique.values()];
+  }
+  function parse(text) {
+    const unique = new Map();
+    for (const word of String(text).split(/\r?\n/).map(word => word.trim()).filter(Boolean)) {
+      if (word.length > 200) throw new Error('Keyword too long');
+      if (!unique.has(normalize(word))) unique.set(normalize(word), word);
+    }
+    if (unique.size > 200) throw new Error('Too many keywords');
+    return [...unique.values()];
+  }
+  const match = (text, words) => { const value = normalize(text); return words.find(word => value.includes(normalize(word))) || null; };
+  const api = { normalize, parse, merge, match };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else globalThis.KarmoKeywords = api;
+})();
+
+;
 /**
  * 유저 차단 설정 기본값. 콘텐츠 스크립트 (block-core.js) 와 옵션 페이지가 함께 읽음
  * 저장 위치: chrome.storage.local 의 karmoSettings[사이트]. 저장된 값이 이 기본값을 덮음
@@ -19,7 +50,6 @@ globalThis.KARMO_BLOCK_DEFAULTS = {
   insight: true, // 좋아요 유저 새 글, 작성량 순위, 취향 제안 (왼쪽 패널)
   scanPages: 5, // 인사이트가 읽는 목록 쪽 수 (현재 쪽 포함)
   candSeen: 6, // 후보로 올리려면 최소로 본 글 수
-  keywords: [], // 제목에 들어 있으면 숨기는 단어. 대소문자 무시, re: 로 시작하면 정규식
   blockedChannels: [], // 채널 주소의 이름으로 차단, 개념글과 추천수 예외 없음
   autoBlockChannels: [], // 이 채널에 글 쓴 작성자 자동 완전 차단. 빈 목록이면 꺼짐
   autoBlockSeen: true,
@@ -317,7 +347,7 @@ globalThis.KARMO_BLOCK_DEFAULTS = {
     /* 하단 블록의 해제: 키워드로 숨겼으면 그 키워드를 빼고, 아니면 차단 해제 */
     const release = (h) => h.channel
       ? mutate({ op: "channelRemove", channel: h.channel })
-      : h.keyword ? setSetting({ keywords: (settings.keywords || []).filter((k) => k !== h.keyword) }) : unblock(h.key);
+      : h.keyword ? mutate({ op: "keywordRemove", word: h.keyword }) : unblock(h.key);
     /* 차단 직후 토스트로 사유, 기간, 메모 */
     const setBlock = async (key, name, fields = {}) => {
       const { previous } = await mutate({ op: "block", key, name, fields });
@@ -786,7 +816,7 @@ globalThis.KARMO_BLOCK_DEFAULTS = {
           const un = document.createElement("button");
           un.type = "button";
           un.className = "un";
-          un.textContent = h.channel ? "채널 차단 해제" : h.keyword ? "키워드 빼기" : "차단 해제";
+          un.textContent = h.channel ? "채널 차단 해제" : h.keyword ? "공통 키워드 빼기" : "차단 해제";
           un.title = whyOf(h);
           un.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); release(h).catch(reportSave); });
           c.append(un);
@@ -809,7 +839,7 @@ globalThis.KARMO_BLOCK_DEFAULTS = {
           if (h.href) a.href = h.href;
           const un = document.createElement("button");
           un.type = "button";
-          un.textContent = h.channel ? "채널 차단 해제" : h.keyword ? "키워드 빼기" : "차단 해제";
+          un.textContent = h.channel ? "채널 차단 해제" : h.keyword ? "공통 키워드 빼기" : "차단 해제";
           un.title = whyOf(h);
           un.addEventListener("click", () => release(h).catch(reportSave));
           li.append(nm, a, un);
@@ -855,6 +885,7 @@ globalThis.KARMO_BLOCK_DEFAULTS = {
       likeMap = Object.assign(Object.create(null), (items[K.like] || {})[site] || {});
       const raw = items[K.settings] || {};
       settings = { ...DEFAULTS, ...(raw[site] || (raw.linkStyle ? raw : {})) };
+      settings.keywords = KarmoKeywords.merge(items.keywordWords, settings.keywords);
       if (!STYLES.includes(settings.linkStyle)) settings.linkStyle = DEFAULTS.linkStyle; // 옛 값 (lines, stripe)
       document.documentElement.dataset.karmoLink = settings.linkStyle;
       loaded = true;
@@ -867,10 +898,10 @@ globalThis.KARMO_BLOCK_DEFAULTS = {
       panelSig = "";
       schedule();
     }
-    const read = () => chrome.storage.local.get({ [K.block]: {}, [K.like]: {}, [K.settings]: {} }, load);
+    const read = () => chrome.storage.local.get({ [K.block]: {}, [K.like]: {}, [K.settings]: {}, keywordWords: [] }, load);
     read();
     chrome.storage.onChanged.addListener((ch, area) => {
-      if (area === "local" && (ch[K.block] || ch[K.like] || ch[K.settings])) read();
+      if (area === "local" && (ch[K.block] || ch[K.like] || ch[K.settings] || ch.keywordWords)) read();
     });
     const ours = (n) => n.nodeType === 1 && (n.classList.contains(MANAGER) || n.classList.contains(PANEL) || n.classList.contains(BLOCK) || n.classList.contains(BTNS) || n.classList.contains("karmo-toast"));
     new MutationObserver((muts) => {
@@ -1469,7 +1500,7 @@ function keywordHit(row, list) {
   const title = squash(row.querySelector(".title")?.textContent, 300).toLowerCase();
   for (const k of list) {
     try {
-      if (k.startsWith("re:") ? new RegExp(k.slice(3), "i").test(title) : title.includes(k.toLowerCase())) return k;
+      if (k.startsWith("re:") ? new RegExp(k.slice(3), "i").test(title) : KarmoKeywords.match(title, [k])) return k;
     } catch {
       /* 깨진 정규식은 건너뜀 */
     }
@@ -1498,11 +1529,19 @@ KarmoBlock.start({
     if (api.ready) globalThis.KarmoInsight?.start(api);
     if (api.ready) globalThis.KarmoAutoBlock?.start(api);
     const channels = new Set(api.settings.blockedChannels || []);
+    const hiddenRows = new Set();
     for (const row of root.querySelectorAll("a.vrow")) {
       if (row.closest(".karmo-blocked-block")) continue;
       const channel = channelOf(row);
       if (channel && channels.has(channel)) {
         api.hide(row, { ...summary(row, `channel:${channel}`, channel), channel, reason: "채널" });
+        hiddenRows.add(row);
+        continue;
+      }
+      const kw = !row.classList.contains("notice") && keywordHit(row, api.settings.keywords);
+      if (kw) {
+        api.hide(row, { ...summary(row, `kw:${kw}`, `키워드 ${kw}`), keyword: kw, reason: "키워드" });
+        hiddenRows.add(row);
       } else if (postOf(row.getAttribute("href"))) {
         const href = row.getAttribute("href");
         api.addChannelButton(row.querySelector(".user-info") || row.querySelector(".title") || row, channel, {
@@ -1515,13 +1554,8 @@ KarmoBlock.start({
       let key = el.getAttribute("data-filter");
       if (!key || el.closest(".karmo-blocked-block")) continue;
       const row = el.closest("a.vrow, .comment-item");
-      const channelHidden = row?.matches("a.vrow") && channels.has(channelOf(row));
-      if (channelHidden && !api.settings.autoBlockChannels?.length) continue;
-      // 키워드 숨김은 글쓴이 확인보다 먼저 (번호 확인 전에도 적용)
-      const kw = !channelHidden && row?.matches("a.vrow") && !row.classList.contains("notice") ? keywordHit(row, api.settings.keywords) : "";
-      if (kw) {
-        api.hide(row, { ...summary(row, `kw:${kw}`, `키워드 ${kw}`), keyword: kw, reason: "키워드" });
-      }
+      const hidden = hiddenRows.has(row);
+      if (hidden && !api.settings.autoBlockChannels?.length) continue;
       // 목록 줄의 계정 유저: 글을 열어 확인한 `닉#번호` 로 바꿔 쓴다 (공지 줄은 대상 아님)
       if (row?.matches("a.vrow") && !row.classList.contains("notice") && !key.includes("#") && isAccount(el)) {
         key = resolveHref(row.getAttribute("href"), { ...api.settings, resolveAccounts: api.settings.resolveAccounts || !!api.settings.autoBlockChannels?.length });
@@ -1530,7 +1564,7 @@ KarmoBlock.start({
       if (!isUnique(el, key)) continue;
       const name = el.textContent.trim() || key;
       if (row?.matches("a.vrow")) globalThis.KarmoAutoBlock?.inspect({ key, name, channel: channelOf(row) });
-      if (channelHidden || kw) continue;
+      if (hidden) continue;
       const blocked = api.isBlocked(key);
       if (row && blocked) {
         // 일반 차단의 목록 글만 예외 판정. 2단계는 개념글과 추천수 예외도 숨김

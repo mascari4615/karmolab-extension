@@ -1,0 +1,13 @@
+.kl-dc-hidden { display: none !important; }
+.kl-dc-block {
+  appearance: none;
+  margin-inline-start: 5px;
+  padding: 2px 5px;
+  color: inherit;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font: 11px/1.25 system-ui, sans-serif;
+  cursor: pointer;
+}
+.kl-dc-block:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }

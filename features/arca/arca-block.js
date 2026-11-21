@@ -155,7 +155,7 @@ function keywordHit(row, list) {
   const title = squash(row.querySelector(".title")?.textContent, 300).toLowerCase();
   for (const k of list) {
     try {
-      if (k.startsWith("re:") ? new RegExp(k.slice(3), "i").test(title) : title.includes(k.toLowerCase())) return k;
+      if (k.startsWith("re:") ? new RegExp(k.slice(3), "i").test(title) : KarmoKeywords.match(title, [k])) return k;
     } catch {
       /* 깨진 정규식은 건너뜀 */
     }
@@ -184,11 +184,19 @@ KarmoBlock.start({
     if (api.ready) globalThis.KarmoInsight?.start(api);
     if (api.ready) globalThis.KarmoAutoBlock?.start(api);
     const channels = new Set(api.settings.blockedChannels || []);
+    const hiddenRows = new Set();
     for (const row of root.querySelectorAll("a.vrow")) {
       if (row.closest(".karmo-blocked-block")) continue;
       const channel = channelOf(row);
       if (channel && channels.has(channel)) {
         api.hide(row, { ...summary(row, `channel:${channel}`, channel), channel, reason: "채널" });
+        hiddenRows.add(row);
+        continue;
+      }
+      const kw = !row.classList.contains("notice") && keywordHit(row, api.settings.keywords);
+      if (kw) {
+        api.hide(row, { ...summary(row, `kw:${kw}`, `키워드 ${kw}`), keyword: kw, reason: "키워드" });
+        hiddenRows.add(row);
       } else if (postOf(row.getAttribute("href"))) {
         const href = row.getAttribute("href");
         api.addChannelButton(row.querySelector(".user-info") || row.querySelector(".title") || row, channel, {
@@ -201,13 +209,8 @@ KarmoBlock.start({
       let key = el.getAttribute("data-filter");
       if (!key || el.closest(".karmo-blocked-block")) continue;
       const row = el.closest("a.vrow, .comment-item");
-      const channelHidden = row?.matches("a.vrow") && channels.has(channelOf(row));
-      if (channelHidden && !api.settings.autoBlockChannels?.length) continue;
-      // 키워드 숨김은 글쓴이 확인보다 먼저 (번호 확인 전에도 적용)
-      const kw = !channelHidden && row?.matches("a.vrow") && !row.classList.contains("notice") ? keywordHit(row, api.settings.keywords) : "";
-      if (kw) {
-        api.hide(row, { ...summary(row, `kw:${kw}`, `키워드 ${kw}`), keyword: kw, reason: "키워드" });
-      }
+      const hidden = hiddenRows.has(row);
+      if (hidden && !api.settings.autoBlockChannels?.length) continue;
       // 목록 줄의 계정 유저: 글을 열어 확인한 `닉#번호` 로 바꿔 쓴다 (공지 줄은 대상 아님)
       if (row?.matches("a.vrow") && !row.classList.contains("notice") && !key.includes("#") && isAccount(el)) {
         key = resolveHref(row.getAttribute("href"), { ...api.settings, resolveAccounts: api.settings.resolveAccounts || !!api.settings.autoBlockChannels?.length });
@@ -216,7 +219,7 @@ KarmoBlock.start({
       if (!isUnique(el, key)) continue;
       const name = el.textContent.trim() || key;
       if (row?.matches("a.vrow")) globalThis.KarmoAutoBlock?.inspect({ key, name, channel: channelOf(row) });
-      if (channelHidden || kw) continue;
+      if (hidden) continue;
       const blocked = api.isBlocked(key);
       if (row && blocked) {
         // 일반 차단의 목록 글만 예외 판정. 2단계는 개념글과 추천수 예외도 숨김

@@ -13,7 +13,9 @@ async function system({ permission = true, failRegister = false, enabled = false
     permissions:{async contains(){return permission;},onRemoved:event()},
     scripting:{async getRegisteredContentScripts(){return scripts;},async registerContentScripts(items){if(failRegister)throw Error('registration failed');scripts.push(...items);},async unregisterContentScripts(){scripts.length=0;}},
   };
-  vm.runInNewContext(code,{chrome,console,Date});
+  const sandbox = vm.createContext({ chrome, console, Date, structuredClone });
+  for (const file of ['features/keyword-core.js', 'features/arca/block-store.js']) vm.runInContext(await read(file), sandbox);
+  vm.runInContext(code, sandbox);
   const send=(type,sender={id:'self',url:chrome.runtime.getURL('popup.html')})=>new Promise(resolve=>{if(!handler({type},sender,resolve))resolve(undefined);});
   await send('arca.feature.status');
   return {data,scripts,send};
