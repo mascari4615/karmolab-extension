@@ -26,9 +26,15 @@ async function renderList() {
     const row = document.createElement('li');
     const name = document.createElement('span');
     name.textContent = entry.name === key ? key : `${entry.name} (${key})`;
+    if (entry.autoKeyword) {
+      const reason = document.createElement('small');
+      reason.textContent = `키워드 자동 차단: ${entry.autoKeyword}`;
+      name.append(reason);
+    }
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.textContent = '차단 해제';
+    if (entry.autoKeyword) remove.title = '이 작성자를 자동 차단 예외로 등록';
     remove.addEventListener('click', async () => {
       remove.disabled = true;
       try { await send({ type: 'dcinside.remove', key }); }

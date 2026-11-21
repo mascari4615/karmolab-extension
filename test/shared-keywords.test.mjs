@@ -7,6 +7,7 @@ async function setup(initial) {
   const data = structuredClone(initial);
   const storage = {
     async get(defaults) {
+      if (typeof defaults === 'string') return { [defaults]: structuredClone(data[defaults]) };
       return structuredClone(Object.fromEntries(Object.entries(defaults).map(([key, value]) => [key, data[key] ?? value])));
     },
     async set(fields) { Object.assign(data, structuredClone(fields)); },
@@ -31,6 +32,28 @@ test('migration combines both legacy Arca formats and preserves other settings a
   await apply({ op: 'keywordRemove', word: 'arca' });
   await apply({ op: 'migrateKeywords' });
   assert.ok(!data.keywordWords.includes('arca'));
+});
+
+test('DC title auto-blocks are idempotent, respect current shared rules and stay removed after unblock', async () => {
+  const { data, apply } = await setup({
+    keywordWords: ['common', 'hide only'], keywordAutoBlockWords: ['COMMON', 'deleted'],
+    blocklist: { dcinside: { manual: { name: 'Manual' } } },
+  });
+  const candidates = [
+    { key: 'author', name: 'Author', word: 'common' },
+    { key: 'manual', name: 'Manual', word: 'common' },
+    { key: 'hideonly', name: 'Hide only', word: 'hide only' },
+    { key: 'stale', name: 'Stale', word: 'deleted' },
+  ];
+  const auto = () => apply({ op: 'dcKeywordBlocks', site: 'dcinside', candidates });
+  const results = await Promise.all([auto(), auto()]);
+  assert.deepEqual(results.map(result => result.added), [1, 0]);
+  assert.deepEqual(Object.keys(data.blocklist.dcinside).sort(), ['author', 'manual']);
+  assert.equal(data.blocklist.dcinside.author.autoKeyword, 'common');
+  assert.deepEqual(data.blocklist.dcinside.manual, { name: 'Manual' });
+  await apply({ op: 'remove', site: 'dcinside', key: 'author' });
+  assert.equal((await auto()).added, 0);
+  assert.deepEqual(data.karmoSettings.dcinside.autoAllowKeys, ['author']);
 });
 
 test('old Arca backups merge keywords into the shared list and DC blocks remain in their own namespace', async () => {

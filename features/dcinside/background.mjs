@@ -4,6 +4,8 @@ const permission = { origins: matches };
 const files = ['features/keyword-core.js', 'features/dcinside/block.js'];
 const enabled = async () => (await chrome.storage.local.get('dcinsideEnabled')).dcinsideEnabled === true;
 let tail = Promise.resolve();
+const validKey = key => typeof key === 'string' && /^[a-z0-9_-]{1,64}$/.test(key);
+const authorName = ({ name, key }) => String(name || key).slice(0, 100);
 
 async function register(active) {
   const found = await chrome.scripting.getRegisteredContentScripts({ ids: [id] });
@@ -40,11 +42,17 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       return { enabled: active };
     }
     if (message.type === 'dcinside.running' && page) return { enabled: await enabled() && hasPermission };
+    if (message.type === 'dcinside.keywordBlocks' && page && hasPermission && await enabled()) {
+      if (!Array.isArray(message.candidates)) throw Error('Invalid keyword matches.');
+      const candidates = message.candidates.filter(item => validKey(item?.key) && typeof item.word === 'string')
+        .map(item => ({ key: item.key, name: authorName(item), word: item.word }));
+      return globalThis.KarmoBlockStore.apply({ site: 'dcinside', op: 'dcKeywordBlocks', candidates });
+    }
     if ((message.type === 'dcinside.block' && page && hasPermission && await enabled()) ||
         (message.type === 'dcinside.remove' && popup)) {
-      if (typeof message.key !== 'string' || !/^[a-z0-9_-]{1,64}$/i.test(message.key)) throw Error('Invalid account.');
+      if (!validKey(message.key)) throw Error('Invalid account.');
       const op = message.type === 'dcinside.block' ? 'block' : 'remove';
-      return globalThis.KarmoBlockStore.apply({ site: 'dcinside', op, key: message.key, name: String(message.name || message.key).slice(0, 100) });
+      return globalThis.KarmoBlockStore.apply({ site: 'dcinside', op, key: message.key, name: authorName(message) });
     }
     throw Error('Unsupported DC Inside request.');
   }).then(value => respond({ ok: true, ...value }), error => respond({ ok: false, error: error.message }));

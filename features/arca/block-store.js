@@ -44,6 +44,18 @@
       }
     };
     switch (command.op) {
+      case "dcKeywordBlocks": {
+        const { keywordAutoBlockWords } = await chrome.storage.local.get("keywordAutoBlockWords");
+        const active = new Set(KarmoKeywords.automatic(got.keywordWords, keywordAutoBlockWords));
+        const allowed = new Set(settings.autoAllowKeys || []);
+        for (const { key, name, word } of command.candidates) {
+          if (Object.hasOwn(blocks, key) || allowed.has(key) || !active.has(word)) continue;
+          blocks[key] = { name, at: new Date().toISOString(), autoKeyword: word };
+          added++;
+        }
+        if (!added && !keywordsChanged) return { added };
+        break;
+      }
       case "block": {
         if (!key || typeof key !== "string") throw new Error("작성자 키 없음");
         const fields = command.fields || {};
@@ -59,7 +71,9 @@
         break;
       }
       case "remove":
-        if (previous?.autoChannel) settings.autoAllowKeys = [...new Set([...(settings.autoAllowKeys || []), key])];
+        if (previous?.autoChannel || (site === "dcinside" && previous?.autoKeyword)) {
+          settings.autoAllowKeys = [...new Set([...(settings.autoAllowKeys || []), key])];
+        }
         delete blocks[key];
         break;
       case "restore":

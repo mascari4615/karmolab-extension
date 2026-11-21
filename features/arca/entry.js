@@ -20,16 +20,18 @@ document.documentElement.dataset.karmoArcaOwner = nativeChrome.runtime.id;
     return [...unique.values()];
   }
   function parse(text) {
-    const unique = new Map();
-    for (const word of String(text).split(/\r?\n/).map(word => word.trim()).filter(Boolean)) {
-      if (word.length > 200) throw new Error('Keyword too long');
-      if (!unique.has(normalize(word))) unique.set(normalize(word), word);
-    }
-    if (unique.size > 200) throw new Error('Too many keywords');
-    return [...unique.values()];
+    const words = String(text).split(/\r?\n/).map(word => word.trim());
+    if (words.some(word => word.length > 200)) throw new Error('Keyword too long');
+    const unique = merge(words);
+    if (unique.length > 200) throw new Error('Too many keywords');
+    return unique;
   }
   const match = (text, words) => { const value = normalize(text); return words.find(word => value.includes(normalize(word))) || null; };
-  const api = { normalize, parse, merge, match };
+  function automatic(words, autoWords) {
+    const selected = new Set(merge(autoWords).map(normalize));
+    return merge(words).filter(word => selected.has(normalize(word)));
+  }
+  const api = { normalize, parse, merge, match, automatic };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else globalThis.KarmoKeywords = api;
 })();

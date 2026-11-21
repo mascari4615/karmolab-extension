@@ -21,7 +21,11 @@
     return unique;
   }
   const match = (text, words) => { const value = normalize(text); return words.find(word => value.includes(normalize(word))) || null; };
-  const api = { normalize, parse, merge, match };
+  function automatic(words, autoWords) {
+    const selected = new Set(merge(autoWords).map(normalize));
+    return merge(words).filter(word => selected.has(normalize(word)));
+  }
+  const api = { normalize, parse, merge, match, automatic };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else globalThis.KarmoKeywords = api;
 })();
