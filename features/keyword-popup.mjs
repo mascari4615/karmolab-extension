@@ -5,9 +5,12 @@ const discard = byId('keywordDiscard');
 const status = byId('keywordStatus');
 const sync = byId('keywordSync');
 const syncStatus = byId('keywordSyncStatus');
+const blockSync = byId('blockListSync');
+const blockStatus = byId('blockListSyncStatus');
+const retryBlocks = byId('blockListSyncRetry');
 const msg = key => chrome.i18n.getMessage(key);
 const draftKey = 'youtubeKeywordDraft';
-const keys = ['keywordWords', 'keywordAutoBlockWords', 'keywordSyncEnabled'];
+const keys = ['keywordWords', 'keywordAutoBlockWords', 'keywordSyncEnabled', 'blockSyncEnabled', 'blockSyncError'];
 let current;
 let base;
 let dirty = false;
@@ -39,8 +42,14 @@ function render() {
   const locked = !current || busy;
   save.disabled = locked || !dirty;
   discard.disabled = sync.disabled = locked;
+  blockSync.disabled = locked || !current?.keywordSyncEnabled;
   discard.hidden = !dirty;
-  if (!busy) sync.checked = current?.keywordSyncEnabled === true;
+  if (!busy) {
+    sync.checked = current?.keywordSyncEnabled === true;
+    blockSync.checked = current?.blockSyncEnabled === true && sync.checked;
+  }
+  retryBlocks.hidden = !current?.blockSyncError || !current?.keywordSyncEnabled || !current?.blockSyncEnabled;
+  retryBlocks.disabled = locked;
   editor.lock(locked);
 }
 async function read() {
@@ -48,6 +57,7 @@ async function read() {
   const data = await chrome.storage.local.get(keys);
   if (revision !== loads) return;
   current = data;
+  blockStatus.textContent = data.keywordSyncEnabled && data.blockSyncEnabled ? data.blockSyncError || '' : '';
   if (!dirty) {
     base = signature(data);
     editor.set(data.keywordWords || [], data.keywordAutoBlockWords || [], busy);
@@ -92,6 +102,23 @@ sync.addEventListener('change', () => {
     } catch (error) { syncStatus.textContent = error.message; }
   });
 });
+blockSync.addEventListener('change', () => {
+  const enabled = blockSync.checked;
+  void action(async () => {
+    try {
+      await send('blockSync', { enabled });
+      await read();
+      blockStatus.textContent = enabled ? '차단 목록 동기화를 켰습니다.' : '이 기기의 차단 목록 동기화를 껐습니다.';
+    } catch (error) { blockStatus.textContent = error.message; }
+  });
+});
+retryBlocks.addEventListener('click', () => action(async () => {
+  try {
+    await send('retryBlocks');
+    await read();
+    if (!current?.blockSyncError) blockStatus.textContent = '차단 목록을 동기화했습니다.';
+  } catch (error) { blockStatus.textContent = error.message; }
+}));
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && keys.some(key => Object.hasOwn(changes, key))) read().catch(() => show('panelLoadError'));
 });

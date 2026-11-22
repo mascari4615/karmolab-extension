@@ -6,7 +6,7 @@ export function runtimeFiles(manifest) {
     'background.mjs', 'features/shorts-playback-background.mjs', 'features/volume-background.mjs', 'features/volume-core.mjs', 'features/volume-offscreen.html', 'features/volume-offscreen.mjs', 'features/volume-page.js', 'features/volume-popup.mjs',
     'features/dark-mode-background.mjs', 'features/dark-mode-popup.mjs', 'features/dark-mode-page.js', 'features/dark-mode-engine.js',
     ...['background.mjs', 'popup.mjs', 'gallery.js', 'block.js', 'block.css'].map(file => `features/dcinside/${file}`),
-    'features/keyword-background.mjs', 'features/keyword-sync.mjs', 'features/keyword-popup.mjs',
+    'features/keyword-background.mjs', 'features/keyword-sync.mjs', 'features/keyword-popup.mjs', 'features/block-sync.mjs', 'features/sync-snapshot.mjs',
     ...['background.mjs', 'popup.mjs', 'data.js', 'feed-api.js', 'entry.js', 'block-store.js', 'block-defaults.js', 'block-toast.js', 'block-core.js', 'arca-profile.js', 'arca-auto-block.js', 'arca-insight.js', 'arca-block.js', 'arca-seen.js', 'arca-scrap.js', 'arca-liked-link.js', 'arca-liked.html', 'arca-liked.js', 'arca-liked.css', 'options.html', 'options.js', 'vendor/article-list.js', 'vendor/article-list.css'].map(file => `features/arca/${file}`),
     '_locales/ko/messages.json', '_locales/en/messages.json',
     ...Object.values(manifest.icons || {}),
