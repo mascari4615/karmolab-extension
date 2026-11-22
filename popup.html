@@ -36,6 +36,7 @@
     .volume-row { display: flex; align-items: center; gap: 8px; }
     .volume-row input[type="range"] { flex: 1; min-width: 0; min-height: 36px; accent-color: #fff; }
     input[type="number"] { width: 55px; padding: 6px; background: #111; color: #fff; border: 1px solid #777; font: inherit; }
+    #dcinsideGalleryInput { flex: 1; min-width: 120px; background: #111; color: #fff; border: 1px solid #777; padding: 6px; font: inherit; }
     .utility button { border-radius: 4px; min-height: 36px; }
     .utility .actions { display: flex; gap: 8px; flex-wrap: wrap; }
     textarea { width: 100%; box-sizing: border-box; min-height: 80px; padding: 8px; border: 1px solid #777; border-radius: 4px; background: #111; color: #fff; font: inherit; resize: vertical; }
@@ -79,13 +80,36 @@
       <button id="dcinsideKeywords" type="button">공통 키워드 편집</button>
     </div>
     <p>작성자 자동 차단을 켠 공통 키워드가 글 제목에 있으면 작성자도 차단 목록에 추가됩니다.</p>
+    <h3>갤러리 차단</h3>
+    <form id="dcinsideGalleryForm" class="actions">
+      <input type="text" id="dcinsideGalleryInput" placeholder="갤러리 URL 또는 ID" aria-label="갤러리 URL 또는 ID" required>
+      <button type="submit">갤러리 차단</button>
+    </form>
+    <button id="dcinsideCurrentGallery" type="button" hidden>현재 갤러리 차단</button>
+    <ul id="dcinsideGalleries" aria-label="차단된 디시인사이드 갤러리"></ul>
+    <h3>작성자 차단</h3>
     <ul id="dcinsideBlocks" aria-label="차단된 디시인사이드 작성자"></ul>
+  </section>
+  <section id="keywordsSection" class="utility" aria-label="공통 키워드">
+    <p data-msg="keywordWordsLabel"></p>
+    <textarea id="keywordText" hidden></textarea>
+    <div id="keywordEditor"></div>
+    <div class="actions">
+      <button id="keywordSave" type="button" disabled data-msg="keywordSave"></button>
+      <button id="keywordDiscard" type="button" hidden>초안 버리기</button>
+    </div>
+    <p id="keywordStatus" role="status"></p>
+    <h3>동기화</h3>
+    <label><input id="keywordSync" type="checkbox" disabled> 같은 브라우저 계정으로 키워드 동기화</label>
+    <p>같은 확장에서 키워드와 작성자 자동 차단 설정을 공유합니다. 처음 켤 때 두 목록을 합칩니다.</p>
+    <p id="keywordSyncStatus" role="status"></p>
   </section>
   <footer><a href="https://lab.mascari4615.com/" target="_blank" data-msg="popupFooter"></a></footer>
   <script src="features/keyword-core.js"></script>
   <script src="features/control-icons.js"></script>
   <script src="features/keyword-editor.js"></script>
   <script src="features/auto-block-exceptions.js"></script>
+  <script src="features/dcinside/gallery.js"></script>
   <script src="features/settings-navigation.js"></script>
   <script src="features/popup-navigation.js"></script>
   <script src="popup.js"></script>
@@ -93,5 +117,6 @@
   <script type="module" src="features/dark-mode-popup.mjs"></script>
   <script type="module" src="features/arca/popup.mjs"></script>
   <script type="module" src="features/dcinside/popup.mjs"></script>
+  <script type="module" src="features/keyword-popup.mjs"></script>
 </body>
 </html>

@@ -1,4 +1,6 @@
 .kl-dc-hidden { display: none !important; }
+.kl-dc-gallery-hidden body > :not(.kl-dc-gallery-cover) { display: none !important; }
+.kl-dc-gallery-cover { box-sizing: border-box; max-width: 42rem; margin: 12vh auto; padding: 24px; font: 16px/1.5 system-ui, sans-serif; }
 .kl-dc-block {
   appearance: none;
   margin-inline-start: 5px;

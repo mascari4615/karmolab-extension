@@ -8,7 +8,7 @@ const ROOT = 'features/arca/';
 let tail = Promise.resolve();
 const serial = (fn) => { const run = tail.then(fn); tail = run.catch(() => {}); return run; };
 const settings = async () => (await chrome.storage.local.get('arcaFeature')).arcaFeature || {};
-const popup = (sender) => sender.id === chrome.runtime.id && sender.url === chrome.runtime.getURL('popup.html');
+const popup = (sender) => sender.id === chrome.runtime.id && sender.url?.split('#')[0] === chrome.runtime.getURL('popup.html');
 async function register() {
   const enabled = (await settings()).enabled && await chrome.permissions.contains({ origins: [ORIGIN] });
   const found = await chrome.scripting.getRegisteredContentScripts({ ids: [SCRIPT] });

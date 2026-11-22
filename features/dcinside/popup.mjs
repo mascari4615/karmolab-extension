@@ -1,6 +1,10 @@
 const status = document.getElementById('dcinsideStatus');
 const toggle = document.getElementById('dcinsideToggle');
 const list = document.getElementById('dcinsideBlocks');
+const galleryList = document.getElementById('dcinsideGalleries');
+const galleryForm = document.getElementById('dcinsideGalleryForm');
+const galleryInput = document.getElementById('dcinsideGalleryInput');
+const currentGallery = document.getElementById('dcinsideCurrentGallery');
 const origins = ['https://gall.dcinside.com/*', 'https://m.dcinside.com/*'];
 let enabled = false;
 let listRevision = 0;
@@ -19,9 +23,21 @@ function renderState(state) {
 
 async function renderList() {
   const revision = ++listRevision;
-  const { blocklist } = await chrome.storage.local.get('blocklist');
+  const { blocklist, karmoSettings } = await chrome.storage.local.get(['blocklist', 'karmoSettings']);
   if (revision !== listRevision) return;
   list.replaceChildren();
+  galleryList.replaceChildren();
+  for (const gallery of karmoSettings?.dcinside?.blockedChannels || []) {
+    const row = document.createElement('li');
+    const label = document.createElement('span');
+    label.textContent = gallery;
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.textContent = '차단 해제';
+    remove.addEventListener('click', () => changeGallery(gallery, true));
+    row.append(label, remove);
+    galleryList.append(row);
+  }
   for (const [key, entry] of Object.entries(blocklist?.dcinside || {})) {
     const row = document.createElement('li');
     const name = document.createElement('span');
@@ -45,6 +61,24 @@ async function renderList() {
   }
 }
 
+async function changeGallery(gallery, remove = false) {
+  try {
+    await send({ type: 'dcinside.gallery', gallery, remove });
+    status.textContent = remove ? '갤러리 차단을 해제했습니다.' : '갤러리를 차단했습니다.';
+    return true;
+  } catch (error) { status.textContent = error.message; return false; }
+}
+
+galleryForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (await changeGallery(galleryInput.value)) galleryInput.value = '';
+});
+chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
+  const gallery = KarmoDcGallery.fromUrl(tab?.url);
+  currentGallery.hidden = !gallery;
+  if (gallery) currentGallery.addEventListener('click', () => changeGallery(gallery));
+}).catch(() => {});
+
 toggle.addEventListener('click', async () => {
   toggle.disabled = true;
   try {
@@ -56,7 +90,7 @@ toggle.addEventListener('click', async () => {
 
 const listError = () => { status.textContent = '차단 목록을 읽지 못했습니다.'; };
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.blocklist) renderList().catch(listError);
+  if (area === 'local' && (changes.blocklist || changes.karmoSettings)) renderList().catch(listError);
 });
 send({ type: 'dcinside.status' }).then(state => {
   renderState(state);

@@ -1,7 +1,9 @@
+import './gallery.js';
+
 const id = 'karmolab-dcinside';
 const matches = ['https://gall.dcinside.com/*', 'https://m.dcinside.com/*'];
 const permission = { origins: matches };
-const files = ['features/keyword-core.js', 'features/dcinside/block.js'];
+const files = ['features/keyword-core.js', 'features/dcinside/gallery.js', 'features/dcinside/block.js'];
 const enabled = async () => (await chrome.storage.local.get('dcinsideEnabled')).dcinsideEnabled === true;
 let tail = Promise.resolve();
 const validKey = key => typeof key === 'string' && /^[a-z0-9_-]{1,64}$/.test(key);
@@ -11,6 +13,8 @@ async function register(active) {
   const found = await chrome.scripting.getRegisteredContentScripts({ ids: [id] });
   if (active && !found.length) {
     await chrome.scripting.registerContentScripts([{ id, matches, js: files, css: ['features/dcinside/block.css'], runAt: 'document_idle' }]);
+  } else if (active && JSON.stringify(found[0].js) !== JSON.stringify(files)) {
+    await chrome.scripting.updateContentScripts([{ id, js: files }]);
   } else if (!active && found.length) {
     await chrome.scripting.unregisterContentScripts({ ids: [id] });
   }
@@ -42,6 +46,12 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
       return { enabled: active };
     }
     if (message.type === 'dcinside.running' && page) return { enabled: await enabled() && hasPermission };
+    if (message.type === 'dcinside.gallery' && popup) {
+      const key = KarmoDcGallery.parse(message.gallery);
+      if (!key) throw Error('디시 갤러리 URL이나 ID를 입력하세요.');
+      const op = message.remove ? 'channelRemove' : 'channelAdd';
+      return globalThis.KarmoBlockStore.apply({ site: 'dcinside', op, channel: key });
+    }
     if (message.type === 'dcinside.keywordBlocks' && page && hasPermission && await enabled()) {
       if (!Array.isArray(message.candidates)) throw Error('Invalid keyword matches.');
       const candidates = message.candidates.filter(item => validKey(item?.key) && typeof item.word === 'string')

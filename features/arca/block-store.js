@@ -1,6 +1,7 @@
 /* 여러 탭과 설정의 차단 저장을 워커 한 큐에서 처리 */
 (() => {
   let tail = Promise.resolve();
+  const write = patch => globalThis.KarmoKeywordSync ? KarmoKeywordSync.commit(patch) : chrome.storage.local.set(patch);
   async function mutate(command) {
     const site = command.site || "arca";
     if (["__proto__", "prototype", "constructor"].includes(site)) throw new Error("지원하지 않는 저장 키");
@@ -17,10 +18,14 @@
     if (command.op === "migrateKeywords" || command.op === "keywordReplace") {
       const patch = keywordsChanged ? { keywordWords: got.keywordWords, karmoSettings: got.karmoSettings } : {};
       if (command.op === "keywordReplace") {
+        const { keywordAutoBlockWords = [] } = await chrome.storage.local.get("keywordAutoBlockWords");
+        if (command.base && command.base !== JSON.stringify([got.keywordWords, keywordAutoBlockWords])) {
+          throw Error("다른 탭이나 기기에서 키워드가 바뀌었습니다. 초안을 버리고 최신 목록을 확인하세요.");
+        }
         patch.keywordWords = KarmoKeywords.parse(command.words.join("\n"));
         patch.keywordAutoBlockWords = KarmoKeywords.parse(command.autoWords.join("\n"));
       }
-      if (Object.keys(patch).length) await chrome.storage.local.set(patch);
+      if (Object.keys(patch).length) await write(patch);
       return {};
     }
     const blocks = got.blocklist[site] ||= {};
@@ -102,6 +107,8 @@
       case "settings": Object.assign(settings, command.patch); prune(); break;
       case "keywordRemove":
         got.keywordWords = got.keywordWords.filter(word => word !== command.word);
+        const { keywordAutoBlockWords = [] } = await chrome.storage.local.get("keywordAutoBlockWords");
+        got.keywordAutoBlockWords = KarmoKeywords.automatic(got.keywordWords, keywordAutoBlockWords);
         keywordsChanged = true;
         break;
       case "prune": prune(); break;
@@ -126,7 +133,7 @@
       default: throw new Error("지원하지 않는 차단 변경");
     }
     if (!keywordsChanged) delete got.keywordWords;
-    await chrome.storage.local.set(got);
+    await write(got);
     return { previous, changed: true, added };
   }
   globalThis.KarmoBlockStore = { exclusive(fn) {

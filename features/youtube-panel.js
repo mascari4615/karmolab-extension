@@ -36,7 +36,6 @@
       ::selection { background: var(--yt-spec-call-to-action, #065fd4); color: #fff; }
       #close { width: 44px; padding: 10px; background: transparent; }
       #close svg { width: 24px; height: 24px; display: block; }
-      #save { margin-top: 12px; }
       ul { list-style: none; margin: 12px 0 0; padding: 0; }
       li { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
       li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
@@ -66,14 +65,11 @@
           <label><span data-msg="commentSpam"></span><input id="spam" type="checkbox" disabled></label>
           <p data-msg="panelTranslationHint"></p>
         </section>
-        <section><h3 data-msg="keywordHeading"></h3>
+        <section><h3 data-msg="keywordEnabled"></h3>
           <label><span data-msg="keywordEnabled"></span><input id="keywords" type="checkbox" disabled></label>
           <label><span data-msg="keywordComments"></span><input id="scope-comments" type="checkbox" disabled></label>
           <label><span data-msg="keywordVideos"></span><input id="scope-videos" type="checkbox" disabled></label>
           <label><span data-msg="keywordShorts"></span><input id="scope-shorts" type="checkbox" disabled></label>
-          <label for="words" data-msg="panelKeywords"></label>
-          <textarea id="words" rows="3" maxlength="40200" disabled></textarea>
-          <p data-msg="keywordWordsLabel"></p><button id="save" type="button" disabled data-msg="keywordSave"></button>
         </section>
         <section><h3 data-msg="shortsCountHeadingPanel"></h3>
           <label><span data-msg="featShortsDate"></span><input id="shortsDate" type="checkbox" disabled></label>
@@ -103,14 +99,12 @@
   const $ = selector => shadow.querySelector(selector);
   $('#home-sizing').replaceWith(KarmoHomeSize.create());
   for (const node of shadow.querySelectorAll('[data-msg]')) node.textContent = msg(node.dataset.msg);
-  for (const [id, icon, label] of [['save', 'save', 'keywordSave'], ['export', 'download', 'backupExport'], ['retry', 'retry', 'panelRetry']]) KarmoControlIcons.apply($('#' + id), icon, msg(label));
+  for (const [id, icon, label] of [['export', 'download', 'backupExport'], ['retry', 'retry', 'panelRetry']]) KarmoControlIcons.apply($('#' + id), icon, msg(label));
   $('#close').setAttribute('aria-label', msg('panelClose'));
   $('#search').setAttribute('aria-label', msg('panelSearch'));
   $('#search').placeholder = msg('panelSearch');
-  const panel = $('aside'), words = $('#words'), status = $('#status');
-  const editor = KarmoKeywordEditor.create(words, () => words.dispatchEvent(new Event('input')));
-  words.hidden = true; words.after(editor.host);
-  editor.host.after(KarmoAutoBlockExceptions.create());
+  const panel = $('aside'), status = $('#status');
+  $('#keywords').closest('section').append(KarmoAutoBlockExceptions.create());
   const trigger = document.createElement('button');
   trigger.id = 'kl-panel-trigger'; trigger.type = 'button';
   trigger.textContent = 'KarmoLab'; trigger.title = msg('panelOpen');
@@ -128,13 +122,8 @@
   }
   new MutationObserver(syncTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['dark', 'class'] });
   syncTheme();
-  let values = {}, loaded = false, loading = false, dirty = false, draftVersion = 0, changeVersion = 0;
-  let savingWords = false, mountTimer;
-  let draftQueue = Promise.resolve();
-  const storeDraft = value => { draftQueue = draftQueue.catch(() => {}).then(() => chrome.storage.session.set({ youtubeKeywordDraft:value })); draftQueue.catch(() => announce('panelSaveError')); };
-  const draftInput = editor.host.querySelector('input[type=text]');
-  const persistDraft = () => queueMicrotask(() => storeDraft({ words:words.value, automatic:editor.automatic, entry:draftInput.value }));
-  draftInput.addEventListener('input', persistDraft);
+  let values = {}, loaded = false, loading = false, changeVersion = 0;
+  let mountTimer;
   let syncValues = {}, backupBusy = false, selectedBackup = null, fileVersion = 0;
   const pending = new Set();
   const toggles = { commentTranslate: $('#translation'), keywordEnabled: $('#keywords'), keywordComments: $('#scope-comments'), keywordVideos: $('#scope-videos'), keywordShorts: $('#scope-shorts'), userBlock: $('#blocking'), shortsDate: $('#shortsDate'), shortsCount: $('#shortsCount'), shortsWatchTime: $('#watchTime') };
@@ -233,8 +222,7 @@
       if (!pending.has(key)) input.checked = (key === 'shortsDate' ? syncValues : values)[key] !== false;
       input.disabled = !loaded || pending.has(key) || backupBusy;
     }
-    words.disabled = $('#search').disabled = !loaded;
-    $('#save').disabled = !loaded || !dirty || savingWords || backupBusy;
+    $('#search').disabled = !loaded;
     for (const [key, select] of Object.entries(selects)) {
       select.disabled = !loaded || pending.has(key) || backupBusy;
       if (!pending.has(key)) select.value = key === 'commentDensity' ? KarmoDensity.commentMode(values[key]) : values[key] || 'both';
@@ -244,9 +232,7 @@
       if (!pending.has(key)) { input.value = rangeValue(key); showRange(key,Number(input.value)); }
     }
     $('#export').disabled = $('#importFile').disabled = !loaded || backupBusy;
-    $('#restore').disabled = !loaded || !selectedBackup || backupBusy || savingWords || pending.size > 0;
-    if (loaded && !dirty && !savingWords) editor.set(values.keywordWords || [], values.keywordAutoBlockWords || [], !loaded || backupBusy);
-    else editor.lock(!loaded || backupBusy || savingWords);
+    $('#restore').disabled = !loaded || !selectedBackup || backupBusy || pending.size > 0;
     renderBlocks();
     renderHomeHidden();
     renderReview();
@@ -256,7 +242,6 @@
     loading = true; $('#retry').hidden = true; announce('panelLoading');
     const version = changeVersion;
     try {
-      await sendSettings({ type: 'karmolab.keywords.ready' });
       const [result, sync] = await Promise.all([chrome.storage.local.get(null), chrome.storage.sync.get({ shortsDate: true })]);
       if (version !== changeVersion) { loading = false; return load(); }
       values = result; syncValues = sync; loaded = true; status.textContent = ''; render();
@@ -269,24 +254,6 @@
   }
   $('#retry').addEventListener('click', () => void load());
   $('#search').addEventListener('input', renderBlocks);
-  words.addEventListener('input', () => { dirty = true; draftVersion++; $('#save').disabled = savingWords; announce('panelUnsaved'); persistDraft(); });
-  $('#save').addEventListener('click', async () => {
-    let parsed;
-    try { parsed = KarmoKeywords.parse(words.value); } catch { announce('keywordError'); return; }
-    const version = draftVersion, storageVersion = changeVersion; savingWords = true; render();
-    try {
-      const autoWords = editor.automatic;
-      await sendSettings({ type: 'karmolab.keywords.save', words: parsed, autoWords });
-      if (storageVersion === changeVersion) { values.keywordWords = parsed; values.keywordAutoBlockWords = autoWords; }
-      if (version === draftVersion) {
-        dirty = false; words.value = parsed.join('\n');
-        if (draftInput.value) persistDraft(); else storeDraft(null);
-        announce('panelSaved');
-      }
-      else announce('panelUnsaved');
-    } catch { announce('panelSaveError'); }
-    finally { savingWords = false; render(); }
-  });
   for (const [key, input] of Object.entries(toggles)) input.addEventListener('change', async () => {
     const checked = input.checked; pending.add(key); render();
     const version = changeVersion;
@@ -361,7 +328,7 @@
     try {
       await sendSettings({ type: 'karmolab.backup.restore', backup: selectedBackup });
       selectedBackup = null; $('#importFile').value = ''; $('#preview').textContent = '';
-      announce(dirty ? 'backupRestoredDraft' : 'backupRestored');
+      announce('backupRestored');
     } catch (error) { announce(error.partial ? 'backupPartialError' : 'backupRestoreError'); }
     finally { backupBusy = false; render(); }
   });
@@ -378,18 +345,8 @@
   const labels = ko ? ['화면과 재생','필터와 차단','숨긴 항목','백업'] : ['Viewing','Filters','Hidden items','Backup'];
   const nav = document.createElement('nav'); nav.setAttribute('role','tablist'); nav.setAttribute('aria-label',ko?'유튜브 설정':'YouTube settings');
   function select(index) { groups.forEach((ids,i)=>{ids.forEach(id=>{ if(sections[id]) sections[id].hidden=i!==index; }); nav.children[i].setAttribute('aria-selected',String(i===index));nav.children[i].tabIndex=i===index?0:-1;}); }
-  window.addEventListener('message', event => {
-    if (event.origin !== location.origin || event.source !== window.parent || event.data !== 'karmolab.openKeywords') return;
-    select(1);
-    $('#keywords').closest('section').scrollIntoView({ block: 'start' });
-  });
   labels.forEach((label,i)=>{const button=document.createElement('button');button.type='button';button.textContent=label;button.setAttribute('role','tab');button.addEventListener('click',()=>select(i));nav.append(button);});
   nav.addEventListener('keydown',event=>{const i=[...nav.children].indexOf(shadow.activeElement);let next=event.key==='ArrowRight'?(i+1)%4:event.key==='ArrowLeft'?(i+3)%4:event.key==='Home'?0:event.key==='End'?3:-1;if(next<0)return;event.preventDefault();select(next);nav.children[next].focus();});
   $('main').before(nav); select(0);
-  void (async () => {
-    const saved = await chrome.storage.session.get('youtubeKeywordDraft');
-    if (saved.youtubeKeywordDraft && !dirty) { dirty=true; const draft=saved.youtubeKeywordDraft; editor.set(String(draft.words || '').split('\n').filter(Boolean), draft.automatic || [], true); draftInput.value = draft.entry || ''; }
-    await load();
-    if (dirty) announce('panelUnsaved');
-  })().catch(() => { void load(); });
+  void load();
 })();

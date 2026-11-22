@@ -4,6 +4,7 @@
   const hidden = new Set();
   const controls = new Map();
   const pending = new Set();
+  let galleryCover;
   let frame = 0;
   let revision = 0;
   let values;
@@ -29,13 +30,32 @@
     const seen = new Set();
     const nextHidden = new Set();
     const candidates = new Map();
-    if (values?.dcinsideEnabled) {
+    const galleries = new Set(values?.karmoSettings?.dcinside?.blockedChannels || []);
+    const currentGallery = KarmoDcGallery.fromUrl(location.href);
+    const galleryBlocked = Boolean(values?.dcinsideEnabled && galleries.has(currentGallery));
+    document.documentElement.classList.toggle('kl-dc-gallery-hidden', galleryBlocked);
+    if (galleryBlocked && !galleryCover?.isConnected) {
+      galleryCover = document.createElement('main');
+      galleryCover.className = 'kl-dc-gallery-cover';
+      const title = document.createElement('h1');
+      title.textContent = '차단한 갤러리';
+      const notice = document.createElement('p');
+      notice.textContent = 'KarmoLab의 디시인사이드 탭에서 갤러리 차단을 해제할 수 있습니다.';
+      galleryCover.append(title, notice);
+      document.body.append(galleryCover);
+    }
+    if (!galleryBlocked) galleryCover?.remove();
+    if (values?.dcinsideEnabled && !galleryBlocked) {
       const blocks = values.blocklist?.dcinside || {};
       const words = KarmoKeywords.merge(values.keywordWords);
       const autoWords = KarmoKeywords.automatic(words, values.keywordAutoBlockWords);
       const allowed = new Set(values.karmoSettings?.dcinside?.autoAllowKeys || []);
       const blocked = key => key && Object.hasOwn(blocks, key);
       const inspect = (anchor, uid, name, target, textNode, isPost = false) => {
+        if (isPost && galleries.has(KarmoDcGallery.fromUrl(textNode?.closest('a')?.href, location.href))) {
+          nextHidden.add(target);
+          return;
+        }
         const key = account(uid);
         const text = textNode?.textContent || '';
         const keyword = text && KarmoKeywords.match(text, words);
